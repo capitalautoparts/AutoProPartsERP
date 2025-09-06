@@ -18,6 +18,29 @@ interface VCdbTables {
   vehicleTypes: Map<number, string>;
   manufacturers: Map<number, string>;
   equipmentModels: Map<number, string>;
+  // Real VCdb tables
+  transmissionNumSpeeds: Map<number, string>;
+  transmissionControlTypes: Map<number, string>;
+  bodyNumDoors: Map<number, string>;
+  bedLengths: Map<number, string>;
+  bedTypes: Map<number, string>;
+  fuelDeliveryTypes: Map<number, string>;
+  fuelSystemDesigns: Map<number, string>;
+  ignitionSystemTypes: Map<number, string>;
+  brakeSystems: Map<number, string>;
+  brakeABS: Map<number, string>;
+  brakeTypes: Map<number, string>;
+  cylinderHeadTypes: Map<number, string>;
+  engineDesignations: Map<number, string>;
+  engineVersions: Map<number, string>;
+  fuelDeliverySubTypes: Map<number, string>;
+  fuelSystemControlTypes: Map<number, string>;
+  transmissionMfrCodes: Map<number, string>;
+  elecControlled: Map<number, string>;
+  springTypes: Map<number, string>;
+  steeringTypes: Map<number, string>;
+  steeringSystems: Map<number, string>;
+  wheelbases: Map<number, string>;
   // VCdb component tables
   engineConfigs: Map<number, string>;
   transmissions: Map<number, string>;
@@ -55,6 +78,29 @@ class FullVCdbService {
     vehicleTypes: new Map(),
     manufacturers: new Map(),
     equipmentModels: new Map(),
+    // Real VCdb tables
+    transmissionNumSpeeds: new Map(),
+    transmissionControlTypes: new Map(),
+    bodyNumDoors: new Map(),
+    bedLengths: new Map(),
+    bedTypes: new Map(),
+    fuelDeliveryTypes: new Map(),
+    fuelSystemDesigns: new Map(),
+    ignitionSystemTypes: new Map(),
+    brakeSystems: new Map(),
+    brakeABS: new Map(),
+    brakeTypes: new Map(),
+    cylinderHeadTypes: new Map(),
+    engineDesignations: new Map(),
+    engineVersions: new Map(),
+    fuelDeliverySubTypes: new Map(),
+    fuelSystemControlTypes: new Map(),
+    transmissionMfrCodes: new Map(),
+    elecControlled: new Map(),
+    springTypes: new Map(),
+    steeringTypes: new Map(),
+    steeringSystems: new Map(),
+    wheelbases: new Map(),
     // VCdb component tables
     engineConfigs: new Map(),
     transmissions: new Map(),
@@ -98,6 +144,43 @@ class FullVCdbService {
       this.loadTable(vcdbPath, '20231026_Mfr.txt', this.tables.manufacturers);
       this.loadTable(vcdbPath, '20231026_EquipmentModel.txt', this.tables.equipmentModels);
       this.loadTable(vcdbPath, '20231026_VehicleType.txt', this.tables.vehicleTypes);
+      
+      // Real VCdb tables
+      this.loadTable(vcdbPath, '20231026_TransmissionNumSpeeds.txt', this.tables.transmissionNumSpeeds);
+      this.loadTable(vcdbPath, '20231026_TransmissionControlType.txt', this.tables.transmissionControlTypes);
+      this.loadTable(vcdbPath, '20231026_BodyNumDoors.txt', this.tables.bodyNumDoors);
+      this.loadTable(vcdbPath, '20231026_BedLength.txt', this.tables.bedLengths);
+      this.loadTable(vcdbPath, '20231026_BedType.txt', this.tables.bedTypes);
+      this.loadTable(vcdbPath, '20231026_FuelDeliveryType.txt', this.tables.fuelDeliveryTypes);
+      this.loadTable(vcdbPath, '20231026_FuelSystemDesign.txt', this.tables.fuelSystemDesigns);
+      this.loadTable(vcdbPath, '20231026_IgnitionSystemType.txt', this.tables.ignitionSystemTypes);
+      this.loadTable(vcdbPath, '20231026_BrakeSystem.txt', this.tables.brakeSystems);
+      this.loadTable(vcdbPath, '20231026_BrakeABS.txt', this.tables.brakeABS);
+      this.loadTable(vcdbPath, '20231026_BrakeType.txt', this.tables.brakeTypes);
+      this.loadTable(vcdbPath, '20231026_CylinderHeadType.txt', this.tables.cylinderHeadTypes);
+      this.loadTable(vcdbPath, '20231026_EngineDesignation.txt', this.tables.engineDesignations);
+      this.loadTable(vcdbPath, '20231026_EngineVersion.txt', this.tables.engineVersions);
+      this.loadTable(vcdbPath, '20231026_FuelDeliverySubType.txt', this.tables.fuelDeliverySubTypes);
+      this.loadTable(vcdbPath, '20231026_FuelSystemControlType.txt', this.tables.fuelSystemControlTypes);
+      this.loadTable(vcdbPath, '20231026_TransmissionMfrCode.txt', this.tables.transmissionMfrCodes);
+      this.loadTable(vcdbPath, '20231026_ElecControlled.txt', this.tables.elecControlled);
+      this.loadTable(vcdbPath, '20231026_SpringType.txt', this.tables.springTypes);
+      this.loadTable(vcdbPath, '20231026_SteeringType.txt', this.tables.steeringTypes);
+      this.loadTable(vcdbPath, '20231026_SteeringSystem.txt', this.tables.steeringSystems);
+      this.loadTable(vcdbPath, '20231026_Wheelbase.txt', this.tables.wheelbases);
+      
+      // Additional VCdb tables
+      this.loadTable(vcdbPath, '20231026_TransmissionNumSpeeds.txt', this.tables.transmissionNumSpeeds);
+      this.loadTable(vcdbPath, '20231026_TransmissionControlType.txt', this.tables.transmissionControlTypes);
+      this.loadTable(vcdbPath, '20231026_BodyNumDoors.txt', this.tables.bodyNumDoors);
+      this.loadTable(vcdbPath, '20231026_BedLength.txt', this.tables.bedLengths);
+      this.loadTable(vcdbPath, '20231026_FuelDeliveryType.txt', this.tables.fuelDeliveryTypes);
+      this.loadTable(vcdbPath, '20231026_FuelSystemDesign.txt', this.tables.fuelSystemDesigns);
+      this.loadTable(vcdbPath, '20231026_IgnitionSystemType.txt', this.tables.ignitionSystemTypes);
+      this.loadTable(vcdbPath, '20231026_BrakeSystem.txt', this.tables.brakeSystems);
+      this.loadTable(vcdbPath, '20231026_BrakeABS.txt', this.tables.brakeABS);
+      this.loadTable(vcdbPath, '20231026_FrontBrakeType.txt', this.tables.frontBrakeTypes);
+      this.loadTable(vcdbPath, '20231026_RearBrakeType.txt', this.tables.rearBrakeTypes);
       
       // VCdb component tables - load with proper structure
       this.loadEngineConfigs(vcdbPath);
@@ -407,6 +490,43 @@ class FullVCdbService {
   getAllVehicleTypes() { return Array.from(this.tables.vehicleTypes.entries()).map(([id, name]) => ({ id, name })); }
   getAllManufacturers() { return Array.from(this.tables.manufacturers.entries()).map(([id, name]) => ({ id, name })); }
   getAllEquipmentModels() { return Array.from(this.tables.equipmentModels.entries()).map(([id, name]) => ({ id, name })); }
+  
+  // Real VCdb data methods
+  getAllTransmissionNumSpeeds() { return Array.from(this.tables.transmissionNumSpeeds.entries()).map(([id, name]) => ({ id, name })); }
+  getAllTransmissionControlTypes() { return Array.from(this.tables.transmissionControlTypes.entries()).map(([id, name]) => ({ id, name })); }
+  getAllBodyNumDoors() { return Array.from(this.tables.bodyNumDoors.entries()).map(([id, name]) => ({ id, name })); }
+  getAllBedLengths() { return Array.from(this.tables.bedLengths.entries()).map(([id, name]) => ({ id, name })); }
+  getAllBedTypes() { return Array.from(this.tables.bedTypes.entries()).map(([id, name]) => ({ id, name })); }
+  getAllFuelDeliveryTypes() { return Array.from(this.tables.fuelDeliveryTypes.entries()).map(([id, name]) => ({ id, name })); }
+  getAllFuelSystemDesigns() { return Array.from(this.tables.fuelSystemDesigns.entries()).map(([id, name]) => ({ id, name })); }
+  getAllIgnitionSystemTypes() { return Array.from(this.tables.ignitionSystemTypes.entries()).map(([id, name]) => ({ id, name })); }
+  getAllBrakeSystems() { return Array.from(this.tables.brakeSystems.entries()).map(([id, name]) => ({ id, name })); }
+  getAllBrakeABS() { return Array.from(this.tables.brakeABS.entries()).map(([id, name]) => ({ id, name })); }
+  getAllBrakeTypes() { return Array.from(this.tables.brakeTypes.entries()).map(([id, name]) => ({ id, name })); }
+  getAllCylinderHeadTypes() { return Array.from(this.tables.cylinderHeadTypes.entries()).map(([id, name]) => ({ id, name })); }
+  getAllEngineDesignations() { return Array.from(this.tables.engineDesignations.entries()).map(([id, name]) => ({ id, name })); }
+  getAllEngineVersions() { return Array.from(this.tables.engineVersions.entries()).map(([id, name]) => ({ id, name })); }
+  getAllFuelDeliverySubTypes() { return Array.from(this.tables.fuelDeliverySubTypes.entries()).map(([id, name]) => ({ id, name })); }
+  getAllFuelSystemControlTypes() { return Array.from(this.tables.fuelSystemControlTypes.entries()).map(([id, name]) => ({ id, name })); }
+  getAllTransmissionMfrCodes() { return Array.from(this.tables.transmissionMfrCodes.entries()).map(([id, name]) => ({ id, name })); }
+  getAllElecControlled() { return Array.from(this.tables.elecControlled.entries()).map(([id, name]) => ({ id, name })); }
+  getAllSpringTypes() { return Array.from(this.tables.springTypes.entries()).map(([id, name]) => ({ id, name })); }
+  getAllSteeringTypes() { return Array.from(this.tables.steeringTypes.entries()).map(([id, name]) => ({ id, name })); }
+  getAllSteeringSystems() { return Array.from(this.tables.steeringSystems.entries()).map(([id, name]) => ({ id, name })); }
+  getAllWheelbases() { return Array.from(this.tables.wheelbases.entries()).map(([id, name]) => ({ id, name })); }
+  
+  // Additional VCdb data methods
+  getAllTransmissionNumSpeeds() { return Array.from(this.tables.transmissionNumSpeeds.entries()).map(([id, name]) => ({ id, name })); }
+  getAllTransmissionControlTypes() { return Array.from(this.tables.transmissionControlTypes.entries()).map(([id, name]) => ({ id, name })); }
+  getAllBodyNumDoors() { return Array.from(this.tables.bodyNumDoors.entries()).map(([id, name]) => ({ id, name })); }
+  getAllBedLengths() { return Array.from(this.tables.bedLengths.entries()).map(([id, name]) => ({ id, name })); }
+  getAllFuelDeliveryTypes() { return Array.from(this.tables.fuelDeliveryTypes.entries()).map(([id, name]) => ({ id, name })); }
+  getAllFuelSystemDesigns() { return Array.from(this.tables.fuelSystemDesigns.entries()).map(([id, name]) => ({ id, name })); }
+  getAllIgnitionSystemTypes() { return Array.from(this.tables.ignitionSystemTypes.entries()).map(([id, name]) => ({ id, name })); }
+  getAllBrakeSystems() { return Array.from(this.tables.brakeSystems.entries()).map(([id, name]) => ({ id, name })); }
+  getAllBrakeABS() { return Array.from(this.tables.brakeABS.entries()).map(([id, name]) => ({ id, name })); }
+  getAllFrontBrakeTypes() { return Array.from(this.tables.frontBrakeTypes.entries()).map(([id, name]) => ({ id, name })); }
+  getAllRearBrakeTypes() { return Array.from(this.tables.rearBrakeTypes.entries()).map(([id, name]) => ({ id, name })); }
 
   // Lookup methods
   getMakeName(id: number) { return this.tables.makes.get(id); }

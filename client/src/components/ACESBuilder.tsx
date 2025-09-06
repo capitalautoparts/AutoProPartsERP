@@ -1,882 +1,1645 @@
-import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Plus, Trash2, Save, Car, Settings, Wrench, Truck, Zap, Gauge } from 'lucide-react';
-import { ACESApplication } from '../types';
-import { vcdbApi } from '../services/vcdbApi';
+import React, { useState, useEffect } from 'react';
 
 interface ACESBuilderProps {
-  applications: ACESApplication[];
-  onUpdate: (applications: ACESApplication[]) => void;
+  applications?: any[];
+  onUpdate?: (applications: any[]) => void;
 }
 
-export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications, onUpdate }) => {
-  const [selectedApp, setSelectedApp] = useState<ACESApplication | null>(null);
-  const [activeTab, setActiveTab] = useState('vehicle');
-  const [formData, setFormData] = useState<Partial<ACESApplication>>({});
+type TabType = 'Vehicle' | 'Engine' | 'Transmission' | 'Drive' | 'Brake' | 'Spring' | 'Steering' | 'Wheel' | 'Bed' | 'Body' | 'MfrBody' | 'Item' | 'Validation';
 
-  const tabs = [
-    { id: 'vehicle', name: 'Vehicle', icon: Car },
-    { id: 'engine', name: 'Engine', icon: Settings },
-    { id: 'transmission', name: 'Transmission', icon: Wrench },
-    { id: 'body', name: 'Body', icon: Truck },
-    { id: 'fuel', name: 'Fuel', icon: Zap },
-    { id: 'brakes', name: 'Brakes', icon: Gauge },
-    { id: 'application', name: 'Application', icon: Settings }
-  ];
+export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onUpdate }) => {
+  const [activeTab, setActiveTab] = useState<TabType>('Vehicle');
+  
+  const tabs: TabType[] = ['Vehicle', 'Engine', 'Transmission', 'Drive', 'Brake', 'Spring', 'Steering', 'Wheel', 'Bed', 'Body', 'MfrBody', 'Item', 'Validation'];
+  // Reference data
+  const [allYears, setAllYears] = useState<any[]>([]);
+  const [allMakes, setAllMakes] = useState<any[]>([]);
+  const [allModels, setAllModels] = useState<any[]>([]);
+  const [allBaseVehicles, setAllBaseVehicles] = useState<any[]>([]);
+  const [vehicleGroups, setVehicleGroups] = useState<any[]>([]);
+  const [vehicleTypes, setVehicleTypes] = useState<any[]>([]);
+  const [regions, setRegions] = useState<any[]>([]);
+  const [vehicleClasses, setVehicleClasses] = useState<any[]>([]);
+  
+  // Filtered data
+  const [availableMakes, setAvailableMakes] = useState<any[]>([]);
+  const [availableModels, setAvailableModels] = useState<any[]>([]);
+  const [availableBaseVehicles, setAvailableBaseVehicles] = useState<any[]>([]);
+  
+  // Vehicle tab selections
+  const [vehicleData, setVehicleData] = useState({
+    group: '',
+    type: '',
+    make: '',
+    model: '',
+    year: '',
+    submodel: '',
+    region: '',
+    class: '',
+    baseVehicleId: ''
+  });
+  
+  // Component data
+  const [components, setComponents] = useState({
+    subModels: [],
+    engineConfigs: [],
+    transmissions: [],
+    brakeConfigs: [],
+    bodyConfigs: [],
+    driveTypes: []
+  });
+  
+  // Engine and Transmission reference data
+  const [engineRefData, setEngineRefData] = useState<any>({});
+  const [transmissionRefData, setTransmissionRefData] = useState<any>({});
+  const [vehicleSystemsRefData, setVehicleSystemsRefData] = useState<any>({});
+  const [physicalSpecsRefData, setPhysicalSpecsRefData] = useState<any>({});
+  const [pcdbRefData, setPcdbRefData] = useState<any>({});
+  
+  // Engine filter selections
+  const [engineFilters, setEngineFilters] = useState({
+    liter: '',
+    cc: '',
+    cid: '',
+    cylinders: '',
+    blockType: '',
+    boreInches: '',
+    boreMetric: '',
+    strokeInches: '',
+    strokeMetric: '',
+    cylinderHeadType: '',
+    valvesPerEngine: '',
+    aspiration: '',
+    ignitionSystemType: '',
+    horsePower: '',
+    kilowattPower: '',
+    fuelType: '',
+    engineManufacturer: '',
+    engineVIN: '',
+    engineVersion: ''
+  });
+  
+  // Transmission filter selections
+  const [transmissionFilters, setTransmissionFilters] = useState({
+    speeds: '',
+    control: '',
+    type: '',
+    mfrName: '',
+    mfrCode: '',
+    elecControlled: ''
+  });
+  
+  // Vehicle systems filter selections
+  const [vehicleSystemsFilters, setVehicleSystemsFilters] = useState({
+    driveType: '',
+    frontBrake: '',
+    rearBrake: '',
+    brakeSystem: '',
+    brakeABS: '',
+    frontSpring: '',
+    rearSpring: '',
+    steeringType: '',
+    steeringSystem: ''
+  });
+  
+  // Physical specifications filter selections
+  const [physicalSpecsFilters, setPhysicalSpecsFilters] = useState({
+    wheelbaseInches: '',
+    wheelbaseMetric: '',
+    bedType: '',
+    bedLengthInches: '',
+    bedLengthMetric: '',
+    bodyType: '',
+    numDoors: '',
+    mfrBodyCode: ''
+  });
+  
+  // Item specifications
+  const [itemSpecs, setItemSpecs] = useState({
+    category: '',
+    subCategory: '',
+    partType: '',
+    position: '',
+    quantity: 1,
+    mfrLabel: '',
+    notes: ''
+  });
+  
+  // Validation state
+  const [validationFilter, setValidationFilter] = useState('All');
+  const [selectedApplications, setSelectedApplications] = useState<string[]>([]);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  
+  const [selectedComponents, setSelectedComponents] = useState({
+    engineConfig: '',
+    transmission: '',
+    brakeConfig: '',
+    driveType: '',
+    subModel: ''
+  });
+  
+  const [application, setApplication] = useState({
+    partNumber: '',
+    partType: '',
+    position: '',
+    quantity: 1,
+    qualifiers: [],
+    notes: ''
+  });
+  
+  const [currentApplications, setCurrentApplications] = useState(applications);
+
+  // Load all reference data
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/aces-corrected/years').then(r => r.json()),
+      fetch('/api/aces-corrected/makes').then(r => r.json()),
+      fetch('/api/aces-corrected/models').then(r => r.json()),
+      fetch('/api/databases/vcdb/20231026_BaseVehicle').then(r => r.json()),
+      fetch('/api/aces-corrected/vehicle-groups').then(r => r.json()),
+      fetch('/api/aces-corrected/vehicle-types').then(r => r.json()),
+      fetch('/api/aces-corrected/regions').then(r => r.json()),
+      fetch('/api/aces-corrected/vehicle-classes').then(r => r.json()),
+      fetch('/api/aces-corrected/pcdb-reference').then(r => r.json())
+    ]).then(([years, makes, models, baseVehicles, groups, types, regions, classes, pcdb]) => {
+      setAllYears(years);
+      setAllMakes(makes);
+      setAllModels(models);
+      setAllBaseVehicles(baseVehicles.data);
+      setVehicleGroups(groups);
+      setVehicleTypes(types);
+      setRegions(regions);
+      setVehicleClasses(classes);
+      setPcdbRefData(pcdb);
+    });
+  }, []);
+
+  // Filter makes when year selected
+  useEffect(() => {
+    if (vehicleData.year) {
+      const validMakeIds = allBaseVehicles
+        .filter(bv => bv.YearID === vehicleData.year)
+        .map(bv => bv.MakeID);
+      const uniqueMakeIds = [...new Set(validMakeIds)];
+      const filteredMakes = allMakes.filter(make => uniqueMakeIds.includes(make.MakeID));
+      setAvailableMakes(filteredMakes);
+      setVehicleData(prev => ({ ...prev, make: '', model: '', baseVehicleId: '' }));
+    } else {
+      setAvailableMakes([]);
+    }
+  }, [vehicleData.year, allBaseVehicles, allMakes]);
+
+  // Filter models when make selected
+  useEffect(() => {
+    if (vehicleData.year && vehicleData.make) {
+      const validModelIds = allBaseVehicles
+        .filter(bv => bv.YearID === vehicleData.year && bv.MakeID === vehicleData.make)
+        .map(bv => bv.ModelID);
+      const uniqueModelIds = [...new Set(validModelIds)];
+      const filteredModels = allModels.filter(model => uniqueModelIds.includes(model.ModelID));
+      setAvailableModels(filteredModels);
+      setVehicleData(prev => ({ ...prev, model: '', baseVehicleId: '' }));
+    } else {
+      setAvailableModels([]);
+    }
+  }, [vehicleData.year, vehicleData.make, allBaseVehicles, allModels]);
+
+  // Filter BaseVehicles when model selected
+  useEffect(() => {
+    if (vehicleData.year && vehicleData.make && vehicleData.model) {
+      const filteredBaseVehicles = allBaseVehicles.filter(bv => 
+        bv.YearID === vehicleData.year && 
+        bv.MakeID === vehicleData.make && 
+        bv.ModelID === vehicleData.model
+      );
+      setAvailableBaseVehicles(filteredBaseVehicles);
+      setVehicleData(prev => ({ ...prev, baseVehicleId: '' }));
+    } else {
+      setAvailableBaseVehicles([]);
+    }
+  }, [vehicleData.year, vehicleData.make, vehicleData.model, allBaseVehicles]);
+
+  // Load components when BaseVehicle selected
+  useEffect(() => {
+    if (vehicleData.baseVehicleId) {
+      Promise.all([
+        fetch(`/api/aces-corrected/submodels/${vehicleData.baseVehicleId}`).then(r => r.json()),
+        fetch(`/api/aces-corrected/engine-configs/${vehicleData.baseVehicleId}`).then(r => r.json()),
+        fetch(`/api/aces-corrected/transmissions/${vehicleData.baseVehicleId}`).then(r => r.json()),
+        fetch(`/api/aces-corrected/brake-configs/${vehicleData.baseVehicleId}`).then(r => r.json()),
+        fetch(`/api/aces-corrected/body-configs/${vehicleData.baseVehicleId}`).then(r => r.json()),
+        fetch(`/api/aces-corrected/drive-types/${vehicleData.baseVehicleId}`).then(r => r.json()),
+        fetch(`/api/aces-corrected/engine-reference/${vehicleData.baseVehicleId}`).then(r => r.json()),
+        fetch(`/api/aces-corrected/transmission-reference/${vehicleData.baseVehicleId}`).then(r => r.json()),
+        fetch(`/api/aces-corrected/vehicle-systems-reference/${vehicleData.baseVehicleId}`).then(r => r.json()),
+        fetch(`/api/aces-corrected/physical-specs-reference/${vehicleData.baseVehicleId}`).then(r => r.json())
+      ]).then(([subModels, engineConfigs, transmissions, brakeConfigs, bodyConfigs, driveTypes, engineRef, transRef, systemsRef, specsRef]) => {
+        setComponents({
+          subModels,
+          engineConfigs,
+          transmissions,
+          brakeConfigs,
+          bodyConfigs,
+          driveTypes
+        });
+        setEngineRefData(engineRef);
+        setTransmissionRefData(transRef);
+        setVehicleSystemsRefData(systemsRef);
+        setPhysicalSpecsRefData(specsRef);
+      });
+    }
+  }, [vehicleData.baseVehicleId]);
 
   const addApplication = () => {
+    if (!vehicleData.baseVehicleId) return;
+    
+    const yearName = allYears.find(y => y.YearID === vehicleData.year)?.YearID;
+    const makeName = allMakes.find(m => m.MakeID === vehicleData.make)?.MakeName;
+    const modelName = allModels.find(m => m.ModelID === vehicleData.model)?.ModelName;
+    
+    const newApp = {
+      id: Date.now().toString(),
+      baseVehicleId: vehicleData.baseVehicleId,
+      year: yearName,
+      make: makeName,
+      model: modelName,
+      engineConfig: selectedComponents.engineConfig,
+      transmission: selectedComponents.transmission,
+      brakeConfig: selectedComponents.brakeConfig,
+      driveType: selectedComponents.driveType,
+      subModel: selectedComponents.subModel,
+      ...application,
+      ...vehicleData,
+      ...itemSpecs
+    };
+    
+    const updatedApps = [...currentApplications, newApp];
+    setCurrentApplications(updatedApps);
+    onUpdate?.(updatedApps);
+    
+    // Reset form
+    setVehicleData({
+      group: '',
+      type: '',
+      make: '',
+      model: '',
+      year: '',
+      submodel: '',
+      region: '',
+      class: '',
+      baseVehicleId: ''
+    });
+    setSelectedComponents({
+      engineConfig: '',
+      transmission: '',
+      brakeConfig: '',
+      driveType: '',
+      subModel: ''
+    });
+    setEngineFilters({
+      liter: '',
+      cc: '',
+      cid: '',
+      cylinders: '',
+      blockType: '',
+      boreInches: '',
+      boreMetric: '',
+      strokeInches: '',
+      strokeMetric: '',
+      cylinderHeadType: '',
+      valvesPerEngine: '',
+      aspiration: '',
+      ignitionSystemType: '',
+      horsePower: '',
+      kilowattPower: '',
+      fuelType: '',
+      engineManufacturer: '',
+      engineVIN: '',
+      engineVersion: ''
+    });
+    setTransmissionFilters({
+      speeds: '',
+      control: '',
+      type: '',
+      mfrName: '',
+      mfrCode: '',
+      elecControlled: ''
+    });
+    setVehicleSystemsFilters({
+      driveType: '',
+      frontBrake: '',
+      rearBrake: '',
+      brakeSystem: '',
+      brakeABS: '',
+      frontSpring: '',
+      rearSpring: '',
+      steeringType: '',
+      steeringSystem: ''
+    });
+    setPhysicalSpecsFilters({
+      wheelbaseInches: '',
+      wheelbaseMetric: '',
+      bedType: '',
+      bedLengthInches: '',
+      bedLengthMetric: '',
+      bodyType: '',
+      numDoors: '',
+      mfrBodyCode: ''
+    });
+    setItemSpecs({
+      category: '',
+      subCategory: '',
+      partType: '',
+      position: '',
+      quantity: 1,
+      mfrLabel: '',
+      notes: ''
+    });
+  };
+  
+  const removeApplication = (id: string) => {
+    const updatedApps = currentApplications.filter(app => app.id !== id);
+    setCurrentApplications(updatedApps);
+    onUpdate?.(updatedApps);
+  };
+  
+  const exportToXML = async () => {
     try {
-      const newApp: ACESApplication = {
-        id: Date.now().toString(),
-        productId: '',
-        quantity: 1,
-        partTypeId: 0,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      const updated = [...applications, newApp];
-      onUpdate(updated);
-      setSelectedApp(newApp);
-      setFormData({});
+      const response = await fetch('/api/aces-corrected/export-xml', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ applications: currentApplications })
+      });
+      
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'aces-applications.xml';
+        a.click();
+        window.URL.revokeObjectURL(url);
+      }
     } catch (error) {
-      console.error('Error adding application:', error);
+      console.error('Export failed:', error);
     }
   };
-
-  const deleteApplication = () => {
-    if (!selectedApp) return;
-    const updated = applications.filter(app => app.id !== selectedApp.id);
-    onUpdate(updated);
-    setSelectedApp(updated[0] || null);
+  
+  const validateApplications = async () => {
+    const errors = [];
+    for (const app of currentApplications) {
+      try {
+        const response = await fetch('/api/aces-corrected/validate-application', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(app)
+        });
+        const validation = await response.json();
+        if (!validation.isValid) {
+          errors.push(`Application ${app.id}: ${validation.errors.join(', ')}`);
+        }
+      } catch (error) {
+        errors.push(`Application ${app.id}: Validation failed`);
+      }
+    }
+    setValidationErrors(errors);
   };
+  
+  const filteredApplications = currentApplications.filter(app => {
+    if (validationFilter === 'All') return true;
+    // Add validation logic based on filter
+    return true;
+  });
 
-  const updateFormData = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (selectedApp) {
-      const updatedApp = { ...selectedApp, [field]: value };
-      const updatedApps = applications.map(app => app.id === selectedApp.id ? updatedApp : app);
-      onUpdate(updatedApps);
-      setSelectedApp(updatedApp);
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'Vehicle':
+        return (
+          <div className="space-y-4">
+            <div className="grid grid-cols-4 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Group</label>
+                <select 
+                  value={vehicleData.group} 
+                  onChange={(e) => setVehicleData({...vehicleData, group: e.target.value})}
+                  className="w-full p-2 border rounded text-sm"
+                >
+                  <option value="">Select Group</option>
+                  {vehicleGroups.map(group => (
+                    <option key={group.id} value={group.id}>{group.name}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">Type</label>
+                <select 
+                  value={vehicleData.type} 
+                  onChange={(e) => setVehicleData({...vehicleData, type: e.target.value})}
+                  className="w-full p-2 border rounded text-sm"
+                >
+                  <option value="">Select Type</option>
+                  {vehicleTypes.map(type => (
+                    <option key={type.VehicleTypeID} value={type.VehicleTypeID}>{type.VehicleTypeName}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">Make</label>
+                <select 
+                  value={vehicleData.make} 
+                  onChange={(e) => setVehicleData({...vehicleData, make: e.target.value})}
+                  className="w-full p-2 border rounded text-sm"
+                  disabled={!vehicleData.year}
+                >
+                  <option value="">Select Make</option>
+                  {availableMakes.map(make => (
+                    <option key={make.MakeID} value={make.MakeID}>{make.MakeName}</option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500">{availableMakes.length} available</p>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">Model</label>
+                <select 
+                  value={vehicleData.model} 
+                  onChange={(e) => setVehicleData({...vehicleData, model: e.target.value})}
+                  className="w-full p-2 border rounded text-sm"
+                  disabled={!vehicleData.make}
+                >
+                  <option value="">Select Model</option>
+                  {availableModels.map(model => (
+                    <option key={model.ModelID} value={model.ModelID}>{model.ModelName}</option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500">{availableModels.length} available</p>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-4 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Year</label>
+                <select 
+                  value={vehicleData.year} 
+                  onChange={(e) => setVehicleData({...vehicleData, year: e.target.value})}
+                  className="w-full p-2 border rounded text-sm"
+                >
+                  <option value="">Select Year</option>
+                  {allYears.map(year => (
+                    <option key={year.YearID} value={year.YearID}>{year.YearID}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">Submodel</label>
+                <select 
+                  value={vehicleData.submodel} 
+                  onChange={(e) => setVehicleData({...vehicleData, submodel: e.target.value})}
+                  className="w-full p-2 border rounded text-sm"
+                  disabled={!vehicleData.baseVehicleId}
+                >
+                  <option value="">Select Submodel</option>
+                  {components.subModels.map(sub => (
+                    <option key={sub.SubModelID} value={sub.SubModelID}>{sub.displayName}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">Region</label>
+                <select 
+                  value={vehicleData.region} 
+                  onChange={(e) => setVehicleData({...vehicleData, region: e.target.value})}
+                  className="w-full p-2 border rounded text-sm"
+                >
+                  <option value="">Select Region</option>
+                  {regions.map(region => (
+                    <option key={region.id} value={region.id}>{region.name}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">Class</label>
+                <select 
+                  value={vehicleData.class} 
+                  onChange={(e) => setVehicleData({...vehicleData, class: e.target.value})}
+                  className="w-full p-2 border rounded text-sm"
+                >
+                  <option value="">Select Class</option>
+                  {vehicleClasses.map(cls => (
+                    <option key={cls.id} value={cls.id}>{cls.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            
+            {availableBaseVehicles.length > 0 && (
+              <div>
+                <label className="block text-sm font-medium mb-1">BaseVehicle</label>
+                <select 
+                  value={vehicleData.baseVehicleId} 
+                  onChange={(e) => setVehicleData({...vehicleData, baseVehicleId: e.target.value})}
+                  className="w-full p-2 border rounded text-sm"
+                >
+                  <option value="">Select BaseVehicle</option>
+                  {availableBaseVehicles.map(bv => (
+                    <option key={bv.BaseVehicleID} value={bv.BaseVehicleID}>
+                      BaseVehicle {bv.BaseVehicleID}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500">{availableBaseVehicles.length} available</p>
+              </div>
+            )}
+          </div>
+        );
+      
+      case 'Engine':
+        return (
+          <div className="space-y-4">
+            {vehicleData.baseVehicleId ? (
+              <>
+                {/* Basic Engine Specifications */}
+                <div className="grid grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Liter</label>
+                    <select 
+                      value={engineFilters.liter}
+                      onChange={(e) => setEngineFilters({...engineFilters, liter: e.target.value})}
+                      className="w-full p-2 border rounded text-sm"
+                    >
+                      <option value="">Any Liter</option>
+                      {engineRefData.liters?.map((liter: string) => (
+                        <option key={liter} value={liter}>{liter}L</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-1">CC</label>
+                    <select 
+                      value={engineFilters.cc}
+                      onChange={(e) => setEngineFilters({...engineFilters, cc: e.target.value})}
+                      className="w-full p-2 border rounded text-sm"
+                    >
+                      <option value="">Any CC</option>
+                      {engineRefData.ccs?.map((cc: string) => (
+                        <option key={cc} value={cc}>{cc} CC</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-1">CID</label>
+                    <select 
+                      value={engineFilters.cid}
+                      onChange={(e) => setEngineFilters({...engineFilters, cid: e.target.value})}
+                      className="w-full p-2 border rounded text-sm"
+                    >
+                      <option value="">Any CID</option>
+                      {engineRefData.cids?.map((cid: string) => (
+                        <option key={cid} value={cid}>{cid} CID</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Cylinders</label>
+                    <select 
+                      value={engineFilters.cylinders}
+                      onChange={(e) => setEngineFilters({...engineFilters, cylinders: e.target.value})}
+                      className="w-full p-2 border rounded text-sm"
+                    >
+                      <option value="">Any Cylinders</option>
+                      {engineRefData.cylinders?.map((cyl: string) => (
+                        <option key={cyl} value={cyl}>{cyl} Cylinders</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                
+                {/* Engine Block and Bore/Stroke */}
+                <div className="grid grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Block Type</label>
+                    <select 
+                      value={engineFilters.blockType}
+                      onChange={(e) => setEngineFilters({...engineFilters, blockType: e.target.value})}
+                      className="w-full p-2 border rounded text-sm"
+                    >
+                      <option value="">Any Block Type</option>
+                      {engineRefData.blockTypes?.map((bt: string) => (
+                        <option key={bt} value={bt}>{bt}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Bore Inches</label>
+                    <select 
+                      value={engineFilters.boreInches}
+                      onChange={(e) => setEngineFilters({...engineFilters, boreInches: e.target.value})}
+                      className="w-full p-2 border rounded text-sm"
+                    >
+                      <option value="">Any Bore (in)</option>
+                      {engineRefData.boreInches?.map((bore: string) => (
+                        <option key={bore} value={bore}>{bore}"</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Bore Metric</label>
+                    <select 
+                      value={engineFilters.boreMetric}
+                      onChange={(e) => setEngineFilters({...engineFilters, boreMetric: e.target.value})}
+                      className="w-full p-2 border rounded text-sm"
+                    >
+                      <option value="">Any Bore (mm)</option>
+                      {engineRefData.boreMetric?.map((bore: string) => (
+                        <option key={bore} value={bore}>{bore}mm</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Stroke Inches</label>
+                    <select 
+                      value={engineFilters.strokeInches}
+                      onChange={(e) => setEngineFilters({...engineFilters, strokeInches: e.target.value})}
+                      className="w-full p-2 border rounded text-sm"
+                    >
+                      <option value="">Any Stroke (in)</option>
+                      {engineRefData.strokeInches?.map((stroke: string) => (
+                        <option key={stroke} value={stroke}>{stroke}"</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                
+                {/* Advanced Engine Properties */}
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Cylinder Head Type</label>
+                    <select 
+                      value={engineFilters.cylinderHeadType}
+                      onChange={(e) => setEngineFilters({...engineFilters, cylinderHeadType: e.target.value})}
+                      className="w-full p-2 border rounded text-sm"
+                    >
+                      <option value="">Any Head Type</option>
+                      {engineRefData.cylinderHeadTypes?.map((cht: any) => (
+                        <option key={cht.CylinderHeadTypeID} value={cht.CylinderHeadTypeID}>{cht.CylinderHeadTypeName}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Aspiration</label>
+                    <select 
+                      value={engineFilters.aspiration}
+                      onChange={(e) => setEngineFilters({...engineFilters, aspiration: e.target.value})}
+                      className="w-full p-2 border rounded text-sm"
+                    >
+                      <option value="">Any Aspiration</option>
+                      {engineRefData.aspirations?.map((asp: any) => (
+                        <option key={asp.AspirationID} value={asp.AspirationID}>{asp.AspirationName}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Valves Per Engine</label>
+                    <select 
+                      value={engineFilters.valvesPerEngine}
+                      onChange={(e) => setEngineFilters({...engineFilters, valvesPerEngine: e.target.value})}
+                      className="w-full p-2 border rounded text-sm"
+                    >
+                      <option value="">Any Valves</option>
+                      {engineRefData.valves?.map((valve: any) => (
+                        <option key={valve.ValvesID} value={valve.ValvesID}>{valve.ValvesPerEngine} Valves</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                
+                {/* Power and Fuel */}
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Horse Power</label>
+                    <select 
+                      value={engineFilters.horsePower}
+                      onChange={(e) => setEngineFilters({...engineFilters, horsePower: e.target.value})}
+                      className="w-full p-2 border rounded text-sm"
+                    >
+                      <option value="">Any HP</option>
+                      {engineRefData.powerOutputs?.map((po: any) => (
+                        <option key={po.PowerOutputID} value={po.PowerOutputID}>{po.HorsePower} HP</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Engine Manufacturer</label>
+                    <select 
+                      value={engineFilters.engineManufacturer}
+                      onChange={(e) => setEngineFilters({...engineFilters, engineManufacturer: e.target.value})}
+                      className="w-full p-2 border rounded text-sm"
+                    >
+                      <option value="">Any Manufacturer</option>
+                      {engineRefData.manufacturers?.map((mfr: any) => (
+                        <option key={mfr.MfrID} value={mfr.MfrID}>{mfr.MfrName}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Engine VIN</label>
+                    <select 
+                      value={engineFilters.engineVIN}
+                      onChange={(e) => setEngineFilters({...engineFilters, engineVIN: e.target.value})}
+                      className="w-full p-2 border rounded text-sm"
+                    >
+                      <option value="">Any VIN</option>
+                      {engineRefData.engineVINs?.map((evin: any) => (
+                        <option key={evin.EngineVINID} value={evin.EngineVINID}>{evin.EngineVINName}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                
+                <div className="text-sm text-gray-600 mt-4">
+                  <p>Showing {components.engineConfigs.length} engine configurations for selected BaseVehicle</p>
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <p>Select a BaseVehicle in the Vehicle tab to view engine options.</p>
+              </div>
+            )}
+          </div>
+        );
+      
+      case 'Transmission':
+        return (
+          <div className="space-y-4">
+            {vehicleData.baseVehicleId ? (
+              <>
+                {/* Primary Transmission Fields */}
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Speeds</label>
+                    <select 
+                      value={transmissionFilters.speeds}
+                      onChange={(e) => setTransmissionFilters({...transmissionFilters, speeds: e.target.value})}
+                      className="w-full p-2 border rounded text-sm"
+                    >
+                      <option value="">Any Speeds</option>
+                      {transmissionRefData.speeds?.map((speed: any) => (
+                        <option key={speed.TransmissionNumSpeedsID} value={speed.TransmissionNumSpeedsID}>
+                          {speed.TransmissionNumSpeeds}-Speed
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Control</label>
+                    <select 
+                      value={transmissionFilters.control}
+                      onChange={(e) => setTransmissionFilters({...transmissionFilters, control: e.target.value})}
+                      className="w-full p-2 border rounded text-sm"
+                    >
+                      <option value="">Any Control</option>
+                      {transmissionRefData.controlTypes?.map((control: any) => (
+                        <option key={control.TransmissionControlTypeID} value={control.TransmissionControlTypeID}>
+                          {control.TransmissionControlTypeName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Type</label>
+                    <select 
+                      value={transmissionFilters.type}
+                      onChange={(e) => setTransmissionFilters({...transmissionFilters, type: e.target.value})}
+                      className="w-full p-2 border rounded text-sm"
+                    >
+                      <option value="">Any Type</option>
+                      {transmissionRefData.types?.map((type: any) => (
+                        <option key={type.TransmissionTypeID} value={type.TransmissionTypeID}>
+                          {type.TransmissionTypeName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                
+                {/* Manufacturer Information */}
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Mfr Name</label>
+                    <select 
+                      value={transmissionFilters.mfrName}
+                      onChange={(e) => setTransmissionFilters({...transmissionFilters, mfrName: e.target.value})}
+                      className="w-full p-2 border rounded text-sm"
+                    >
+                      <option value="">Any Manufacturer</option>
+                      {transmissionRefData.manufacturers?.map((mfr: any) => (
+                        <option key={mfr.MfrID} value={mfr.MfrID}>{mfr.MfrName}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Mfr Code</label>
+                    <select 
+                      value={transmissionFilters.mfrCode}
+                      onChange={(e) => setTransmissionFilters({...transmissionFilters, mfrCode: e.target.value})}
+                      className="w-full p-2 border rounded text-sm"
+                    >
+                      <option value="">Any Mfr Code</option>
+                      {transmissionRefData.mfrCodes?.map((code: any) => (
+                        <option key={code.TransmissionMfrCodeID} value={code.TransmissionMfrCodeID}>
+                          {code.TransmissionMfrCode}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Elec Controlled</label>
+                    <select 
+                      value={transmissionFilters.elecControlled}
+                      onChange={(e) => setTransmissionFilters({...transmissionFilters, elecControlled: e.target.value})}
+                      className="w-full p-2 border rounded text-sm"
+                    >
+                      <option value="">Any</option>
+                      {transmissionRefData.elecControlled?.map((ec: any) => (
+                        <option key={ec.ElecControlledID} value={ec.ElecControlledID}>
+                          {ec.ElecControlled}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                
+                <div className="text-sm text-gray-600 mt-4">
+                  <p>Showing {components.transmissions.length} transmission configurations for selected BaseVehicle</p>
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <p>Select a BaseVehicle in the Vehicle tab to view transmission options.</p>
+              </div>
+            )}
+          </div>
+        );
+      
+      case 'Brake':
+        return (
+          <div className="space-y-4">
+            {vehicleData.baseVehicleId ? (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Front Brake</label>
+                    <select 
+                      value={vehicleSystemsFilters.frontBrake}
+                      onChange={(e) => setVehicleSystemsFilters({...vehicleSystemsFilters, frontBrake: e.target.value})}
+                      className="w-full p-2 border rounded text-sm"
+                    >
+                      <option value="">Any Front Brake</option>
+                      {vehicleSystemsRefData.frontBrakeTypes?.map((brake: any) => (
+                        <option key={brake.BrakeTypeID} value={brake.BrakeTypeID}>
+                          {brake.BrakeTypeName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Rear Brake</label>
+                    <select 
+                      value={vehicleSystemsFilters.rearBrake}
+                      onChange={(e) => setVehicleSystemsFilters({...vehicleSystemsFilters, rearBrake: e.target.value})}
+                      className="w-full p-2 border rounded text-sm"
+                    >
+                      <option value="">Any Rear Brake</option>
+                      {vehicleSystemsRefData.rearBrakeTypes?.map((brake: any) => (
+                        <option key={brake.BrakeTypeID} value={brake.BrakeTypeID}>
+                          {brake.BrakeTypeName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Brake System</label>
+                    <select 
+                      value={vehicleSystemsFilters.brakeSystem}
+                      onChange={(e) => setVehicleSystemsFilters({...vehicleSystemsFilters, brakeSystem: e.target.value})}
+                      className="w-full p-2 border rounded text-sm"
+                    >
+                      <option value="">Any Brake System</option>
+                      {vehicleSystemsRefData.brakeSystems?.map((system: any) => (
+                        <option key={system.BrakeSystemID} value={system.BrakeSystemID}>
+                          {system.BrakeSystemName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Brake ABS</label>
+                    <select 
+                      value={vehicleSystemsFilters.brakeABS}
+                      onChange={(e) => setVehicleSystemsFilters({...vehicleSystemsFilters, brakeABS: e.target.value})}
+                      className="w-full p-2 border rounded text-sm"
+                    >
+                      <option value="">Any ABS</option>
+                      {vehicleSystemsRefData.brakeABS?.map((abs: any) => (
+                        <option key={abs.BrakeABSID} value={abs.BrakeABSID}>
+                          {abs.BrakeABSName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                
+                <div className="text-sm text-gray-600 mt-4">
+                  <p>Showing {components.brakeConfigs.length} brake configurations for selected BaseVehicle</p>
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <p>Select a BaseVehicle in the Vehicle tab to view brake options.</p>
+              </div>
+            )}
+          </div>
+        );
+      
+      case 'Drive':
+        return (
+          <div className="space-y-4">
+            {vehicleData.baseVehicleId ? (
+              <div>
+                <label className="block text-sm font-medium mb-1">Drive Type</label>
+                <select 
+                  value={vehicleSystemsFilters.driveType}
+                  onChange={(e) => setVehicleSystemsFilters({...vehicleSystemsFilters, driveType: e.target.value})}
+                  className="w-full p-2 border rounded text-sm max-w-md"
+                >
+                  <option value="">Any Drive Type</option>
+                  {vehicleSystemsRefData.driveTypes?.map((drive: any) => (
+                    <option key={drive.DriveTypeID} value={drive.DriveTypeID}>
+                      {drive.DriveTypeName}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">{vehicleSystemsRefData.driveTypes?.length || 0} drive types available</p>
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <p>Select a BaseVehicle in the Vehicle tab to view drive type options.</p>
+              </div>
+            )}
+          </div>
+        );
+      
+      case 'Spring':
+        return (
+          <div className="space-y-4">
+            {vehicleData.baseVehicleId ? (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Front Spring</label>
+                    <select 
+                      value={vehicleSystemsFilters.frontSpring}
+                      onChange={(e) => setVehicleSystemsFilters({...vehicleSystemsFilters, frontSpring: e.target.value})}
+                      className="w-full p-2 border rounded text-sm"
+                    >
+                      <option value="">Any Front Spring</option>
+                      {vehicleSystemsRefData.frontSpringTypes?.map((spring: any) => (
+                        <option key={spring.SpringTypeID} value={spring.SpringTypeID}>
+                          {spring.SpringTypeName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Rear Spring</label>
+                    <select 
+                      value={vehicleSystemsFilters.rearSpring}
+                      onChange={(e) => setVehicleSystemsFilters({...vehicleSystemsFilters, rearSpring: e.target.value})}
+                      className="w-full p-2 border rounded text-sm"
+                    >
+                      <option value="">Any Rear Spring</option>
+                      {vehicleSystemsRefData.rearSpringTypes?.map((spring: any) => (
+                        <option key={spring.SpringTypeID} value={spring.SpringTypeID}>
+                          {spring.SpringTypeName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                
+                <div className="text-sm text-gray-600 mt-4">
+                  <p>Spring suspension options for selected BaseVehicle</p>
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <p>Select a BaseVehicle in the Vehicle tab to view spring options.</p>
+              </div>
+            )}
+          </div>
+        );
+      
+      case 'Steering':
+        return (
+          <div className="space-y-4">
+            {vehicleData.baseVehicleId ? (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Steering Type</label>
+                    <select 
+                      value={vehicleSystemsFilters.steeringType}
+                      onChange={(e) => setVehicleSystemsFilters({...vehicleSystemsFilters, steeringType: e.target.value})}
+                      className="w-full p-2 border rounded text-sm"
+                    >
+                      <option value="">Any Steering Type</option>
+                      {vehicleSystemsRefData.steeringTypes?.map((type: any) => (
+                        <option key={type.SteeringTypeID} value={type.SteeringTypeID}>
+                          {type.SteeringTypeName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Steering System</label>
+                    <select 
+                      value={vehicleSystemsFilters.steeringSystem}
+                      onChange={(e) => setVehicleSystemsFilters({...vehicleSystemsFilters, steeringSystem: e.target.value})}
+                      className="w-full p-2 border rounded text-sm"
+                    >
+                      <option value="">Any Steering System</option>
+                      {vehicleSystemsRefData.steeringSystems?.map((system: any) => (
+                        <option key={system.SteeringSystemID} value={system.SteeringSystemID}>
+                          {system.SteeringSystemName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                
+                <div className="text-sm text-gray-600 mt-4">
+                  <p>Steering system options for selected BaseVehicle</p>
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <p>Select a BaseVehicle in the Vehicle tab to view steering options.</p>
+              </div>
+            )}
+          </div>
+        );
+      
+      case 'Wheel':
+        return (
+          <div className="space-y-4">
+            {vehicleData.baseVehicleId ? (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Base Inches</label>
+                    <select 
+                      value={physicalSpecsFilters.wheelbaseInches}
+                      onChange={(e) => setPhysicalSpecsFilters({...physicalSpecsFilters, wheelbaseInches: e.target.value})}
+                      className="w-full p-2 border rounded text-sm"
+                    >
+                      <option value="">Any Wheelbase (in)</option>
+                      {physicalSpecsRefData.wheelbases?.map((wb: any) => (
+                        <option key={wb.WheelBaseID} value={wb.WheelBaseID}>
+                          {wb.WheelBase}" wheelbase
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Base Metric</label>
+                    <select 
+                      value={physicalSpecsFilters.wheelbaseMetric}
+                      onChange={(e) => setPhysicalSpecsFilters({...physicalSpecsFilters, wheelbaseMetric: e.target.value})}
+                      className="w-full p-2 border rounded text-sm"
+                    >
+                      <option value="">Any Wheelbase (mm)</option>
+                      {physicalSpecsRefData.wheelbases?.map((wb: any) => (
+                        <option key={wb.WheelBaseID} value={wb.WheelBaseID}>
+                          {wb.WheelBaseMetric}mm wheelbase
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                
+                <div className="text-sm text-gray-600 mt-4">
+                  <p>Wheelbase specifications for selected BaseVehicle</p>
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <p>Select a BaseVehicle in the Vehicle tab to view wheelbase options.</p>
+              </div>
+            )}
+          </div>
+        );
+      
+      case 'Bed':
+        return (
+          <div className="space-y-4">
+            {vehicleData.baseVehicleId ? (
+              physicalSpecsRefData.isTruck ? (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Bed Type</label>
+                      <select 
+                        value={physicalSpecsFilters.bedType}
+                        onChange={(e) => setPhysicalSpecsFilters({...physicalSpecsFilters, bedType: e.target.value})}
+                        className="w-full p-2 border rounded text-sm"
+                      >
+                        <option value="">Any Bed Type</option>
+                        {physicalSpecsRefData.bedTypes?.map((bt: any) => (
+                          <option key={bt.BedTypeID} value={bt.BedTypeID}>
+                            {bt.BedTypeName}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Length Inches</label>
+                      <select 
+                        value={physicalSpecsFilters.bedLengthInches}
+                        onChange={(e) => setPhysicalSpecsFilters({...physicalSpecsFilters, bedLengthInches: e.target.value})}
+                        className="w-full p-2 border rounded text-sm"
+                      >
+                        <option value="">Any Length (in)</option>
+                        {physicalSpecsRefData.bedLengths?.map((bl: any) => (
+                          <option key={bl.BedLengthID} value={bl.BedLengthID}>
+                            {bl.BedLength}" bed
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Length Metric</label>
+                    <select 
+                      value={physicalSpecsFilters.bedLengthMetric}
+                      onChange={(e) => setPhysicalSpecsFilters({...physicalSpecsFilters, bedLengthMetric: e.target.value})}
+                      className="w-full p-2 border rounded text-sm max-w-md"
+                    >
+                      <option value="">Any Length (mm)</option>
+                      {physicalSpecsRefData.bedLengths?.map((bl: any) => (
+                        <option key={bl.BedLengthID} value={bl.BedLengthID}>
+                          {bl.BedLengthMetric}mm bed
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div className="text-sm text-gray-600 mt-4">
+                    <p>Truck bed specifications for selected BaseVehicle</p>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <p>Bed specifications are only available for truck/pickup vehicles.</p>
+                  <p className="text-sm mt-2">This vehicle type does not have bed configurations.</p>
+                </div>
+              )
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <p>Select a BaseVehicle in the Vehicle tab to view bed options.</p>
+              </div>
+            )}
+          </div>
+        );
+      
+      case 'Body':
+        return (
+          <div className="space-y-4">
+            {vehicleData.baseVehicleId ? (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Body Type</label>
+                    <select 
+                      value={physicalSpecsFilters.bodyType}
+                      onChange={(e) => setPhysicalSpecsFilters({...physicalSpecsFilters, bodyType: e.target.value})}
+                      className="w-full p-2 border rounded text-sm"
+                    >
+                      <option value="">Any Body Type</option>
+                      {physicalSpecsRefData.bodyTypes?.map((bt: any) => (
+                        <option key={bt.BodyTypeID} value={bt.BodyTypeID}>
+                          {bt.BodyTypeName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Num Doors</label>
+                    <select 
+                      value={physicalSpecsFilters.numDoors}
+                      onChange={(e) => setPhysicalSpecsFilters({...physicalSpecsFilters, numDoors: e.target.value})}
+                      className="w-full p-2 border rounded text-sm"
+                    >
+                      <option value="">Any Doors</option>
+                      {physicalSpecsRefData.bodyNumDoors?.map((bnd: any) => (
+                        <option key={bnd.BodyNumDoorsID} value={bnd.BodyNumDoorsID}>
+                          {bnd.BodyNumDoors} doors
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                
+                <div className="text-sm text-gray-600 mt-4">
+                  <p>Body style specifications for selected BaseVehicle</p>
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <p>Select a BaseVehicle in the Vehicle tab to view body options.</p>
+              </div>
+            )}
+          </div>
+        );
+      
+      case 'MfrBody':
+        return (
+          <div className="space-y-4">
+            {vehicleData.baseVehicleId ? (
+              <>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Body Code</label>
+                  <select 
+                    value={physicalSpecsFilters.mfrBodyCode}
+                    onChange={(e) => setPhysicalSpecsFilters({...physicalSpecsFilters, mfrBodyCode: e.target.value})}
+                    className="w-full p-2 border rounded text-sm max-w-md"
+                  >
+                    <option value="">Any Manufacturer Body Code</option>
+                    {physicalSpecsRefData.mfrBodyCodes?.map((mbc: any) => (
+                      <option key={mbc.MfrBodyCodeID} value={mbc.MfrBodyCodeID}>
+                        {mbc.MfrBodyCodeName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div className="text-sm text-gray-600 mt-4">
+                  <p>Manufacturer-specific body codes for selected BaseVehicle</p>
+                  <p className="text-xs text-gray-500 mt-1">{physicalSpecsRefData.mfrBodyCodes?.length || 0} manufacturer body codes available</p>
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <p>Select a BaseVehicle in the Vehicle tab to view manufacturer body codes.</p>
+              </div>
+            )}
+          </div>
+        );
+      
+      case 'Item':
+        return (
+          <div className="space-y-4">
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Category</label>
+                <select 
+                  value={itemSpecs.category}
+                  onChange={(e) => setItemSpecs({...itemSpecs, category: e.target.value})}
+                  className="w-full p-2 border rounded text-sm"
+                >
+                  <option value="">Select Category</option>
+                  {pcdbRefData.categories?.map((cat: string) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">Sub Category</label>
+                <select 
+                  value={itemSpecs.subCategory}
+                  onChange={(e) => setItemSpecs({...itemSpecs, subCategory: e.target.value})}
+                  className="w-full p-2 border rounded text-sm"
+                >
+                  <option value="">Select Sub Category</option>
+                  {pcdbRefData.subCategories?.map((subCat: string) => (
+                    <option key={subCat} value={subCat}>{subCat}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">Part Type</label>
+                <select 
+                  value={itemSpecs.partType}
+                  onChange={(e) => setItemSpecs({...itemSpecs, partType: e.target.value})}
+                  className="w-full p-2 border rounded text-sm"
+                >
+                  <option value="">Select Part Type</option>
+                  {pcdbRefData.partTypes?.map((pt: any) => (
+                    <option key={pt.PartTypeID} value={pt.PartTypeID}>{pt.PartTypeName}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Position</label>
+                <select 
+                  value={itemSpecs.position}
+                  onChange={(e) => setItemSpecs({...itemSpecs, position: e.target.value})}
+                  className="w-full p-2 border rounded text-sm"
+                >
+                  <option value="">Select Position</option>
+                  {pcdbRefData.positions?.map((pos: any) => (
+                    <option key={pos.PositionID} value={pos.PositionID}>{pos.PositionName}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">Qty</label>
+                <input 
+                  type="number"
+                  value={itemSpecs.quantity}
+                  onChange={(e) => setItemSpecs({...itemSpecs, quantity: parseInt(e.target.value) || 1})}
+                  className="w-full p-2 border rounded text-sm"
+                  min="1"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">Mfr Label</label>
+                <input 
+                  type="text"
+                  value={itemSpecs.mfrLabel}
+                  onChange={(e) => setItemSpecs({...itemSpecs, mfrLabel: e.target.value})}
+                  className="w-full p-2 border rounded text-sm"
+                  placeholder="Manufacturer label"
+                />
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-1">Notes</label>
+              <textarea 
+                value={itemSpecs.notes}
+                onChange={(e) => setItemSpecs({...itemSpecs, notes: e.target.value})}
+                className="w-full p-2 border rounded text-sm"
+                rows={3}
+                placeholder="Additional application notes"
+              />
+            </div>
+            
+            <div className="text-sm text-gray-600">
+              <p>Part and application specifications from PCdb</p>
+            </div>
+          </div>
+        );
+      
+      case 'Validation':
+        return (
+          <div className="space-y-6">
+            {/* Mapping Validation Section */}
+            <div className="border rounded-lg p-4">
+              <h4 className="text-md font-medium mb-3">Mapping Validation</h4>
+              
+              {/* Filter Controls */}
+              <div className="flex items-center space-x-4 mb-4">
+                <span className="text-sm font-medium">Filter:</span>
+                {['All', 'Valid', 'Invalid', 'Conflict'].map(filter => (
+                  <label key={filter} className="flex items-center">
+                    <input 
+                      type="radio"
+                      name="validationFilter"
+                      value={filter}
+                      checked={validationFilter === filter}
+                      onChange={(e) => setValidationFilter(e.target.value)}
+                      className="mr-1"
+                    />
+                    <span className="text-sm">{filter}</span>
+                  </label>
+                ))}
+              </div>
+              
+              {/* Action Buttons */}
+              <div className="flex space-x-2 mb-4">
+                <button 
+                  onClick={exportToXML}
+                  className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
+                >
+                  Export
+                </button>
+                <button 
+                  onClick={() => selectedApplications.forEach(removeApplication)}
+                  disabled={selectedApplications.length === 0}
+                  className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 disabled:bg-gray-400"
+                >
+                  Delete
+                </button>
+                <button 
+                  onClick={validateApplications}
+                  className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
+                >
+                  Validate
+                </button>
+              </div>
+              
+              {/* Mapping Errors */}
+              {validationErrors.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium mb-1">Mapping Errors</label>
+                  <textarea 
+                    value={validationErrors.join('\n')}
+                    readOnly
+                    className="w-full p-2 border rounded text-sm bg-red-50"
+                    rows={4}
+                  />
+                </div>
+              )}
+            </div>
+            
+            {/* Enhanced Application Mapping Table */}
+            <div className="border rounded-lg p-4">
+              <h4 className="text-md font-medium mb-3">Application Mapping ({filteredApplications.length})</h4>
+              
+              {filteredApplications.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left p-2">
+                          <input 
+                            type="checkbox"
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedApplications(filteredApplications.map(app => app.id));
+                              } else {
+                                setSelectedApplications([]);
+                              }
+                            }}
+                          />
+                        </th>
+                        <th className="text-left p-2">Vehicle</th>
+                        <th className="text-left p-2">Item</th>
+                        <th className="text-left p-2">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredApplications.map((app: any) => (
+                        <tr key={app.id} className="border-b hover:bg-gray-50">
+                          <td className="p-2">
+                            <input 
+                              type="checkbox"
+                              checked={selectedApplications.includes(app.id)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedApplications([...selectedApplications, app.id]);
+                                } else {
+                                  setSelectedApplications(selectedApplications.filter(id => id !== app.id));
+                                }
+                              }}
+                            />
+                          </td>
+                          <td className="p-2">
+                            <div className="font-medium">{app.year} {app.make} {app.model}</div>
+                            <div className="text-xs text-gray-500">BaseVehicle: {app.baseVehicleId}</div>
+                          </td>
+                          <td className="p-2">
+                            <div className="font-medium">{app.partType || 'No Part Type'}</div>
+                            <div className="text-xs text-gray-500">
+                              {app.position && `Position: ${app.position}`}
+                              {app.quantity && ` | Qty: ${app.quantity}`}
+                              {app.mfrLabel && ` | Label: ${app.mfrLabel}`}
+                            </div>
+                          </td>
+                          <td className="p-2">
+                            <div className="flex space-x-1">
+                              <button className="text-blue-600 hover:text-blue-800 text-xs">Edit</button>
+                              <button 
+                                onClick={() => removeApplication(app.id)}
+                                className="text-red-600 hover:text-red-800 text-xs"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="text-center py-4 text-gray-500">
+                  <p>No applications match the current filter.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      
+      default:
+        return (
+          <div className="text-center py-8 text-gray-500">
+            <p className="text-lg">Coming Soon</p>
+            <p className="text-sm mt-2">{activeTab} tab functionality will be implemented next.</p>
+          </div>
+        );
     }
   };
 
   return (
-    <div className="space-y-4">
-      {/* Top Panel - Application Form */}
-      <div className="border rounded-lg bg-white">
-        {selectedApp ? (
-          <>
-            {/* Tabs */}
-            <div className="border-b bg-white">
-              <nav className="flex">
-                {tabs.map((tab) => {
-                  const Icon = tab.icon;
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`flex items-center px-4 py-2 text-sm font-medium border-b-2 ${
-                        activeTab === tab.id
-                          ? 'border-blue-500 text-blue-600'
-                          : 'border-transparent text-gray-500 hover:text-gray-700'
-                      }`}
-                    >
-                      <Icon className="w-4 h-4 mr-2" />
-                      {tab.name}
-                    </button>
-                  );
-                })}
-              </nav>
-            </div>
-
-            {/* Tab Content */}
-            <div className="p-4">
-              {activeTab === 'vehicle' && (
-                <div>
-                  <VehicleTab application={selectedApp} formData={formData} updateFormData={updateFormData} />
-                </div>
-              )}
-              {activeTab === 'engine' && (
-                <div>
-                  <EngineTab application={selectedApp} formData={formData} updateFormData={updateFormData} />
-                </div>
-              )}
-              {activeTab === 'transmission' && (
-                <div>
-                  <TransmissionTab application={selectedApp} formData={formData} updateFormData={updateFormData} />
-                </div>
-              )}
-              {activeTab === 'body' && (
-                <div>
-                  <BodyTab application={selectedApp} formData={formData} updateFormData={updateFormData} />
-                </div>
-              )}
-              {activeTab === 'fuel' && (
-                <div>
-                  <FuelTab application={selectedApp} formData={formData} updateFormData={updateFormData} />
-                </div>
-              )}
-              {activeTab === 'brakes' && (
-                <div>
-                  <BrakesTab application={selectedApp} formData={formData} updateFormData={updateFormData} />
-                </div>
-              )}
-              {activeTab === 'application' && (
-                <div>
-                  <ApplicationTab application={selectedApp} formData={formData} updateFormData={updateFormData} />
-                </div>
-              )}
-            </div>
-          </>
-        ) : (
-          <div className="flex items-center justify-center h-64 text-gray-500">
-            Select an application to edit
-          </div>
-        )}
-      </div>
-
-      {/* Bottom Panel - Applications List */}
-      <div className="border rounded-lg bg-gray-50">
-        <div className="p-3 border-b bg-white">
-          <div className="flex justify-between items-center">
-            <h3 className="font-medium">Applications ({applications.length})</h3>
-            <div className="flex gap-2">
-              <button
-                onClick={addApplication}
-                className="flex items-center px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
-              >
-                <Plus className="w-4 h-4 mr-1" />
-                Add
-              </button>
-              <button
-                onClick={deleteApplication}
-                disabled={!selectedApp}
-                className="flex items-center px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
-              >
-                <Trash2 className="w-4 h-4 mr-1" />
-                Delete
-              </button>
-              <button className="flex items-center px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700">
-                <Save className="w-4 h-4 mr-1" />
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 p-3 max-h-48 overflow-y-auto">
-          {applications.map((app, index) => (
-            <div
-              key={app.id}
-              onClick={() => setSelectedApp(app)}
-              className={`p-3 border rounded cursor-pointer hover:bg-gray-100 ${
-                selectedApp?.id === app.id ? 'bg-blue-50 border-blue-200' : 'bg-white'
+    <div className="space-y-6">
+      {/* Tab Navigation */}
+      <div className="border-b border-gray-200">
+        <nav className="-mb-px flex space-x-8 overflow-x-auto">
+          {tabs.map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === tab
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              <div className="font-medium text-sm">
-                App {index + 1}
-              </div>
-              <div className="text-xs text-gray-600 mt-1">
-                {app.year && app.make && app.model 
-                  ? `${app.year} ${app.make} ${app.model}`
-                  : app.baseVehicleId 
-                    ? `BaseVehicle: ${app.baseVehicleId}`
-                    : 'New Application'
-                }
-              </div>
-            </div>
+              {tab}
+            </button>
           ))}
-          {applications.length === 0 && (
-            <div className="col-span-full p-4 text-center text-gray-500 text-sm">
-              No applications. Click Add to create one.
-            </div>
-          )}
-        </div>
+        </nav>
       </div>
-    </div>
-  );
-};
 
-interface TabProps {
-  application: ACESApplication;
-  formData: Partial<ACESApplication>;
-  updateFormData: (field: string, value: any) => void;
-}
+      {/* Tab Content */}
+      <div className="min-h-[400px]">
+        {renderTabContent()}
+      </div>
 
-const VehicleTab: React.FC<TabProps> = ({ application, formData, updateFormData }) => {
-  const selectedYear = formData.year || application.year;
-  const selectedMakeId = formData.makeId || application.makeId;
-  const selectedModelId = formData.modelId || application.modelId;
-  
-  const { data: years = [] } = useQuery({ 
-    queryKey: ['vcdb-years', selectedMakeId, selectedModelId], 
-    queryFn: () => vcdbApi.getYears(selectedMakeId, selectedModelId)
-  });
-  
-  const { data: makes = [] } = useQuery({ 
-    queryKey: ['vcdb-makes', selectedYear, selectedModelId], 
-    queryFn: () => vcdbApi.getMakes(selectedYear, selectedModelId),
-    onError: (error) => console.error('Makes query error:', error)
-  });
-  
-  const { data: models = [] } = useQuery({ 
-    queryKey: ['vcdb-models', selectedYear, selectedMakeId], 
-    queryFn: () => vcdbApi.getModels(selectedYear, selectedMakeId)
-  });
-  
-  const { data: baseVehicles = [] } = useQuery({ 
-    queryKey: ['vcdb-basevehicles', selectedYear, selectedMakeId, selectedModelId], 
-    queryFn: () => vcdbApi.getBaseVehicles(selectedYear, selectedMakeId, selectedModelId),
-    enabled: !!selectedYear && !!selectedMakeId && !!selectedModelId
-  });
-  
-  const baseVehicleId = baseVehicles.length > 0 ? baseVehicles[0].id : null;
-  
-  // Auto-update BaseVehicle ID when Year/Make/Model combination resolves
-  React.useEffect(() => {
-    if (baseVehicleId && baseVehicleId !== (formData.baseVehicleId || application.baseVehicleId)) {
-      updateFormData('baseVehicleId', baseVehicleId);
-    }
-  }, [baseVehicleId]);
-  const { data: subModels = [] } = useQuery({ 
-    queryKey: ['vcdb-submodels', baseVehicleId], 
-    queryFn: () => vcdbApi.getSubModels(baseVehicleId),
-    enabled: !!baseVehicleId
-  });
-  const { data: vehicleTypes = [] } = useQuery({ queryKey: ['vcdb-vehicletypes'], queryFn: vcdbApi.getVehicleTypes });
-  const { data: manufacturers = [] } = useQuery({ queryKey: ['vcdb-manufacturers'], queryFn: vcdbApi.getManufacturers });
-  const { data: equipmentModels = [] } = useQuery({ queryKey: ['vcdb-equipmentmodels'], queryFn: vcdbApi.getEquipmentModels });
-
-  return (
-    <div className="space-y-4">
-      <div className="mb-4">
-        <h4 className="font-medium mb-2">Vehicle Identification Pattern</h4>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">BaseVehicle ID</label>
-            <input 
-              type="text" 
-              className="w-full border rounded px-3 py-2 bg-gray-100" 
-              value={baseVehicles.length > 0 ? baseVehicles[0].id : 'Select Year/Make/Model'}
-              readOnly
-            />
+      {/* Application Mapping Table */}
+      <div className="border-t pt-6">
+        <div className="flex justify-between items-center mb-4">
+          <h4 className="text-md font-medium">Application Mapping ({currentApplications.length})</h4>
+          <button 
+            onClick={addApplication}
+            disabled={!vehicleData.baseVehicleId}
+            className="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700 disabled:bg-gray-400"
+          >
+            Add Application
+          </button>
+        </div>
+        
+        {currentApplications.length > 0 ? (
+          <div className="space-y-2">
+            {currentApplications.map((app: any) => (
+              <div key={app.id} className="bg-gray-50 p-3 rounded border flex justify-between items-center">
+                <div className="text-sm">
+                  <span className="font-medium">{app.year} {app.make} {app.model}</span>
+                  {app.group && <span className="ml-2 text-gray-600">Group: {app.group}</span>}
+                  {app.region && <span className="ml-2 text-gray-600">Region: {app.region}</span>}
+                </div>
+                <button 
+                  onClick={() => removeApplication(app.id)}
+                  className="text-red-600 hover:text-red-800 text-sm"
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Year</label>
-            <select 
-              className="w-full border rounded px-3 py-2" 
-              value={selectedYear || ''}
-              onChange={(e) => {
-                const newYear = parseInt(e.target.value) || null;
-                updateFormData('year', newYear);
-                // Only clear BaseVehicle, let other fields stay if they're still valid
-                updateFormData('baseVehicleId', null);
-              }}
-            >
-              <option value="">Select Year...</option>
-              {years.map(year => (
-                <option key={year.id} value={year.id}>{year.name}</option>
-              ))}
-            </select>
+        ) : (
+          <div className="text-center py-4 text-gray-500">
+            <p>No applications added yet. Configure vehicle details above and click "Add Application".</p>
           </div>
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">Make</label>
-          <select 
-            className="w-full border rounded px-3 py-2" 
-            value={selectedMakeId || ''}
-            onChange={(e) => {
-              updateFormData('makeId', parseInt(e.target.value) || null);
-              updateFormData('baseVehicleId', null);
-            }}
-
-          >
-            <option value="">Select Make...</option>
-            {makes.map(make => (
-              <option key={make.id} value={make.id}>{make.name}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Model</label>
-          <select 
-            className="w-full border rounded px-3 py-2" 
-            value={formData.modelId || application.modelId || ''}
-            onChange={(e) => {
-              updateFormData('modelId', parseInt(e.target.value) || null);
-              updateFormData('baseVehicleId', null);
-            }}
-          >
-            <option value="">Select Model...</option>
-            {models.map(model => (
-              <option key={model.id} value={model.id}>{model.name}</option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">Sub Model</label>
-          <select 
-            className="w-full border rounded px-3 py-2" 
-            disabled={!baseVehicleId}
-            value={formData.subModelId || application.subModelId || ''}
-            onChange={(e) => updateFormData('subModelId', parseInt(e.target.value) || null)}
-          >
-            <option value="">Select Sub Model...</option>
-            {subModels.map(subModel => (
-              <option key={subModel.id} value={subModel.id}>{subModel.name}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-      
-      <div className="border-t pt-4">
-        <h4 className="font-medium mb-2">Equipment Applications (ACES 4.2)</h4>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Manufacturer</label>
-            <select 
-              className="w-full border rounded px-3 py-2" 
-              value={formData.manufacturerId || application.manufacturerId || ''}
-              onChange={(e) => updateFormData('manufacturerId', parseInt(e.target.value) || null)}
-            >
-              <option value="">Select Manufacturer...</option>
-              {manufacturers.slice(0, 50).map(mfr => (
-                <option key={mfr.id} value={mfr.id}>{mfr.name}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Equipment Model</label>
-            <select 
-              className="w-full border rounded px-3 py-2" 
-              value={formData.equipmentModelId || application.equipmentModelId || ''}
-              onChange={(e) => updateFormData('equipmentModelId', parseInt(e.target.value) || null)}
-            >
-              <option value="">Select Equipment...</option>
-              {equipmentModels.slice(0, 50).map(eq => (
-                <option key={eq.id} value={eq.id}>{eq.name}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Vehicle Type</label>
-            <select 
-              className="w-full border rounded px-3 py-2" 
-              value={formData.vehicleTypeId || application.vehicleTypeId || ''}
-              onChange={(e) => updateFormData('vehicleTypeId', parseInt(e.target.value) || null)}
-            >
-              <option value="">Select Type...</option>
-              {vehicleTypes.slice(0, 50).map(type => (
-                <option key={type.id} value={type.id}>{type.name}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Production Years</label>
-            <div className="flex gap-2">
-              <input 
-                type="number" 
-                placeholder="Start" 
-                className="w-1/2 border rounded px-3 py-2" 
-                value={formData.productionStart || application.productionStart || ''}
-                onChange={(e) => updateFormData('productionStart', parseInt(e.target.value) || null)}
-              />
-              <input 
-                type="number" 
-                placeholder="End" 
-                className="w-1/2 border rounded px-3 py-2" 
-                value={formData.productionEnd || application.productionEnd || ''}
-                onChange={(e) => updateFormData('productionEnd', parseInt(e.target.value) || null)}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const EngineTab: React.FC<TabProps> = ({ application, formData, updateFormData }) => {
-  const baseVehicleId = formData.baseVehicleId || application.baseVehicleId;
-  const { data: engineBases = [] } = useQuery({ 
-    queryKey: ['vcdb-enginebases', baseVehicleId], 
-    queryFn: () => vcdbApi.getEngineBases(baseVehicleId),
-    enabled: !!baseVehicleId
-  });
-  const { data: engineBlocks = [] } = useQuery({ queryKey: ['vcdb-engineblocks'], queryFn: vcdbApi.getEngineBlocks });
-  const { data: engineVINs = [] } = useQuery({ queryKey: ['vcdb-enginevins'], queryFn: vcdbApi.getEngineVINs });
-  const { data: aspirations = [] } = useQuery({ queryKey: ['vcdb-aspirations'], queryFn: vcdbApi.getAspirations });
-
-  return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">Engine Base</label>
-          <select 
-            className="w-full border rounded px-3 py-2" 
-            value={formData.engineBaseId || application.engineBaseId || ''}
-            onChange={(e) => updateFormData('engineBaseId', parseInt(e.target.value) || null)}
-            disabled={!baseVehicleId}
-          >
-            <option value="">{baseVehicleId ? 'Select Engine Base...' : 'Select BaseVehicle first'}</option>
-            {engineBases.map(engine => (
-              <option key={engine.id} value={engine.id}>{engine.name}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Engine Block</label>
-          <select 
-            className="w-full border rounded px-3 py-2" 
-            value={formData.engineBlockId || application.engineBlockId || ''}
-            onChange={(e) => updateFormData('engineBlockId', parseInt(e.target.value) || null)}
-          >
-            <option value="">Select Engine Block...</option>
-            {engineBlocks.map(block => (
-              <option key={block.id} value={block.id}>{block.name}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Engine VIN</label>
-          <select 
-            className="w-full border rounded px-3 py-2" 
-            value={formData.engineVINId || application.engineVINId || ''}
-            onChange={(e) => updateFormData('engineVINId', parseInt(e.target.value) || null)}
-          >
-            <option value="">Select Engine VIN...</option>
-            {engineVINs.map(vin => (
-              <option key={vin.id} value={vin.id}>{vin.name}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Aspiration</label>
-          <select 
-            className="w-full border rounded px-3 py-2" 
-            value={formData.aspirationId || application.aspirationId || ''}
-            onChange={(e) => updateFormData('aspirationId', parseInt(e.target.value) || null)}
-          >
-            <option value="">Select Aspiration...</option>
-            {aspirations.map(asp => (
-              <option key={asp.id} value={asp.id}>{asp.name}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const TransmissionTab: React.FC<TabProps> = ({ application, formData, updateFormData }) => {
-  const baseVehicleId = formData.baseVehicleId || application.baseVehicleId;
-  const { data: transmissionTypes = [] } = useQuery({ 
-    queryKey: ['vcdb-transmissiontypes', baseVehicleId], 
-    queryFn: () => vcdbApi.getTransmissionTypes(baseVehicleId),
-    enabled: !!baseVehicleId
-  });
-  const { data: driveTypes = [] } = useQuery({ queryKey: ['vcdb-drivetypes'], queryFn: vcdbApi.getDriveTypes });
-
-  const numSpeedsOptions = [
-    { id: 1, name: '1-Speed' }, { id: 2, name: '2-Speed' }, { id: 3, name: '3-Speed' },
-    { id: 4, name: '4-Speed' }, { id: 5, name: '5-Speed' }, { id: 6, name: '6-Speed' },
-    { id: 7, name: '7-Speed' }, { id: 8, name: '8-Speed' }, { id: 9, name: '9-Speed' },
-    { id: 10, name: '10-Speed' }, { id: 11, name: '11-Speed' }, { id: 12, name: '12-Speed' },
-    { id: 13, name: 'CVT' }
-  ];
-
-  const controlTypeOptions = [
-    { id: 'Electronic', name: 'Electronic' },
-    { id: 'Hydraulic', name: 'Hydraulic' },
-    { id: 'Manual', name: 'Manual' },
-    { id: 'Mechanical', name: 'Mechanical' }
-  ];
-
-  return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">Transmission Type</label>
-          <select 
-            className="w-full border rounded px-3 py-2"
-            value={formData.transmissionTypeId || application.transmissionTypeId || ''}
-            onChange={(e) => updateFormData('transmissionTypeId', parseInt(e.target.value) || null)}
-            disabled={!baseVehicleId}
-          >
-            <option value="">{baseVehicleId ? 'Select Transmission...' : 'Select BaseVehicle first'}</option>
-            {transmissionTypes.map(trans => (
-              <option key={trans.id} value={trans.id}>{trans.name}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Drive Type</label>
-          <select 
-            className="w-full border rounded px-3 py-2"
-            value={formData.driveTypeId || application.driveTypeId || ''}
-            onChange={(e) => updateFormData('driveTypeId', parseInt(e.target.value) || null)}
-          >
-            <option value="">Select Drive Type...</option>
-            {driveTypes.map(drive => (
-              <option key={drive.id} value={drive.id}>{drive.name}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Number of Speeds</label>
-          <select 
-            className="w-full border rounded px-3 py-2"
-            value={formData.numSpeeds || application.numSpeeds || ''}
-            onChange={(e) => updateFormData('numSpeeds', parseInt(e.target.value) || null)}
-          >
-            <option value="">Select Speeds...</option>
-            {numSpeedsOptions.map(speed => (
-              <option key={speed.id} value={speed.id}>{speed.name}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Control Type</label>
-          <select 
-            className="w-full border rounded px-3 py-2"
-            value={formData.controlType || application.controlType || ''}
-            onChange={(e) => updateFormData('controlType', e.target.value)}
-          >
-            <option value="">Select Control Type...</option>
-            {controlTypeOptions.map(control => (
-              <option key={control.id} value={control.id}>{control.name}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const BodyTab: React.FC<TabProps> = ({ application, formData, updateFormData }) => {
-  const baseVehicleId = formData.baseVehicleId || application.baseVehicleId;
-  const { data: bodyTypes = [] } = useQuery({ 
-    queryKey: ['vcdb-bodytypes', baseVehicleId], 
-    queryFn: () => vcdbApi.getBodyTypes(baseVehicleId),
-    enabled: !!baseVehicleId
-  });
-
-  const doorOptions = [
-    { id: 2, name: '2 Door' }, { id: 3, name: '3 Door' }, 
-    { id: 4, name: '4 Door' }, { id: 5, name: '5 Door' }
-  ];
-
-  const bedLengthOptions = [
-    { id: 'Short', name: 'Short Bed' },
-    { id: 'Standard', name: 'Standard Bed' },
-    { id: 'Long', name: 'Long Bed' },
-    { id: 'Extra Long', name: 'Extra Long Bed' }
-  ];
-
-  return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">Body Type</label>
-          <select 
-            className="w-full border rounded px-3 py-2"
-            value={formData.bodyTypeId || application.bodyTypeId || ''}
-            onChange={(e) => updateFormData('bodyTypeId', parseInt(e.target.value) || null)}
-            disabled={!baseVehicleId}
-          >
-            <option value="">{baseVehicleId ? 'Select Body Type...' : 'Select BaseVehicle first'}</option>
-            {bodyTypes.map(body => (
-              <option key={body.id} value={body.id}>{body.name}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Number of Doors</label>
-          <select 
-            className="w-full border rounded px-3 py-2"
-            value={formData.numDoors || application.numDoors || ''}
-            onChange={(e) => updateFormData('numDoors', parseInt(e.target.value) || null)}
-          >
-            <option value="">Select Doors...</option>
-            {doorOptions.map(door => (
-              <option key={door.id} value={door.id}>{door.name}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Bed Length</label>
-          <select 
-            className="w-full border rounded px-3 py-2"
-            value={formData.bedLength || application.bedLength || ''}
-            onChange={(e) => updateFormData('bedLength', e.target.value)}
-          >
-            <option value="">Select Bed Length...</option>
-            {bedLengthOptions.map(bed => (
-              <option key={bed.id} value={bed.id}>{bed.name}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Wheelbase (inches)</label>
-          <input 
-            type="number" 
-            className="w-full border rounded px-3 py-2" 
-            placeholder="e.g., 119.0"
-            step="0.1"
-            value={formData.wheelbase || application.wheelbase || ''}
-            onChange={(e) => updateFormData('wheelbase', parseFloat(e.target.value) || null)}
-          />
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const BrakesTab: React.FC<TabProps> = ({ application, formData, updateFormData }) => {
-  const brakeSystemOptions = [
-    { id: 'Hydraulic', name: 'Hydraulic' },
-    { id: 'Air', name: 'Air' },
-    { id: 'Electric', name: 'Electric' },
-    { id: 'Mechanical', name: 'Mechanical' }
-  ];
-
-  return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">Brake System</label>
-          <select 
-            className="w-full border rounded px-3 py-2"
-            value={formData.brakeSystem || application.brakeSystem || ''}
-            onChange={(e) => updateFormData('brakeSystem', e.target.value)}
-          >
-            <option value="">Select Brake System...</option>
-            {brakeSystemOptions.map(system => (
-              <option key={system.id} value={system.id}>{system.name}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">ABS</label>
-          <select 
-            className="w-full border rounded px-3 py-2"
-            value={formData.abs || application.abs || ''}
-            onChange={(e) => updateFormData('abs', e.target.value)}
-          >
-            <option value="">Select ABS...</option>
-            <option value="Yes">Yes</option>
-            <option value="No">No</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Front Brake Type</label>
-          <input 
-            type="text" 
-            className="w-full border rounded px-3 py-2"
-            placeholder="e.g., Disc, Drum"
-            value={formData.frontBrakeType || application.frontBrakeType || ''}
-            onChange={(e) => updateFormData('frontBrakeType', e.target.value)}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Rear Brake Type</label>
-          <input 
-            type="text" 
-            className="w-full border rounded px-3 py-2"
-            placeholder="e.g., Disc, Drum"
-            value={formData.rearBrakeType || application.rearBrakeType || ''}
-            onChange={(e) => updateFormData('rearBrakeType', e.target.value)}
-          />
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const FuelTab: React.FC<TabProps> = ({ application, formData, updateFormData }) => {
-  const baseVehicleId = formData.baseVehicleId || application.baseVehicleId;
-  const { data: fuelTypes = [] } = useQuery({ 
-    queryKey: ['vcdb-fueltypes', baseVehicleId], 
-    queryFn: () => vcdbApi.getFuelTypes(baseVehicleId),
-    enabled: !!baseVehicleId
-  });
-
-  const fuelDeliveryOptions = [
-    { id: 'Fuel Injection', name: 'Fuel Injection' },
-    { id: 'Carburetor', name: 'Carburetor' },
-    { id: 'Direct Injection', name: 'Direct Injection' },
-    { id: 'Port Injection', name: 'Port Injection' }
-  ];
-
-  const fuelSystemOptions = [
-    { id: 'Single Point', name: 'Single Point' },
-    { id: 'Multi Point', name: 'Multi Point' },
-    { id: 'Sequential', name: 'Sequential' },
-    { id: 'Batch Fire', name: 'Batch Fire' }
-  ];
-
-  const ignitionOptions = [
-    { id: 'Electronic', name: 'Electronic' },
-    { id: 'Distributorless', name: 'Distributorless' },
-    { id: 'Coil on Plug', name: 'Coil on Plug' },
-    { id: 'Distributor', name: 'Distributor' }
-  ];
-
-  return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">Fuel Type</label>
-          <select 
-            className="w-full border rounded px-3 py-2"
-            value={formData.fuelTypeId || application.fuelTypeId || ''}
-            onChange={(e) => updateFormData('fuelTypeId', parseInt(e.target.value) || null)}
-            disabled={!baseVehicleId}
-          >
-            <option value="">{baseVehicleId ? 'Select Fuel Type...' : 'Select BaseVehicle first'}</option>
-            {fuelTypes.map(fuel => (
-              <option key={fuel.id} value={fuel.id}>{fuel.name}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Fuel Delivery Type</label>
-          <select 
-            className="w-full border rounded px-3 py-2"
-            value={formData.fuelDeliveryType || application.fuelDeliveryType || ''}
-            onChange={(e) => updateFormData('fuelDeliveryType', e.target.value)}
-          >
-            <option value="">Select Delivery Type...</option>
-            {fuelDeliveryOptions.map(delivery => (
-              <option key={delivery.id} value={delivery.id}>{delivery.name}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Fuel System Design</label>
-          <select 
-            className="w-full border rounded px-3 py-2"
-            value={formData.fuelSystemDesign || application.fuelSystemDesign || ''}
-            onChange={(e) => updateFormData('fuelSystemDesign', e.target.value)}
-          >
-            <option value="">Select System Design...</option>
-            {fuelSystemOptions.map(system => (
-              <option key={system.id} value={system.id}>{system.name}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Ignition System</label>
-          <select 
-            className="w-full border rounded px-3 py-2"
-            value={formData.ignitionSystem || application.ignitionSystem || ''}
-            onChange={(e) => updateFormData('ignitionSystem', e.target.value)}
-          >
-            <option value="">Select Ignition System...</option>
-            {ignitionOptions.map(ignition => (
-              <option key={ignition.id} value={ignition.id}>{ignition.name}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const ApplicationTab: React.FC<TabProps> = ({ application, formData, updateFormData }) => {
-  const { data: partTypes = [] } = useQuery({ queryKey: ['vcdb-parttypes'], queryFn: vcdbApi.getPartTypes });
-  const { data: positions = [] } = useQuery({ queryKey: ['vcdb-positions'], queryFn: vcdbApi.getPositions });
-  const { data: qualifiers = [] } = useQuery({ queryKey: ['vcdb-qualifiers'], queryFn: vcdbApi.getQualifiers });
-
-  return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">Quantity</label>
-          <input 
-            type="number" 
-            className="w-full border rounded px-3 py-2" 
-            value={formData.quantity || application.quantity || 1} 
-            min="1"
-            onChange={(e) => updateFormData('quantity', parseInt(e.target.value) || 1)}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Part Type</label>
-          <select 
-            className="w-full border rounded px-3 py-2" 
-            value={formData.partTypeId || application.partTypeId || ''}
-            onChange={(e) => updateFormData('partTypeId', parseInt(e.target.value) || null)}
-          >
-            <option value="">Select Part Type...</option>
-            {partTypes.slice(0, 100).map(part => (
-              <option key={part.id} value={part.id}>{part.name}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Position</label>
-          <select 
-            className="w-full border rounded px-3 py-2" 
-            value={formData.positionId || application.positionId || ''}
-            onChange={(e) => updateFormData('positionId', parseInt(e.target.value) || null)}
-          >
-            <option value="">Select Position...</option>
-            {positions.map(pos => (
-              <option key={pos.id} value={pos.id}>{pos.name}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Manufacturer Label</label>
-          <input 
-            type="text" 
-            className="w-full border rounded px-3 py-2" 
-            placeholder="OEM part label"
-            value={formData.mfrLabel || application.mfrLabel || ''}
-            onChange={(e) => updateFormData('mfrLabel', e.target.value)}
-          />
-        </div>
-      </div>
-      
-      <div className="border-t pt-4">
-        <h4 className="font-medium mb-2">Qualifiers</h4>
-        <div className="grid grid-cols-1 gap-2">
-          <select className="w-full border rounded px-3 py-2">
-            <option value="">Add Qualifier...</option>
-            {qualifiers.slice(0, 50).map(qual => (
-              <option key={qual.id} value={qual.id}>{qual.name}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-      
-      <div className="border-t pt-4">
-        <h4 className="font-medium mb-2">Asset References (ACES 4.2)</h4>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Asset Name</label>
-            <input 
-              type="text" 
-              className="w-full border rounded px-3 py-2" 
-              value={formData.assetName || application.assetName || ''}
-              onChange={(e) => updateFormData('assetName', e.target.value)}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Asset Item Order</label>
-            <input 
-              type="number" 
-              className="w-full border rounded px-3 py-2" 
-              value={formData.assetItemOrder || application.assetItemOrder || ''}
-              onChange={(e) => updateFormData('assetItemOrder', parseInt(e.target.value) || null)}
-            />
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

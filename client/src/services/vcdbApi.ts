@@ -129,5 +129,66 @@ export const vcdbApi = {
   getBrands: async (): Promise<Array<{id: string, name: string}>> => {
     const response = await fetch(`${API_BASE}/brands`);
     return response.json();
+  },
+
+  // Real VCdb API methods
+  getTransmissionNumSpeeds: async (): Promise<Array<{id: number, name: string}>> => {
+    const response = await fetch(`${API_BASE}/transmissionnumspeeds`);
+    return response.json();
+  },
+
+  getTransmissionControlTypes: async (): Promise<Array<{id: number, name: string}>> => {
+    const response = await fetch(`${API_BASE}/transmissioncontroltypes`);
+    return response.json();
+  },
+
+  getBodyNumDoors: async (): Promise<Array<{id: number, name: string}>> => {
+    const response = await fetch(`${API_BASE}/bodynumdoors`);
+    return response.json();
+  },
+
+  getBedLengths: async (): Promise<Array<{id: number, name: string}>> => {
+    const response = await fetch(`${API_BASE}/bedlengths`);
+    return response.json();
+  },
+
+  getBedTypes: async (): Promise<Array<{id: number, name: string}>> => {
+    const response = await fetch(`${API_BASE}/bedtypes`);
+    return response.json();
+  },
+
+  getFuelDeliveryTypes: async (): Promise<Array<{id: number, name: string}>> => {
+    const response = await fetch(`${API_BASE}/fueldeliverytypes`);
+    return response.json();
+  },
+
+  getFuelSystemDesigns: async (): Promise<Array<{id: number, name: string}>> => {
+    const response = await fetch(`${API_BASE}/fuelsystemdesigns`);
+    return response.json();
+  },
+
+  getIgnitionSystemTypes: async (): Promise<Array<{id: number, name: string}>> => {
+    const response = await fetch(`${API_BASE}/ignitionsystemtypes`);
+    return response.json();
+  },
+
+  getBrakeSystems: async (): Promise<Array<{id: number, name: string}>> => {
+    const response = await fetch(`${API_BASE}/brakesystems`);
+    return response.json();
+  },
+
+  getBrakeABS: async (): Promise<Array<{id: number, name: string}>> => {
+    const response = await fetch(`${API_BASE}/brakeabs`);
+    return response.json();
+  },
+
+  getBrakeTypes: async (): Promise<Array<{id: number, name: string}>> => {
+    const response = await fetch(`${API_BASE}/braketypes`);
+    return response.json();
+  },
+
+  getWheelbases: async (): Promise<Array<{id: number, name: string}>> => {
+    const response = await fetch(`${API_BASE}/wheelbases`);
+    return response.json();
   }
 };

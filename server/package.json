@@ -8,6 +8,7 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.883.0",
     "adm-zip": "^0.5.16",
     "aws-sdk": "^2.1543.0",
     "cors": "^2.8.5",

@@ -1,9 +1,44 @@
 import { parseStringPromise, Builder } from 'xml2js';
 import { ACESApplication, ImportResult } from '../types';
-import { vcdbService } from './vcdbService';
+import { extractedDatabaseService } from './extractedDatabaseService.js';
 
 export class ACESService {
   
+  /**
+   * Get all years from VCdb
+   */
+  async getYears(): Promise<any[]> {
+    return extractedDatabaseService.getTableData('VCdb', '20231026_Year');
+  }
+
+  /**
+   * Get makes by year
+   */
+  async getMakesByYear(year: number): Promise<any[]> {
+    return extractedDatabaseService.getTableData('VCdb', '20231026_Make');
+  }
+
+  /**
+   * Get models by year and make
+   */
+  async getModelsByYearMake(year: number, make: string): Promise<any[]> {
+    return extractedDatabaseService.getTableData('VCdb', '20231026_Model');
+  }
+
+  /**
+   * Get submodels by year, make, and model
+   */
+  async getSubModelsByYearMakeModel(year: number, make: string, model: string): Promise<any[]> {
+    return extractedDatabaseService.getTableData('VCdb', '20231026_SubModel');
+  }
+
+  /**
+   * Get engines by year, make, and model
+   */
+  async getEnginesByYearMakeModel(year: number, make: string, model: string): Promise<any[]> {
+    return extractedDatabaseService.getTableData('VCdb', '20231026_EngineBase');
+  }
+
   /**
    * Parse ACES XML (supports 4.1 and 4.2)
    */
@@ -59,13 +94,8 @@ export class ACESService {
     if (app.BaseVehicle) {
       application.baseVehicleId = parseInt(app.BaseVehicle[0].$.id);
       
-      // Resolve vehicle info from VCdb
-      const vehicleInfo = vcdbService.resolveVehicleInfo(application.baseVehicleId);
-      if (vehicleInfo) {
-        application.year = vehicleInfo.year;
-        application.make = vehicleInfo.make;
-        application.model = vehicleInfo.model;
-      }
+      // TODO: Resolve vehicle info from extracted VCdb data
+      // const vehicleInfo = this.resolveVehicleInfo(application.baseVehicleId);
     }
 
     // Year/Make/Model pattern
@@ -78,11 +108,13 @@ export class ACESService {
     }
     if (app.Make) {
       application.makeId = parseInt(app.Make[0].$.id);
-      application.make = vcdbService.getMakeName(application.makeId);
+      // TODO: Get make name from extracted data
+      // application.make = this.getMakeName(application.makeId);
     }
     if (app.Model) {
       application.modelId = parseInt(app.Model[0].$.id);
-      application.model = vcdbService.getModelName(application.modelId);
+      // TODO: Get model name from extracted data
+      // application.model = this.getModelName(application.modelId);
     }
 
     // Equipment pattern (ACES 4.2+)

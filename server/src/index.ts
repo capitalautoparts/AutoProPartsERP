@@ -5,15 +5,20 @@ import customersRouter from './routes/customers.js';
 import ordersRouter from './routes/orders.js';
 import jobsRouter from './routes/jobs.js';
 import acesRouter from './routes/aces.js';
+import acesCorrectedRouter from './routes/aces-corrected.js';
+import aces42Router from './routes/aces42.js';
 
 import databaseRouter from './routes/database.js';
 import debugRouter from './routes/debug.js';
 import referenceRouter from './routes/reference.js';
 import vcdbRouter from './routes/vcdb.js';
+import extractedDatabasesRouter from './routes/extractedDatabases.js';
+import deploymentRouter from './routes/deployment.js';
 import { dataService } from './services/dataService.js';
 import { fullVcdbService } from './services/fullVcdbService.js';
 import { pcdbPadbService } from './services/pcdbPadbService.js';
 import { qdbBrandService } from './services/qdbBrandService.js';
+import { extractedDatabaseService } from './services/extractedDatabaseService.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -29,11 +34,15 @@ app.use('/api/customers', customersRouter);
 app.use('/api/orders', ordersRouter);
 app.use('/api/jobs', jobsRouter);
 app.use('/api/aces', acesRouter);
+app.use('/api/aces-corrected', acesCorrectedRouter);
+app.use('/api/aces42', aces42Router);
 
 app.use('/api/database', databaseRouter);
 app.use('/api/debug', debugRouter);
 app.use('/api/reference', referenceRouter);
 app.use('/api/vcdb', vcdbRouter);
+app.use('/api/databases', extractedDatabasesRouter);
+app.use('/api/deployment', deploymentRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -101,6 +110,9 @@ async function startServer() {
     console.log(`📊 Qdb qualifiers loaded: ${qualifiers.length}`);
     console.log(`📊 Brands loaded: ${brands.length}`);
     
+    // Load extracted databases
+    await extractedDatabaseService.loadAllDatabases();
+    
     if (makes.length > 0) {
       console.log(`📊 Sample makes: ${makes.slice(0, 3).map(m => m.name).join(', ')}`);
     }
@@ -111,6 +123,15 @@ async function startServer() {
       console.log(`🔧 Products API: http://localhost:${PORT}/api/products`);
       console.log(`👥 Customers API: http://localhost:${PORT}/api/customers`);
       console.log(`📦 Orders API: http://localhost:${PORT}/api/orders`);
+      console.log(`🗄️ Databases API: http://localhost:${PORT}/api/databases`);
+      console.log(`📊 VCdb API: http://localhost:${PORT}/api/databases/vcdb`);
+      console.log(`📊 PCdb API: http://localhost:${PORT}/api/databases/pcdb`);
+      console.log(`📊 PAdb API: http://localhost:${PORT}/api/databases/padb`);
+      console.log(`📊 Qdb API: http://localhost:${PORT}/api/databases/qdb`);
+      console.log(`🚀 Deployment API: http://localhost:${PORT}/api/deployment`);
+      console.log(`🏗️ ACES Builder: http://localhost:${PORT}/api/aces`);
+      console.log(`✅ ACES Corrected: http://localhost:${PORT}/api/aces-corrected`);
+      console.log(`🏗️ ACES 4.2 Builder: http://localhost:${PORT}/api/aces42`);
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);

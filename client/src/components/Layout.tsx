@@ -7,7 +7,8 @@ import {
   TrendingUp, 
   Calculator, 
   ShoppingBag, 
-  Warehouse
+  Warehouse,
+  Settings
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -19,6 +20,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { name: 'Products (PIM)', href: '/products', icon: Package },
     { name: 'Orders', href: '/orders', icon: ShoppingCart },
     { name: 'Customers', href: '/customers', icon: Users },
+
     { name: 'Marketing', href: '/marketing', icon: TrendingUp },
     { name: 'Accounting', href: '/accounting', icon: Calculator },
     { name: 'Purchasing', href: '/purchasing', icon: ShoppingBag },

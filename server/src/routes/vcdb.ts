@@ -212,6 +212,123 @@ router.get('/brands', (req, res) => {
   res.json(brands);
 });
 
+// Real VCdb endpoints
+router.get('/transmissionnumspeeds', (req, res) => {
+  const numSpeeds = fullVcdbService.getAllTransmissionNumSpeeds();
+  res.json(numSpeeds);
+});
+
+router.get('/transmissioncontroltypes', (req, res) => {
+  const controlTypes = fullVcdbService.getAllTransmissionControlTypes();
+  res.json(controlTypes);
+});
+
+router.get('/bodynumdoors', (req, res) => {
+  const numDoors = fullVcdbService.getAllBodyNumDoors();
+  res.json(numDoors);
+});
+
+router.get('/bedlengths', (req, res) => {
+  const bedLengths = fullVcdbService.getAllBedLengths();
+  res.json(bedLengths);
+});
+
+router.get('/bedtypes', (req, res) => {
+  const bedTypes = fullVcdbService.getAllBedTypes();
+  res.json(bedTypes);
+});
+
+router.get('/fueldeliverytypes', (req, res) => {
+  const fuelDeliveryTypes = fullVcdbService.getAllFuelDeliveryTypes();
+  res.json(fuelDeliveryTypes);
+});
+
+router.get('/fuelsystemdesigns', (req, res) => {
+  const fuelSystemDesigns = fullVcdbService.getAllFuelSystemDesigns();
+  res.json(fuelSystemDesigns);
+});
+
+router.get('/ignitionsystemtypes', (req, res) => {
+  const ignitionSystemTypes = fullVcdbService.getAllIgnitionSystemTypes();
+  res.json(ignitionSystemTypes);
+});
+
+router.get('/brakesystems', (req, res) => {
+  const brakeSystems = fullVcdbService.getAllBrakeSystems();
+  res.json(brakeSystems);
+});
+
+router.get('/brakeabs', (req, res) => {
+  const brakeABS = fullVcdbService.getAllBrakeABS();
+  res.json(brakeABS);
+});
+
+router.get('/braketypes', (req, res) => {
+  const brakeTypes = fullVcdbService.getAllBrakeTypes();
+  res.json(brakeTypes);
+});
+
+router.get('/wheelbases', (req, res) => {
+  const wheelbases = fullVcdbService.getAllWheelbases();
+  res.json(wheelbases);
+});
+
+// Additional VCdb endpoints
+router.get('/transmissionnumspeeds', (req, res) => {
+  const numSpeeds = fullVcdbService.getAllTransmissionNumSpeeds();
+  res.json(numSpeeds);
+});
+
+router.get('/transmissioncontroltypes', (req, res) => {
+  const controlTypes = fullVcdbService.getAllTransmissionControlTypes();
+  res.json(controlTypes);
+});
+
+router.get('/bodynumdoors', (req, res) => {
+  const numDoors = fullVcdbService.getAllBodyNumDoors();
+  res.json(numDoors);
+});
+
+router.get('/bedlengths', (req, res) => {
+  const bedLengths = fullVcdbService.getAllBedLengths();
+  res.json(bedLengths);
+});
+
+router.get('/fueldeliverytypes', (req, res) => {
+  const fuelDeliveryTypes = fullVcdbService.getAllFuelDeliveryTypes();
+  res.json(fuelDeliveryTypes);
+});
+
+router.get('/fuelsystemdesigns', (req, res) => {
+  const fuelSystemDesigns = fullVcdbService.getAllFuelSystemDesigns();
+  res.json(fuelSystemDesigns);
+});
+
+router.get('/ignitionsystemtypes', (req, res) => {
+  const ignitionSystemTypes = fullVcdbService.getAllIgnitionSystemTypes();
+  res.json(ignitionSystemTypes);
+});
+
+router.get('/brakesystems', (req, res) => {
+  const brakeSystems = fullVcdbService.getAllBrakeSystems();
+  res.json(brakeSystems);
+});
+
+router.get('/brakeabs', (req, res) => {
+  const brakeABS = fullVcdbService.getAllBrakeABS();
+  res.json(brakeABS);
+});
+
+router.get('/frontbraketypes', (req, res) => {
+  const frontBrakeTypes = fullVcdbService.getAllFrontBrakeTypes();
+  res.json(frontBrakeTypes);
+});
+
+router.get('/rearbraketypes', (req, res) => {
+  const rearBrakeTypes = fullVcdbService.getAllRearBrakeTypes();
+  res.json(rearBrakeTypes);
+});
+
 // Debug endpoint for 2005 Dodge Ram 1500 (BaseVehicleID 18253)
 router.get('/debug/ram1500', (req, res) => {
   const baseVehicleId = 18253; // 2005 Dodge Ram 1500
