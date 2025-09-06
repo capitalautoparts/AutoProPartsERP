@@ -1,0 +1,5 @@
+FuelSystemControlTypeID|FuelSystemControlTypeName
+3|N/R
+4|U/K
+5|Electronic
+6|Mechanical

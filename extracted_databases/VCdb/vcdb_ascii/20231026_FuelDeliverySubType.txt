@@ -1,0 +1,9 @@
+FuelDeliverySubTypeID|FuelDeliverySubTypeName
+38|IDI
+3|N/R
+4|U/K
+5|MFI
+6|2BBL
+23|DI
+25|Common Rail
+27|MPI

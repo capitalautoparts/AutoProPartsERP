@@ -1,0 +1,5 @@
+BrakeABSID|BrakeABSName
+4|U/K
+6|Non-ABS
+7|2-Wheel ABS
+8|4-Wheel ABS

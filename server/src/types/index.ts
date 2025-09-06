@@ -16,7 +16,6 @@ export interface Product {
   updatedAt: string;
   // ACES/PIES related data
   acesApplications?: ACESApplication[];
-  aces42Applications?: import('./aces42').ACES42ApplicationInternal[];
   piesItem?: PIESItem;
   piesDescriptions?: PIESDescription[];
   piesPrices?: PIESPrice[];
@@ -30,50 +29,74 @@ export interface Product {
   piesMarketCopy?: PIESMarketCopy[];
 }
 
-// ACES 4.1 Types (Legacy - use ACES42 for new implementations)
+// Unified ACES Application (supports all versions)
 export interface ACESApplication {
   id: string;
   productId: string;
+  
+  // Vehicle identification (BaseVehicle pattern)
   baseVehicleId?: number;
   subModelId?: number;
+  
+  // Year/Make/Model pattern
   yearId?: number;
   makeId?: number;
   modelId?: number;
+  
+  // Equipment pattern (ACES 4.2+)
+  manufacturerId?: number;
+  equipmentModelId?: number;
+  equipmentBaseId?: number;
+  vehicleTypeId?: number;
+  productionStart?: number;
+  productionEnd?: number;
+  
+  // Engine specifications
   engineId?: number;
-  // Vehicle attributes
+  engineBaseId?: number;
+  engineVINId?: number;
+  engineBlockId?: number;
+  aspirationId?: number;
+  
+  // Application details
+  quantity: number;
+  partTypeId: number;
+  positionId?: number;
+  
+  // Qualifiers and notes
+  qualifiers?: ACESQualifier[];
+  notes?: string[];
+  
+  // Asset references (ACES 4.2+)
+  assetName?: string;
+  assetItemOrder?: number;
+  
+  // Validation control (ACES 4.2+)
+  validateApplication?: boolean;
+  
+  // Resolved display data (populated from VCdb)
   year?: number;
   make?: string;
   model?: string;
   subModel?: string;
   engine?: string;
-  engineVIN?: string;
-  transmission?: string;
-  driveType?: string;
-  steering?: string;
-  bodyType?: string;
-  bodyNumDoors?: string;
-  bedLength?: string;
-  bedType?: string;
-  wheelBase?: string;
-  // Application attributes
-  position?: string;
-  quantity?: number;
-  partType?: string;
-  mfrLabel?: string;
-  // Qualifiers
-  qualifiers?: ACESQualifier[];
-  notes?: string[];
+  manufacturerName?: string;
+  equipmentModelName?: string;
+  vehicleTypeName?: string;
+  partTypeName?: string;
+  positionName?: string;
+  
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ACESQualifier {
   id: string;
   applicationId: string;
-  qualifierType: string;
-  qualifierValue: string;
+  qualifierId: number;
+  qualifierText?: string;
+  parameters?: string[];
 }
-
-// Re-export ACES 4.2 types
-export * from './aces42';
 
 // PIES 7.2 Types
 export interface PIESItem {

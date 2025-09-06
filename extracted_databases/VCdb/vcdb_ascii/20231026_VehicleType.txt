@@ -1,0 +1,21 @@
+VehicleTypeID|VehicleTypeName|VehicleTypeGroupID
+5|Car|2
+6|Truck|2
+7|Van|2
+44|ATV|7
+46|Offroad Motorcycle|7
+47|Personal Watercraft|7
+48|Snowmobile|7
+49|Street Motorcycle|7
+2187|Medium/Heavy Truck|8
+2231|2-Wheel Drive Tractor|10
+2236|Snowblower|13
+2259|Combine|10
+2270|Terminal Push-Back Tractor|11
+2277|Forestry - Tree Harvester|9
+2301|Residential Generator Sets|12
+2318|Compact Utility Loader|9
+2327|Outboard Engine|14
+2371|Medium/Heavy Duty Engine|16
+2372|Residential Zero-Turn Mower|13
+2369|Motorhome/Recreational Vehicle|8

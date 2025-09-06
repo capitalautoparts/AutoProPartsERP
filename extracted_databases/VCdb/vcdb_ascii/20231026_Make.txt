@@ -1,0 +1,33 @@
+MakeID|MakeName
+7|Fiat
+11|Land Rover
+23|Renault
+39|Chrysler
+40|Dodge
+47|Chevrolet
+54|Ford
+67|Nissan
+74|Volkswagen
+76|Toyota
+496|Mack
+497|Freightliner
+499|Hino
+547|DAF
+559|Kenworth
+614|Giant Motors
+629|Husqvarna
+1177|Bombardier
+1181|Cannondale
+1203|Sea-Doo
+1254|Autocar LLC.
+1255|Blue Bird
+1289|Dina Transit Bus
+1302|Capacity Of Texas
+1324|Datsun
+1326|JAC
+1352|Chery
+1353|DFM
+1356|Polestar
+1370|Lynx
+1375|Airstream
+1423|Dinamo

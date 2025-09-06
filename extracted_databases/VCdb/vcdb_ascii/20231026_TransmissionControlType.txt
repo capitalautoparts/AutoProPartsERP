@@ -1,0 +1,5 @@
+TransmissionControlTypeID|TransmissionControlTypeName
+4|U/K
+5|Automatic
+6|Manual
+9|Automatic CVT

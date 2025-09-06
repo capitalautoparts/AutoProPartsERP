@@ -1,0 +1,13 @@
+EngineVINID|EngineVINName
+1|-
+12|A
+13|B
+19|F
+20|N
+24|6
+29|G
+31|D
+38|9
+39|L
+41|P
+42|U

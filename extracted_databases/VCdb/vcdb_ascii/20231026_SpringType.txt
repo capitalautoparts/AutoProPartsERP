@@ -1,0 +1,6 @@
+SpringTypeID|SpringTypeName
+4|U/K
+5|Coil
+6|Leaf
+7|Torsion Bar
+8|Air

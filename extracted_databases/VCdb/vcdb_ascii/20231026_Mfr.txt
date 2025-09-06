@@ -1,0 +1,42 @@
+MfrID|MfrName
+2|N/A
+658|John Deere
+4|U/K
+674|Case IH
+763|Generac
+9|Volkswagen
+823|Troy-Bilt
+11|General Motors
+825|Tug
+832|Komatsu
+14|Mitsubishi
+834|Gravely
+971|Evinrude
+1562|Big Dog
+678|Kawasaki
+21|Chrysler
+22|Ford
+806|Kubota
+24|Getrag
+849|IHI-Shibaura
+27|Isuzu
+1593|Tecumseh
+35|Nissan
+38|Renault
+43|Toyota
+45|Tremec
+50|ZF
+55|Fiat
+65|Jaguar
+94|Cummins
+389|Mercedes-Benz
+479|Detroit Diesel
+481|Hino
+482|PACCAR
+598|FAW
+653|Eaton
+655|Mack
+665|Datsun
+668|JAC
+1318|Chery
+1372|Polestar

@@ -1,0 +1,5 @@
+Abbreviation|Description|LongDescription
+-|Intentionally blank.|Indicates the attribute was intentionally left blank because it is both VCDB and legacy, and the legacy value was blank. Also used for Wheelbase for cars, since Wheelbase was not populated for cars.
+N/A|Not Available|Indicates the attribute was researched, but no information is available at this time.
+N/R|Not Required|Indicates the attribute is not required for the vehicle.
+U/K|Unknown|Indicates the attribute has not been researched yet.

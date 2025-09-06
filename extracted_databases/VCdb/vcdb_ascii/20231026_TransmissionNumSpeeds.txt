@@ -1,0 +1,13 @@
+TransmissionNumSpeedsID|TransmissionNumSpeeds
+3|N/R
+4|U/K
+5|3
+6|4
+7|5
+9|6
+10|8
+16|1
+19|9
+23|10
+24|13
+27|12

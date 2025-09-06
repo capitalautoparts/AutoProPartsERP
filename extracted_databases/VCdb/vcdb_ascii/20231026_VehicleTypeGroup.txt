@@ -1,0 +1,4 @@
+VehicleTypeGroupID|VehicleTypeGroupName
+2|Light Duty
+8|Medium/Heavy Truck
+7|Powersports

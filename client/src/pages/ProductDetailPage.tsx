@@ -3,8 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Save } from 'lucide-react';
 import { productsApi } from '../services/api';
-import { acesService } from '../services/acesService';
-import { ACES42Tab } from '../components/ACES42Tab';
+import { vcdbApi } from '../services/vcdbApi';
+
+
 
 const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -21,8 +22,7 @@ const ProductDetailPage: React.FC = () => {
 
   const tabs = [
     { id: 'profile', name: 'Profile' },
-    { id: 'aces', name: 'ACES 4.1 (78 fields)' },
-    { id: 'aces42', name: 'ACES 4.2 (Equipment + Assets)' },
+    { id: 'aces', name: 'ACES Applications (All Versions)' },
     { id: 'pies-item', name: 'PIES Item (28 fields)' },
     { id: 'pies-desc', name: 'PIES Description (6 fields)' },
     { id: 'pies-price', name: 'PIES Price (13 fields)' },
@@ -85,7 +85,7 @@ const ProductDetailPage: React.FC = () => {
       <div className="bg-white shadow rounded-lg p-6">
         {activeTab === 'profile' && <ProfileTab product={product} />}
         {activeTab === 'aces' && <ACESTab product={product} />}
-        {activeTab === 'aces42' && <ACES42Tab product={product} onUpdate={() => {}} />}
+
         {activeTab === 'pies-item' && <PIESItemTab product={product} />}
         {activeTab === 'pies-desc' && <PIESDescriptionTab product={product} />}
         {activeTab === 'pies-price' && <PIESPriceTab />}
@@ -596,33 +596,29 @@ const VehicleSelector: React.FC = () => {
   const [selectedModel, setSelectedModel] = useState<string>('');
 
   const { data: years = [] } = useQuery({
-    queryKey: ['aces-years'],
-    queryFn: acesService.getYears
+    queryKey: ['vcdb-years'],
+    queryFn: vcdbApi.getYears
   });
 
   const { data: makes = [] } = useQuery({
-    queryKey: ['aces-makes', selectedYear],
-    queryFn: () => acesService.getMakes(selectedYear!),
-    enabled: !!selectedYear
+    queryKey: ['vcdb-makes'],
+    queryFn: vcdbApi.getMakes
   });
 
-  const { data: models = [] } = useQuery({
-    queryKey: ['aces-models', selectedYear, selectedMake],
-    queryFn: () => acesService.getModels(selectedYear!, selectedMake),
-    enabled: !!selectedYear && !!selectedMake
+  const { data: partTypes = [] } = useQuery({
+    queryKey: ['vcdb-parttypes'],
+    queryFn: vcdbApi.getPartTypes
   });
 
-  const { data: subModels = [] } = useQuery({
-    queryKey: ['aces-submodels', selectedYear, selectedMake, selectedModel],
-    queryFn: () => acesService.getSubModels(selectedYear!, selectedMake, selectedModel),
-    enabled: !!selectedYear && !!selectedMake && !!selectedModel
+  const { data: positions = [] } = useQuery({
+    queryKey: ['vcdb-positions'],
+    queryFn: vcdbApi.getPositions
   });
 
-  const { data: engines = [] } = useQuery({
-    queryKey: ['aces-engines', selectedYear, selectedMake, selectedModel],
-    queryFn: () => acesService.getEngines(selectedYear!, selectedMake, selectedModel),
-    enabled: !!selectedYear && !!selectedMake && !!selectedModel
-  });
+  // Placeholder for models/engines until we implement full VCdb
+  const models = selectedMake ? ['Model A', 'Model B'] : [];
+  const subModels = selectedModel ? ['Base', 'Premium'] : [];
+  const engines = selectedModel ? ['2.0L', '3.0L'] : [];
 
   return (
     <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
@@ -657,7 +653,7 @@ const VehicleSelector: React.FC = () => {
         >
           <option value="">Select Make...</option>
           {makes.map(make => (
-            <option key={make} value={make}>{make}</option>
+            <option key={make.id} value={make.name}>{make.name}</option>
           ))}
         </select>
       </div>
@@ -721,16 +717,24 @@ const VehicleSelector: React.FC = () => {
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
         <select className="w-full border border-gray-300 rounded-md px-3 py-2">
-          <option value="">Select...</option>
-          <option value="Front">Front</option>
-          <option value="Rear">Rear</option>
-          <option value="Left">Left</option>
-          <option value="Right">Right</option>
+          <option value="">Select Position...</option>
+          {positions.map(position => (
+            <option key={position.id} value={position.id}>{position.name}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Part Type</label>
+        <select className="w-full border border-gray-300 rounded-md px-3 py-2">
+          <option value="">Select Part Type...</option>
+          {partTypes.map(partType => (
+            <option key={partType.id} value={partType.id}>{partType.name}</option>
+          ))}
         </select>
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
-        <input type="number" placeholder="2" className="w-full border border-gray-300 rounded-md px-3 py-2" />
+        <input type="number" placeholder="1" defaultValue="1" className="w-full border border-gray-300 rounded-md px-3 py-2" />
       </div>
       <div className="col-span-3">
         <button className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">

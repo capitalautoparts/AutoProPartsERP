@@ -1,0 +1,15 @@
+RegionID|ParentID|RegionAbbr|RegionName
+1||USA|United States
+2||CAN|Canada
+3||MEX|Mexico
+4||CHL|Chile
+5||COL|Colombia
+6||BRA|Brazil
+7||ARG|Argentina
+8||PER|Peru
+9||ECU|Ecuador
+11||BOL|Bolivia
+13||GTM|Guatemala
+14||PAN|Panama
+17||VEN|Venezuela
+21||SLV|El Salvador

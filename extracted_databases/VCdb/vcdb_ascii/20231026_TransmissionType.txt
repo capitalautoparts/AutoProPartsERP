@@ -1,0 +1,4 @@
+TransmissionTypeID|TransmissionTypeName
+4|U/K
+5|Transmission
+6|Transaxle

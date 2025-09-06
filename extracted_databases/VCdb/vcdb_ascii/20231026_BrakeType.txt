@@ -1,0 +1,4 @@
+BrakeTypeID|BrakeTypeName
+4|U/K
+5|Disc
+6|Drum

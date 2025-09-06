@@ -1,0 +1,5 @@
+SteeringConfigID|SteeringTypeID|SteeringSystemID
+1|6|5
+2|5|5
+8|4|4
+15|4|6

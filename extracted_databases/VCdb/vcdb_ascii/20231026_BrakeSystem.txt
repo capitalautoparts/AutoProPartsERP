@@ -1,0 +1,6 @@
+BrakeSystemID|BrakeSystemName
+4|U/K
+5|Power
+8|Air
+10|Hydraulic Vacuum
+11|Hydraulic

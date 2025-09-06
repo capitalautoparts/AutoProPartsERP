@@ -5,11 +5,13 @@ import customersRouter from './routes/customers.js';
 import ordersRouter from './routes/orders.js';
 import jobsRouter from './routes/jobs.js';
 import acesRouter from './routes/aces.js';
-import aces42Router from './routes/aces42.js';
+
 import databaseRouter from './routes/database.js';
 import debugRouter from './routes/debug.js';
 import referenceRouter from './routes/reference.js';
+import vcdbRouter from './routes/vcdb.js';
 import { dataService } from './services/dataService.js';
+import { vcdbService } from './services/vcdbService.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -25,10 +27,11 @@ app.use('/api/customers', customersRouter);
 app.use('/api/orders', ordersRouter);
 app.use('/api/jobs', jobsRouter);
 app.use('/api/aces', acesRouter);
-app.use('/api/aces42', aces42Router);
+
 app.use('/api/database', databaseRouter);
 app.use('/api/debug', debugRouter);
 app.use('/api/reference', referenceRouter);
+app.use('/api/vcdb', vcdbRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -81,6 +84,13 @@ async function startServer() {
     
     const productCount = dataService.getAllProducts().length;
     console.log(`✅ Loaded ${productCount} products with PIES/ACES data`);
+    
+    // Test VCdb loading
+    const makes = vcdbService.getAllMakes();
+    console.log(`📊 VCdb makes loaded: ${makes.length}`);
+    if (makes.length > 0) {
+      console.log(`📊 Sample makes: ${makes.slice(0, 3).map(m => m.name).join(', ')}`);
+    }
     
     app.listen(PORT, () => {
       console.log(`🚀 Auto Parts ERP Server running on port ${PORT}`);

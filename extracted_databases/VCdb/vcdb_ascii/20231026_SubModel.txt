@@ -1,0 +1,23 @@
+SubModelID|SubModelName
+20|Base
+296|SLT
+695|King Ranch
+1374|Off-Road
+2431|Confort
+2856|Comfortline
+3069|ZL1
+3325|Sense
+3640|AAC3605-3706
+3698|120
+4508|Touring L Plus
+4596|Intens
+4631|Pasajeros
+5154|Life
+5516|Comfortable
+5880|SRT Super Stock
+6046|X-Dynamic SE
+6273|Fire
+7745|22 Front Sleeper
+11411|FC9J
+11424|B2-18
+11927|S51

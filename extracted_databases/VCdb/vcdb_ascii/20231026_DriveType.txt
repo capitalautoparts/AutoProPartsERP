@@ -1,0 +1,10 @@
+DriveTypeID|DriveTypeName
+4|U/K
+5|FWD
+6|AWD
+7|RWD
+8|4WD
+11|6 X 4
+12|4 X 2
+14|6 X 2
+15|8 X 4

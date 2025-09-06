@@ -1,0 +1,25 @@
+BodyTypeID|BodyTypeName
+5|Sedan
+6|Wagon
+9|Coupe
+10|Convertible
+11|Sport Utility
+15|Mini Passenger Van
+17|Standard Cab Pickup
+22|Crew Cab Pickup
+23|Standard Cargo Van
+24|Extended Cargo Van
+25|Extended Passenger Van
+26|Cutaway Van
+40|U/K
+55|Tractor Truck - Long Conventional
+56|Bus (Non School) - Cab Forward
+57|Straight Truck - Low Tilt
+61|Tractor Truck - Half Cab
+62|Bus (School) - Cab Forward
+65|Bus (Non School) - Unknown
+70|Straight Truck - Medium Conventional
+88|Gliders - Long Conventional
+104|Straight Truck - Low Crew Cab
+59|Motorhome - Stripped Chassis
+124|Motorhome - Class B

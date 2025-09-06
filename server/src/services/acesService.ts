@@ -1,124 +1,251 @@
-import fs from 'fs';
-import path from 'path';
-import { databaseExtractor } from './databaseExtractor.js';
-
-interface VehicleData {
-  year: number;
-  make: string;
-  model: string;
-  subModel?: string;
-  engine?: string;
-}
+import { parseStringPromise, Builder } from 'xml2js';
+import { ACESApplication, ImportResult } from '../types';
+import { vcdbService } from './vcdbService';
 
 export class ACESService {
-  private vcdbData: any[] = [];
-  private extractedPath: string;
-  private initialized = false;
-
-  constructor() {
-    this.extractedPath = path.join(process.cwd().replace('\\server', ''), 'extracted_databases');
-    this.initializeData();
-  }
-
-  private async initializeData() {
-    if (this.initialized) return;
-    
+  
+  /**
+   * Parse ACES XML (supports 4.1 and 4.2)
+   */
+  async parseACESXML(xmlContent: string): Promise<ImportResult> {
     try {
-      console.log('🔍 Extracting VCdb data from ZIP files...');
-      const extractedData = await databaseExtractor.extractVehicleData();
+      const result = await parseStringPromise(xmlContent);
+      const aces = result.ACES;
+      const version = aces.$.version;
       
-      if (extractedData.length > 0) {
-        console.log(`✅ Loaded ${extractedData.length} VCdb records`);
-        this.vcdbData = this.convertToVehicleData(extractedData);
-      } else {
-        console.log('📝 Using sample vehicle data');
-        this.vcdbData = this.generateSampleVehicleData();
+      const applications: ACESApplication[] = [];
+      const errors: string[] = [];
+      const warnings: string[] = [];
+
+      if (aces.App) {
+        for (const app of aces.App) {
+          try {
+            const application = this.parseApplication(app, version);
+            applications.push(application);
+          } catch (error) {
+            errors.push(`Application ${app.$.id}: ${error.message}`);
+          }
+        }
       }
+
+      return {
+        success: errors.length === 0,
+        recordsProcessed: applications.length,
+        errors,
+        warnings
+      };
+
     } catch (error) {
-      console.error('❌ Error loading VCdb data:', error);
-      this.vcdbData = this.generateSampleVehicleData();
+      return {
+        success: false,
+        recordsProcessed: 0,
+        errors: [`XML parsing failed: ${error.message}`],
+        warnings: []
+      };
     }
-    
-    this.initialized = true;
   }
 
-  private convertToVehicleData(extractedData: any[]): VehicleData[] {
-    const vehicles: VehicleData[] = [];
-    
-    // Convert BaseVehicle records to VehicleData format
-    for (const record of extractedData) {
-      if (record.year && record.make && record.model) {
-        vehicles.push({
-          year: record.year,
-          make: record.make,
-          model: record.model,
-          subModel: undefined,
-          engine: undefined
-        });
+  private parseApplication(app: any, version: string): ACESApplication {
+    const application: ACESApplication = {
+      id: app.$.id,
+      productId: '', // Will be set when linking to product
+      quantity: parseInt(app.Qty?.[0] || '1'),
+      partTypeId: parseInt(app.PartType?.[0]?.$.id),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    // BaseVehicle pattern
+    if (app.BaseVehicle) {
+      application.baseVehicleId = parseInt(app.BaseVehicle[0].$.id);
+      
+      // Resolve vehicle info from VCdb
+      const vehicleInfo = vcdbService.resolveVehicleInfo(application.baseVehicleId);
+      if (vehicleInfo) {
+        application.year = vehicleInfo.year;
+        application.make = vehicleInfo.make;
+        application.model = vehicleInfo.model;
       }
     }
-    
-    // Add sample data if no extracted data
-    if (vehicles.length === 0) {
-      vehicles.push(...this.generateSampleVehicleData());
+
+    // Year/Make/Model pattern
+    if (app.Years) {
+      const years = app.Years[0].$;
+      application.yearId = parseInt(years.from);
+      if (years.from !== years.to) {
+        application.notes = [`Year range: ${years.from}-${years.to}`];
+      }
     }
-    
-    return vehicles;
+    if (app.Make) {
+      application.makeId = parseInt(app.Make[0].$.id);
+      application.make = vcdbService.getMakeName(application.makeId);
+    }
+    if (app.Model) {
+      application.modelId = parseInt(app.Model[0].$.id);
+      application.model = vcdbService.getModelName(application.modelId);
+    }
+
+    // Equipment pattern (ACES 4.2+)
+    if (app.Mfr) {
+      application.manufacturerId = parseInt(app.Mfr[0].$.id);
+    }
+    if (app.EquipmentModel) {
+      application.equipmentModelId = parseInt(app.EquipmentModel[0].$.id);
+    }
+    if (app.VehicleType) {
+      application.vehicleTypeId = parseInt(app.VehicleType[0].$.id);
+    }
+    if (app.ProductionYears) {
+      const prod = app.ProductionYears[0].$;
+      application.productionStart = parseInt(prod.ProductionStart);
+      application.productionEnd = parseInt(prod.ProductionEnd);
+    }
+
+    // Engine specifications
+    if (app.EngineBase) {
+      application.engineBaseId = parseInt(app.EngineBase[0].$.id);
+    }
+    if (app.EngineVIN) {
+      application.engineVINId = parseInt(app.EngineVIN[0].$.id);
+    }
+    if (app.EngineBlock) {
+      application.engineBlockId = parseInt(app.EngineBlock[0].$.id);
+    }
+
+    // Position
+    if (app.Position) {
+      application.positionId = parseInt(app.Position[0].$.id);
+    }
+
+    // Qualifiers
+    if (app.Qual) {
+      application.qualifiers = app.Qual.map((qual: any) => ({
+        id: `${application.id}_${qual.$.id}`,
+        applicationId: application.id,
+        qualifierId: parseInt(qual.$.id),
+        qualifierText: qual.text?.[0],
+        parameters: qual.param?.map((p: any) => p.$.value) || []
+      }));
+    }
+
+    // Notes
+    if (app.Note) {
+      application.notes = Array.isArray(app.Note) ? app.Note : [app.Note];
+    }
+
+    // ACES 4.2+ features
+    if (version === '4.2') {
+      if (app.AssetName) {
+        application.assetName = app.AssetName[0];
+      }
+      if (app.AssetItemOrder) {
+        application.assetItemOrder = parseInt(app.AssetItemOrder[0]);
+      }
+      if (app.$.validate === 'no') {
+        application.validateApplication = false;
+      }
+    }
+
+    return application;
   }
 
-  private generateSampleVehicleData(): VehicleData[] {
-    return [
-      { year: 2023, make: 'Toyota', model: 'Camry', subModel: 'LE', engine: '2.5L L4' },
-      { year: 2023, make: 'Toyota', model: 'Camry', subModel: 'XLE', engine: '2.5L L4' },
-      { year: 2023, make: 'Toyota', model: 'Corolla', subModel: 'L', engine: '2.0L L4' },
-      { year: 2022, make: 'Toyota', model: 'Camry', subModel: 'LE', engine: '2.5L L4' },
-      { year: 2022, make: 'Honda', model: 'Accord', subModel: 'Sport', engine: '1.5L L4 Turbo' },
-      { year: 2022, make: 'Honda', model: 'Civic', subModel: 'LX', engine: '2.0L L4' },
-      { year: 2021, make: 'Ford', model: 'F-150', subModel: 'XLT', engine: '3.5L V6' },
-      { year: 2021, make: 'Ford', model: 'Mustang', subModel: 'GT', engine: '5.0L V8' },
-      { year: 2020, make: 'Chevrolet', model: 'Silverado', subModel: 'LT', engine: '5.3L V8' },
-      { year: 2020, make: 'Chevrolet', model: 'Malibu', subModel: 'LS', engine: '1.5L L4' }
-    ];
-  }
+  /**
+   * Generate ACES XML (auto-detects version based on data)
+   */
+  async generateACESXML(applications: ACESApplication[], brandAAIAID: string): Promise<string> {
+    const hasEquipment = applications.some(app => app.equipmentModelId || app.manufacturerId);
+    const hasAssets = applications.some(app => app.assetName);
+    const version = (hasEquipment || hasAssets) ? '4.2' : '4.1';
 
-  async getYears(): Promise<number[]> {
-    await this.initializeData();
-    const years = [...new Set(this.vcdbData.map(v => v.year))];
-    return years.sort((a, b) => b - a);
-  }
+    const xmlApps = applications.map((app, index) => {
+      const xmlApp: any = {
+        $: { action: 'A', id: (index + 1).toString() },
+        Qty: [app.quantity.toString()],
+        PartType: [{ $: { id: app.partTypeId.toString() } }],
+        Part: [app.productId] // Use product part number
+      };
 
-  async getMakesByYear(year: number): Promise<string[]> {
-    await this.initializeData();
-    const makes = this.vcdbData
-      .filter(v => v.year === year)
-      .map(v => v.make);
-    return [...new Set(makes)].sort();
-  }
+      // BaseVehicle pattern
+      if (app.baseVehicleId) {
+        xmlApp.BaseVehicle = [{ $: { id: app.baseVehicleId.toString() } }];
+      }
 
-  async getModelsByYearMake(year: number, make: string): Promise<string[]> {
-    await this.initializeData();
-    const models = this.vcdbData
-      .filter(v => v.year === year && v.make === make)
-      .map(v => v.model);
-    return [...new Set(models)].sort();
-  }
+      // Year/Make/Model pattern
+      if (app.yearId && app.makeId && app.modelId) {
+        if (app.notes?.some(note => note.includes('Year range'))) {
+          const range = app.notes.find(note => note.includes('Year range'))?.split(': ')[1];
+          if (range) {
+            const [from, to] = range.split('-');
+            xmlApp.Years = [{ $: { from, to } }];
+          }
+        }
+        xmlApp.Make = [{ $: { id: app.makeId.toString() } }];
+        xmlApp.Model = [{ $: { id: app.modelId.toString() } }];
+      }
 
-  async getSubModelsByYearMakeModel(year: number, make: string, model: string): Promise<string[]> {
-    await this.initializeData();
-    const subModels = this.vcdbData
-      .filter(v => v.year === year && v.make === make && v.model === model)
-      .map(v => v.subModel)
-      .filter(Boolean);
-    return [...new Set(subModels)].sort();
-  }
+      // Equipment pattern (4.2 only)
+      if (version === '4.2') {
+        if (app.manufacturerId) {
+          xmlApp.Mfr = [{ $: { id: app.manufacturerId.toString() } }];
+        }
+        if (app.equipmentModelId) {
+          xmlApp.EquipmentModel = [{ $: { id: app.equipmentModelId.toString() } }];
+        }
+        if (app.vehicleTypeId) {
+          xmlApp.VehicleType = [{ $: { id: app.vehicleTypeId.toString() } }];
+        }
+      }
 
-  async getEnginesByYearMakeModel(year: number, make: string, model: string): Promise<string[]> {
-    await this.initializeData();
-    const engines = this.vcdbData
-      .filter(v => v.year === year && v.make === make && v.model === model)
-      .map(v => v.engine)
-      .filter(Boolean);
-    return [...new Set(engines)].sort();
+      // Position
+      if (app.positionId) {
+        xmlApp.Position = [{ $: { id: app.positionId.toString() } }];
+      }
+
+      // Qualifiers
+      if (app.qualifiers?.length) {
+        xmlApp.Qual = app.qualifiers.map(qual => ({
+          $: { id: qual.qualifierId.toString() },
+          text: qual.qualifierText ? [qual.qualifierText] : undefined
+        }));
+      }
+
+      // Notes
+      if (app.notes?.length) {
+        xmlApp.Note = app.notes.filter(note => !note.includes('Year range'));
+      }
+
+      // Assets (4.2 only)
+      if (version === '4.2' && app.assetName) {
+        xmlApp.AssetName = [app.assetName];
+        if (app.assetItemOrder) {
+          xmlApp.AssetItemOrder = [app.assetItemOrder.toString()];
+        }
+      }
+
+      return xmlApp;
+    });
+
+    const acesDoc = {
+      ACES: {
+        $: { version },
+        Header: [{
+          Company: ['Auto Parts ERP'],
+          BrandAAIAID: [brandAAIAID],
+          DocumentTitle: ['Product Applications'],
+          SubmissionType: ['FULL'],
+          VcdbVersionDate: ['2023-10-26']
+        }],
+        App: xmlApps,
+        Footer: [{ RecordCount: [applications.length.toString()] }]
+      }
+    };
+
+    const builder = new Builder({
+      xmldec: { version: '1.0', encoding: 'UTF-8' },
+      renderOpts: { pretty: true, indent: '\t' }
+    });
+
+    return builder.buildObject(acesDoc);
   }
 }
 

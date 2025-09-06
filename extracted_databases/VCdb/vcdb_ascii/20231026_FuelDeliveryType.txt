@@ -1,0 +1,4 @@
+FuelDeliveryTypeID|FuelDeliveryTypeName
+1|-
+5|FI
+6|CARB

@@ -1,0 +1,8 @@
+AspirationID|AspirationName
+1|-
+5|Naturally Aspirated
+6|Turbocharged
+7|Supercharged
+9|Turbo/Supercharged
+10|Turbo/Intercooled
+12|Turbo/Aftercooled

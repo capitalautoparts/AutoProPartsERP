@@ -1,0 +1,4 @@
+SteeringTypeID|SteeringTypeName
+4|U/K
+5|Gear
+6|Rack

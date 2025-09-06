@@ -1,0 +1,5 @@
+IgnitionSystemTypeID|IgnitionSystemTypeName
+3|N/R
+4|U/K
+5|Distributor-Breakerless
+6|Distributorless

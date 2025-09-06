@@ -1,0 +1,10 @@
+FuelSystemDesignID|FuelSystemDesignName
+3|N/R
+4|U/K
+5|PFI
+6|SFI
+7|Hitachi
+50|Bosch DFI
+142|DI
+154|CRDI
+173|CDI

@@ -1,0 +1,14 @@
+EngineVersionID|EngineVersion
+3|N/R
+8|Vortec
+37|Magnum
+41|HEMI
+49|Duramax
+50|U/K
+61|MIVEC
+74|EcoBoost
+83|Pentastar
+176|MultiJet
+179|FIRE
+195|-
+230|Acteco

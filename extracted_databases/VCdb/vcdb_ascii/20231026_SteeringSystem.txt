@@ -1,0 +1,4 @@
+SteeringSystemID|SteeringSystemName
+4|U/K
+5|Power
+6|Manual

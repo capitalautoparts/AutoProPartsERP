@@ -1,0 +1,4 @@
+ChangeAttributeStateID|ChangeAttributeState
+1|Add
+2|Delete
+3|Modify
