@@ -1,0 +1,14 @@
+MetaUOMID	UOMCode	UOMDescription	UOMLabel	MeasurementGroupId
+1	MM	Millimeter	mm	1
+4	IN	Inch	in	1
+45	LU	Lumens	lm	5
+46	LX	Lux	lx	5
+47	CP	Candlepower	C.P.	5
+67	HR	Hours	h	6
+70	KV	Degrees Kelvin	Deg. K	7
+75	2G	Volts AC	VAC	8
+76	2H	Volts DC	VDC	8
+78	99	Watts	W	8
+81	68	Ampere	A	8
+82	82	Ohm	Ohms	8
+117	4S	Pascal	Pa	5

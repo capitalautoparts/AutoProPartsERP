@@ -1,0 +1,8 @@
+PIESExpiGroupId|ExpiGroupCode|ExpiGroupDescription
+1|CORE|Core Returns
+2|HAZR|Hazardous Material
+3|PART|Part Item
+4|REGULATE|Regulation
+5|RETN|Return
+6|SHIP|Shipping
+7|STOK|Stock

@@ -1,0 +1,21 @@
+VersionDate|QualifierID|QualifierText|Action
+5/25/2018 12:00:00 AM|22775|CARB Executive Order <p1 type="idlist"/>|M
+5/25/2018 12:00:00 AM|23487|Engine Family Number (EFN) <p1 type="idlist"/>|M
+9/30/2022 12:00:00 AM|27230|Valve cover gasket (/s) included|A
+9/30/2022 12:00:00 AM|27230|Valve cover gasket (/s) included|M
+1/12/2023 12:00:00 AM|27470|Torque To Yield Bolts Must Be Replaced|A
+6/29/2023 12:00:00 AM|27866|Requires Removal of Factory Upper Arm Frame Droop Stops|A
+4/29/2022 12:00:00 AM|27136|with <p1 type="size"/> and <p2 type="size"/> Cabs with <p3 type="name"/> Model <p4 type="idlist"/>|A
+5/28/2021 12:00:00 AM|24422|Debe Coincidir con Número(s) de Equipo Original <p1 type="idlist"/> en Parte Posterior del Grupo de Instrumentos|M
+3/29/2019 12:00:00 AM|24120|without Vertical Aim Control|A
+3/29/2019 12:00:00 AM|24123|with Vertical Aim Control|A
+10/29/2021 12:00:00 AM|22940|Estría de <p1 type="size"/> - <p2 type="num"/>|M
+12/18/2020 12:00:00 AM|25171|with Sport Suspension|A
+12/18/2020 12:00:00 AM|25172|without Sport Suspension|A
+1/31/2020 12:00:00 AM|24422|Must Match OE Number(s) <p1 type="idlist"/> On Back of Cluster|A
+12/20/2019 12:00:00 AM|24120|without Vertical Aim Control|M
+12/20/2019 12:00:00 AM|24123|with Vertical Aim Control|M
+9/29/2017 12:00:00 AM|23925|After <p1 type="date"/>|A
+9/24/2021 12:00:00 AM|26216|with <p1 type="weight"/> - <p2 type="weight"/> <p3 type="name"/> Air Suspension|A
+9/24/2021 12:00:00 AM|26222|For <p1 type="type"/> Biodiesel Engines Only|A
+7/31/2020 12:00:00 AM|24697|If vehicle has <p1 type="size"/> wide leaf springs, use bracket kit <p2 type="part"/>|A

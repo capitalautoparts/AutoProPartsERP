@@ -1,0 +1,68 @@
+ChangeDetailID|ChangeID|ChangeAttributeStateID|TableNameID|PrimaryKeyColumnName|PrimaryKeyBefore|PrimaryKeyAfter|ColumnName|ColumnValueBefore|ColumnValueAfter
+221|61|1|1|QualifierID||23925|QualifierText||After <p1 type="date"/>
+222|61|1|1|QualifierID||23925|ExampleText||After 01/01/2001
+223|61|1|1|QualifierID||23925|QualifierTypeId||1
+224|61|1|1|QualifierID||23925|QualifierID||23925
+816|237|3|1|QualifierID|22775|22775|QualifierTypeId|3|9
+855|249|3|1|QualifierID|23487|23487|QualifierText|Engine Family Number <p1 type="idlist"/>|Engine Family Number (EFN) <p1 type="idlist"/>
+856|249|3|1|QualifierID|23487|23487|ExampleText|Engine Family Number VHN2.2VJGKEK|Engine Family Number (EFN) TGM5.7CPGAEA
+1063|313|1|1|QualifierID||24123|QualifierText||with Vertical Aim Control
+1064|313|1|1|QualifierID||24123|ExampleText||with Vertical Aim Control
+1065|313|1|1|QualifierID||24123|QualifierTypeId||1
+1066|313|1|1|QualifierID||24123|QualifierID||24123
+1075|316|1|1|QualifierID||24120|QualifierText||without Vertical Aim Control
+1076|316|1|1|QualifierID||24120|ExampleText||without Vertical Aim Control
+1077|316|1|1|QualifierID||24120|QualifierTypeId||1
+1078|316|1|1|QualifierID||24120|QualifierID||24120
+3681|4956|1|1|QualifierID||24422|QualifierText||Must Match OE Number(s) <p1 type="idlist"/> On Back of Cluster
+3682|4956|1|1|QualifierID||24422|ExampleText||Must Match OE Number(s) <p1 type="idlist"/> On Back of Cluster
+3683|4956|1|1|QualifierID||24422|QualifierTypeId||2
+3684|4956|1|1|QualifierID||24422|QualifierID||24422
+5505|5531|1|1|QualifierId||24697|QualifierId||24697
+5506|5531|1|1|QualifierId||24697|QualifierText||If vehicle has <p1 type="size"/> wide leaf springs, use bracket kit <p2 type="part"/>
+5507|5531|1|1|QualifierId||24697|ExampleText||If vehicle has 2.5 in wide leaf springs, use bracket kit RS5558
+5508|5531|1|1|QualifierId||24697|QualifierTypeId||3
+7667|6159|1|1|QualifierId||25171|QualifierId||25171
+7668|6159|1|1|QualifierId||25171|QualifierText||with Sport Suspension
+7669|6159|1|1|QualifierId||25171|ExampleText||with Sport Suspension
+7670|6159|1|1|QualifierId||25171|QualifierTypeId||1
+7671|6159|1|4|QualifierGroupId||2477|GroupNumberId||1239
+7672|6159|1|4|QualifierGroupId||2477|QualifierId||25171
+7673|6159|1|4|QualifierGroupId||2477|QualifierGroupId||2477
+7674|6160|1|1|QualifierId||25172|QualifierId||25172
+7675|6160|1|1|QualifierId||25172|QualifierText||without Sport Suspension
+7676|6160|1|1|QualifierId||25172|ExampleText||without Sport Suspension
+7677|6160|1|1|QualifierId||25172|QualifierTypeId||1
+7678|6160|1|4|QualifierGroupId||2478|GroupNumberId||1239
+7679|6160|1|4|QualifierGroupId||2478|QualifierId||25172
+7680|6160|1|4|QualifierGroupId||2478|QualifierGroupId||2478
+94911|28848|3|1|QualifierId|24422|24422|QualifierText|Must Match OE Number(s) <p1 type="idlist"/> On Back of Cluster|Must match OE Number # <p1 type="idlist"/> on back of Cluster
+94912|28848|3|1|QualifierId|24422|24422|ExampleText|Must Match OE Number(s) <p1 type="idlist"/> On Back of Cluster|Must match OE Number # <p1 type="idlist"/> on back of Cluster
+101465|30833|1|1|QualifierId||26216|QualifierId||26216
+101466|30833|1|1|QualifierId||26216|QualifierText||with <p1 type="weight"/> - <p2 type="weight"/> <p3 type="name"/> Air Suspension
+101467|30833|1|1|QualifierId||26216|ExampleText||with 38,000 lb - 40,000 lb Peterbilt Air Suspension
+101468|30833|1|1|QualifierId||26216|QualifierTypeId||1
+101489|30839|1|1|QualifierId||26222|QualifierId||26222
+101490|30839|1|1|QualifierId||26222|QualifierText||For <p1 type="type"/> Biodiesel Engines Only
+101491|30839|1|1|QualifierId||26222|ExampleText||For B5 Biodiesel Engines Only
+101492|30839|1|1|QualifierId||26222|QualifierTypeId||1
+101794|30930|3|1|QualifierId|22940|22940|QualifierText|<p1 type="size"/> - < p2 type="num"/> Spline|<p1 type="size"/> - <p2 type="num"/> Spline
+101795|30930|3|1|QualifierId|22940|22940|ExampleText||1.58 in - 36 Spline
+105832|32066|1|1|QualifierId||27136|QualifierId||27136
+105833|32066|1|1|QualifierId||27136|QualifierText||with <p1 type="size"/> and <p2 type="size"/> Cabs with <p3 type="name"/> Model <p4 type="idlist"/>
+105834|32066|1|1|QualifierId||27136|ExampleText||with 89 in and 110 in Cabs with Link Cabmate Model NAV9876
+105835|32066|1|1|QualifierId||27136|QualifierTypeId||1
+109984|33771|1|1|QualifierId||27230|QualifierId||27230
+109985|33771|1|1|QualifierId||27230|QualifierText||Valve cover gasket (/s) included
+109986|33771|1|1|QualifierId||27230|ExampleText||Valve cover gasket (/s) included
+109987|33771|1|1|QualifierId||27230|QualifierTypeId||5
+110000|33776|3|1|QualifierId|27230|27230|QualifierText|Valve cover gasket (/s) included|Valve Cover Gasket(s) Included
+110001|33776|3|1|QualifierId|27230|27230|ExampleText|Valve cover gasket (/s) included|Valve Cover Gasket(s) Included
+111001|34040|1|1|QualifierId||27470|QualifierId||27470
+111002|34040|1|1|QualifierId||27470|QualifierText||Torque To Yield Bolts Must Be Replaced
+111003|34040|1|1|QualifierId||27470|ExampleText||Torque To Yield Bolts Must Be Replaced
+111004|34040|1|1|QualifierId||27470|QualifierTypeId||6
+183402|52227|1|1|QualifierId||27866|QualifierId||27866
+183403|52227|1|1|QualifierId||27866|QualifierText||Requires Removal of Factory Upper Arm Frame Droop Stops
+183404|52227|1|1|QualifierId||27866|ExampleText||Requires Removal of Factory Upper Arm Frame Droop Stops
+183405|52227|1|1|QualifierId||27866|QualifierTypeId||4

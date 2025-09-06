@@ -1,0 +1,2 @@
+PartTerminologyID|RelatedPartTerminologyID
+11701|11718

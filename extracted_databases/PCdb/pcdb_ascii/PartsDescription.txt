@@ -1,0 +1,8 @@
+PartsDescriptionID|PartsDescription
+11306|Multi-Purpose Light Bulb.
+11592|A set of disc brake pads for a vehicle's disc brake caliper brake system.
+12228|Sweet edibles.
+13817|A lightweight pullover shirt with a round neckline and short sleeves, worn as an undershirt or outer garment.
+18064|Spark Plug.
+23906|A light bulb for a headlight.
+33136|Sponge.

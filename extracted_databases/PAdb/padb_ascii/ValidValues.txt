@@ -1,0 +1,104 @@
+ValidValueID	ValidValue
+2	0-3 Months
+6	1
+1420	10
+11	12-18 Months
+2842	18-24 Months
+23	2
+61	2T
+62	2XL
+63	2XL Tall
+64	2XS
+67	3-6 Months
+87	3T
+88	3XL
+89	3XL Tall
+90	4
+109	4T
+110	4XL
+111	4XL Tall
+1418	6
+126	6-9 Months
+1419	8
+155	9-12 Months
+1625	Bi-Hex
+276	Bonded
+282	Boys
+1378	Carbon Fiber Ceramic
+331	Ceramic
+339	Clear
+381	Copper
+2280	Crush
+397	Cup
+464	Electronic
+465	Electronic and Mechanical
+483	Extra Large
+484	Extra Large Tall
+485	Extra Small
+2300	Extra-Long Projection
+2301	Extra-Long Special
+1710	Fine Wire
+515	Flat
+525	Fluorescent
+542	Front
+543	Front Rear
+545	Frosted
+578	Girls
+579	Glass
+1358	Gold-Palladium
+599	Halogen
+612	Hex
+614	HID
+2279	Hybrid
+644	Incandescent
+653	Infant Boys
+654	Infant Girls
+665	Integrally Molded
+1359	Iridium
+2307	Iridium-Platinum
+705	Large
+706	Large Tall
+712	LED
+2302	Long Projection
+2494	Low-Metallic
+772	Mechanical
+773	Medium
+776	Mens
+781	Metallic
+2303	Mid Projection
+785	Mixed
+802	Natural
+807	Newborn
+808	Nickel
+812	No
+2304	Non-Projected
+824	Non-Removable Nut
+844	Opaque
+849	Organic
+881	Performance
+890	Plastic
+1360	Platinum
+957	Rear
+966	Regular
+972	Removable Nut
+996	Riveted
+1361	Ruthenium
+1057	Semi-metallic
+2305	Short Projection
+1362	Silver
+1101	Small
+1142	Standard
+1167	Stud
+2306	Surface Gap
+1177	Synthetic
+1191	Tapered
+1217	Toddler Boys
+1218	Toddler Girls
+1363	Tungsten
+1331	Womens
+1341	Yes
+1342	Youth Extra Large
+1343	Youth Extra Small
+1345	Youth Large
+1347	Youth Medium
+1349	Youth Small

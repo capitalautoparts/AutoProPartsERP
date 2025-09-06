@@ -1,0 +1,7 @@
+ChangeReasonID|ChangeReason
+1|New Research
+2|Batch Data Import
+3|Record Merge
+4|Record Split
+5|Attribute Value Invalid
+6|Attribute Value Update

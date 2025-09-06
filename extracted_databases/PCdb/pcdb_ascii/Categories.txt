@@ -1,0 +1,6 @@
+CategoryID|CategoryName
+3|Brake
+7|Electrical, Lighting and Body
+14|Ignition
+18|Vehicles, Equipment, Tools, and Supplies
+44|Household, Shop and Office Products

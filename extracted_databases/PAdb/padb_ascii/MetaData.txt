@@ -1,0 +1,6 @@
+MetaID	MetaName	MetaDescr	MetaFormat	DataType	MinLength	MaxLength
+74	Alphanumeric of 255	Alphanumeric of 255	AN1/255	Alphanumeric	1	255
+88	Numeric measurement floating decimal		R1/10	Numeric measurement floating decimal	1	10
+89	Alphanumeric of 80	Alphanumeric of 80	ID80	Alphanumeric	1	80
+163	Numeric measurement no decimal		N0-1/10	Numeric measurement no decimal	1	10
+178	Numeric quantity, whole number of 80	Numeric quantity, whole number of 80.	N1/80	Numeric quantity, whole number	1	80

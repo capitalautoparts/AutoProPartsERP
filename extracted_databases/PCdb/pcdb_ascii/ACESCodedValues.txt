@@ -1,0 +1,181 @@
+Element|Attribute|CodedValue|CodeDescription
+AssetDetailType||ZZ9|User Defined
+AssetDetailType||ZZ8|User Defined
+AssetDetailType||ZZ7|User Defined
+AssetDetailType||ZZ6|User Defined
+AssetDetailType||ZZ5|User Defined
+AssetDetailType||ZZ4|User Defined
+AssetDetailType||ZZ3|User Defined
+AssetDetailType||ZZ2|User Defined
+AssetDetailType||ZZ1|User Defined
+AssetDetailType||WHP|Whitepaper
+AssetDetailType||WAR|Warranty
+AssetDetailType||TON|Tone Art
+AssetDetailType||THU|Thumbnail
+AssetDetailType||SPE|Specification Sheet Filename
+AssetDetailType||RES|Research Bulletin
+AssetDetailType||PST|Price Sheet
+AssetDetailType||PSS|Product Specifications Sheet
+AssetDetailType||PP3|Planogram Case Pack 3
+AssetDetailType||PP2|Planogram Case Pack 2
+AssetDetailType||PP1|Planogram Case Pack 1
+AssetDetailType||PI3|Planogram Inner Pack 3
+AssetDetailType||PI2|Planogram Inner Pack 2
+AssetDetailType||PI1|Planogram Inner Pack 1
+AssetDetailType||PDB|Product Brochure
+AssetDetailType||PC3|Planogram Consumer Pack 3
+AssetDetailType||PC2|Planogram Consumer Pack 2
+AssetDetailType||PC1|Planogram Consumer Pack 1
+AssetDetailType||PAL|Pallet Configuration Drawing
+AssetDetailType||PAG|Link To Manufacturer Page
+AssetDetailType||P07|Photo - Unmounted
+AssetDetailType||P06|Photo - Mounted
+AssetDetailType||P05|Photo - Close Up
+AssetDetailType||P04|Photo - Primary
+AssetDetailType||P03|Photo - lifestyle view
+AssetDetailType||P02|Photo - in package
+AssetDetailType||P01|Photo - out of package
+AssetDetailType||OWN|Owner's Manual
+AssetDetailType||MSD|Material Safety Data Sheet
+AssetDetailType||LIN|Line Art
+AssetDetailType||LGO|Logo Image
+AssetDetailType||ISG|Illustration Guide
+AssetDetailType||INS|Installation Instructions
+AssetDetailType||HMS|Hazardous Materials Info Sheet
+AssetDetailType||FED|Full Engineering Drawing
+AssetDetailType||FAB|Features and Benefits
+AssetDetailType||EBK|Ebook
+AssetDetailType||DRW|Technical Drawing
+AssetDetailType||DAS|Datasheet
+AssetDetailType||CER|Certificate of Origin
+AssetDetailType||CAT|Catalog
+AssetDetailType||CAS|Case Study
+AssetDetailType||BUY|Buyers Guide
+AssetDetailType||BUL|Technical Bulletin
+AssetDetailType||BRO|Brochure
+AssetDetailType||AUD|Audio File
+AssetDetailType||APG|Application Guide
+AssetDetailType||360|360 Degree Image Set
+App|validate|yes|Yes
+App|validate|no|No
+App|action|D|Delete
+App|action|A|Add
+ACES|version|4.2|ACES 4.2
+ACES|version|4.1|ACES 4.1
+ACES|version|4.0|ACES 4.0
+ACES|SubmissionType|UPDATE|Change File
+ACES|SubmissionType|TEST|Test File
+ACES|SubmissionType|FULL|Full Refresh File
+FileType||XLS|Excel File
+FileType||WMA|.wma AUDIO FILE
+FileType||WEBM|.webm VIDEO FILE
+FileType||WAV|.wav AUDIO FILE
+FileType||TXT|.txt TEXT FILE
+FileType||TIF|.tif Tagged Image File
+FileType||SVG|.svg Scaler Vector Graphics format
+FileType||PNG|.png Portable Network Graphics
+FileType||PDF|PDF File
+FileType||PCM|.pcm AUDIO FILE
+FileType||OGV|.ogv VIDEO VILE
+FileType||OGG|.ogg AUDIO FILE
+FileType||MP4|.mp4 VIDEO FILE
+FileType||MP3|.mp3 AUDIO FILE
+FileType||MKV|.mkv VIDEO FILE
+FileType||MIDI|.mid AUDIO FILE
+FileType||JPG|.jpg Joint Photographic Experts Group
+FileType||GIF|.gif Graphics Interchange Format
+FileType||FLV|.flv VIDEO FILE
+FileType||F4V|.f4v VIDEO FILE
+FileType||EPS|.eps Encapsulated PostScript
+FileType||DOC|Word Doc
+FileType||BMP|.bmp Bitmap Image
+FileType||AVI|.avi VIDEO FILE
+FileType||AIF|.aif AUDIO FILE
+FileType||AC3|.ac3 AUDIO FILE
+FileType||AAC|.aac AUDIO FILE
+DigitalFileInformation|LanguageCode|fr|French
+DigitalFileInformation|LanguageCode|es|Spanish
+DigitalFileInformation|LanguageCode|en|English
+DigitalFileInformation|action|N|No Change
+DigitalFileInformation|action|D|Delete
+DigitalFileInformation|action|C|Change
+DigitalFileInformation|action|A|Add
+Country||US|United States
+Country||MX|Mexico
+Country||CO|Colombia
+Country||CL|Chile
+Country||CA|Canada
+Country||BR|Brazil
+Country||AR|Argentina
+ColorMode||WEB|Vector B/W
+ColorMode||VEC|Vector Color
+ColorMode||RGB|RGB
+ColorMode||OTH|Other
+ColorMode||GRA|Gray Scale
+ColorMode||CMY|CMYK
+ColorMode||BIT|Bitmap
+Background||WHI|White
+Background||TRA|Transparent
+Background||OTH|Other
+Background||NUL|N/A
+Background||CLI|White w/clipping path
+AssetDimensions|UOM|PX|Pixels
+AssetDimensions|UOM|IN|Inches
+AssetDimensions|UOM|CM|Centimeters
+Resolution||1200|1200
+Resolution||800|800
+Resolution||600|600
+Resolution||300|300
+Resolution||96|96
+Resolution||72|72
+Representation||R|Representative
+Representation||A|Actual
+Qual|uom|ton|Ton
+Qual|uom|oz|Ounce
+Qual|uom|mm|Millimeter
+Qual|uom|mg|Milligram
+Qual|uom|lb|Pound
+Qual|uom|kg|Kilogram
+Qual|uom|in|Inch
+Qual|uom|g|Gram
+Qual|uom|ft|Foot
+Qual|uom|cm|Centimeter
+Qual|altuom|ton|Ton
+Qual|altuom|oz|Ounce
+Qual|altuom|mm|Millimeter
+Qual|altuom|mg|Milligram
+Qual|altuom|lb|Pound
+Qual|altuom|kg|Kilogram
+Qual|altuom|in|Inch
+Qual|altuom|g|Gram
+Qual|altuom|ft|Foot
+Qual|altuom|cm|Centimeter
+OrientationView||ZZ9|User Defined
+OrientationView||ZZ8|User Defined
+OrientationView||ZZ7|User Defined
+OrientationView||ZZ6|User Defined
+OrientationView||ZZ5|User Defined
+OrientationView||ZZ4|User Defined
+OrientationView||ZZ3|User Defined
+OrientationView||ZZ2|User Defined
+OrientationView||ZZ1|User Defined
+OrientationView||TOP|Top
+OrientationView||SID|Side
+OrientationView||RIT|Right
+OrientationView||NUL|Not Applicable
+OrientationView||LIF|Lifestyle
+OrientationView||LEF|Left
+OrientationView||KIT|Kit
+OrientationView||FRO|Front
+OrientationView||CON|Connector
+OrientationView||BOT|Bottom
+OrientationView||BAC|Back
+OrientationView||ANG|Angle
+Note|lang|fr|French
+Note|lang|es|Spanish
+Note|lang|en|English
+AssetDetailType||QRC|Quick Response Code (QR Code)
+Qual|uom|km|Kilometer
+Qual|uom|mi|Mile
+Qual|altuom|km|Kilometer
+Qual|altuom|mi|Mile

@@ -1,0 +1,8 @@
+PartTerminologyID|PartTerminologyName|PartsDescriptionID|RevDate
+1684|Disc Brake Pad Set|11592|05/01/2023
+7212|Spark Plug|18064|05/20/2022
+11701|Headlight Bulb|23906|05/01/2023
+11718|Multi-Purpose Light Bulb|11306|05/09/2023
+14269|T-Shirt|13817|05/01/2023
+17220|Sponge|33136|05/01/2023
+57237|Candy|12228|05/01/2023

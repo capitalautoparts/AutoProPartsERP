@@ -1,0 +1,10 @@
+AliasID|AliasName
+2376|Bone Sponge
+2377|Headlamp Light Bulb
+2378|Headlamp Bulb
+2379|Brake Pad Set
+2380|Sweets
+2381|Shirt
+2382|Wash Pad
+2383|Wash Sponge
+2384|Sponge Block

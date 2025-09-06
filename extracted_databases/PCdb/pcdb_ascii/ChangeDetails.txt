@@ -1,0 +1,37 @@
+ChangeDetailID|ChangeID|ChangeAttributeStateID|TableNameID|PrimaryKeyColumnName|PrimaryKeyBefore|PrimaryKeyAfter|ColumnName|ColumnValueBefore|ColumnValueAfter
+357|52|1|12|PartsDescriptionID||11306|PartsDescription||Multi Purpose Light Bulb
+358|52|1|12|PartsDescriptionID||11306|PartsDescriptionID||11306
+359|52|1|15|PartsToUseID||47591|PartTerminologyID||11718
+360|52|1|15|PartsToUseID||47591|UseID||1
+361|52|1|15|PartsToUseID||47591|PartsToUseID||47591
+362|52|3|11|PartTerminologyID|11718|11718|PartsDescriptionId||11306
+8307|939|1|12|PartsDescriptionID||11592|PartsDescription||A set of two disc brake pads
+8308|939|1|12|PartsDescriptionID||11592|PartsDescriptionID||11592
+8309|939|3|11|PartTerminologyID|1684|1684|PartsDescriptionId|1126|11592
+19926|2835|1|12|PartsDescriptionID||12228|PartsDescription||Sweet edibles.
+19927|2835|1|12|PartsDescriptionID||12228|PartsDescriptionID||12228
+19928|2835|1|11|PartTerminologyID||57237|PartTerminologyName||Candy
+19929|2835|1|11|PartTerminologyID||57237|PartsDescriptionId||12228
+19930|2835|1|11|PartTerminologyID||57237|PartTerminologyID||57237
+19931|2835|1|27|CodeMasterID|||PartTerminologyID||57237
+19932|2835|1|27|CodeMasterID|||SubCategoryID||263
+19933|2835|1|27|CodeMasterID|||CategoryID||1
+19936|2835|1|27|CodeMasterID||75700|PositionID||1
+19937|2835|1|27|CodeMasterID||75700|CodeMasterID||75700
+19938|2835|1|15|PartsToUseID||48533|PartTerminologyID||57237
+19939|2835|1|15|PartsToUseID||48533|UseID||2
+19940|2835|1|15|PartsToUseID||48533|PartsToUseID||48533
+54218|8004|1|12|PartsDescriptionID||13817|PartsDescription||A lightweight pullover shirt with a round neckline and short sleeves, worn as an undershirt or outer garment
+54219|8004|1|12|PartsDescriptionID||13817|PartsDescriptionID||13817
+54220|8004|3|11|PartTerminologyID|14269|14269|PartsDescriptionId||13817
+132330|31240|1|12|PartsDescriptionID||18064|PartsDescription||Spark Plug
+132331|31240|1|12|PartsDescriptionID||18064|PartsDescriptionID||18064
+132332|31240|3|27|CodeMasterID|0||PartTerminologyID|0|7212
+132333|31240|3|27|CodeMasterID|0||SubCategoryID|200|246
+132335|31240|3|11|PartTerminologyID|7212|7212|PartsDescriptionId||18064
+618213|142907|3|11|PartTerminologyID|11701|11701|PartsDescriptionId|1126|1
+662500|156604|1|12|PartsDescriptionID||33136|PartsDescriptionID||33136
+662501|156604|1|12|PartsDescriptionID||33136|PartsDescription||Sponge.
+662502|156604|3|11|PartTerminologyID|17220|17220|PartsDescriptionId||33136
+713561|179871|3|11|PartTerminologyID|11718|11718|PartTerminologyName|Multi Purpose Light Bulb|Multi-Purpose Light Bulb
+713562|179871|3|12|PartsDescriptionID|11306|11306|PartsDescription|Multi Purpose Light Bulb.|Multi-Purpose Light Bulb.

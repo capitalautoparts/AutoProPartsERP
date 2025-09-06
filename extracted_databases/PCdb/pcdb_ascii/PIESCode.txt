@@ -1,0 +1,781 @@
+PIESCodeId|CodeValue|CodeFormat|FieldFormat|CodeDescription|Source
+1|LF|ID2||Lifetime|PIES
+2|LGO|ID3||Logo Image|PIES
+3|LIF|ID3|ID1|Life Cycle Status Code|PIES
+4|1|ID1||CARB Eligible|PIES
+5|0|ID1||Proposed|PIES
+6|E|ID1/10||Corrosive Material|
+7|EA|ID2||Each|ANSI X.12 Element 355 www.x12.org
+8|DZ|ID2||Dozen|ANSI X.12 Element 355 www.x12.org
+9|DRW|ID3||Technical Drawing|PIES
+10|PK|ID2||Inner Pack (shippable)|ANSI X.12 Element 355 www.x12.org
+11|PI3|ID3||Planogram Inner Pack 3|PIES
+12|PI2|ID3||Planogram Inner Pack 2|PIES
+13|PI1|ID3||Planogram Inner Pack 1|PIES
+14|PH|ID2||Pack (PAK)|ANSI X.12 Element 355 www.x12.org
+15|PGC|ID3||Product Group|PIES
+16|1.1|ID1/4||Explosives|DOT CFR49 Section 172.101 http://www.ecfr.gov/cgi-bin/retrieveECFR?gp=&SID=aa9e902bd8b22eb0e98451d5959ab2d5&n=49y2.1.1.3.9&r=PART&ty=HTML#49:2.1.1.3.9.2
+17|1.2|ID1/4||Explosives Projected|DOT CFR49 Section 172.101 http://www.ecfr.gov/cgi-bin/retrieveECFR?gp=&SID=aa9e902bd8b22eb0e98451d5959ab2d5&n=49y2.1.1.3.9&r=PART&ty=HTML#49:2.1.1.3.9.2
+18|CTS|ID3|ID2|Country of Origin 5|ISO 3166-1 www.iso.org
+19|CTR|ID3|ID2|Country of Origin 4|ISO 3166-1 www.iso.org
+20|CTQ|ID3|ID2|Country of Origin 3|ISO 3166-1 www.iso.org
+21|CTP|ID3|ID2|Country of Origin 2|ISO 3166-1 www.iso.org
+22|1.4|ID1/4||Explosives No Blast|DOT CFR49 Section 172.101 http://www.ecfr.gov/cgi-bin/retrieveECFR?gp=&SID=aa9e902bd8b22eb0e98451d5959ab2d5&n=49y2.1.1.3.9&r=PART&ty=HTML#49:2.1.1.3.9.2
+23|CTO|ID3|ID2|Country of Origin (Primary)|ISO 3166-1 www.iso.org
+24|BR|ID2||Brazil|ISO 3166-1 www.iso.org
+25|D|ID1||D for DOT Hazardous Material Codes|http://www.phmsa.dot.gov/hazmat
+26|DR|ID2||Drum|ANSI X.12 Element 355 www.x12.org
+27|CX|ID2||Coil|ANSI X.12 Element 355 www.x12.org
+28|CT|ID2||Carton|ANSI X.12 Element 355 www.x12.org
+29|CQ|ID2||Cartridge|ANSI X.12 Element 355 www.x12.org
+30|CP|ID2||Crate|ANSI X.12 Element 355 www.x12.org
+31|CN|ID2||Can|ANSI X.12 Element 355 www.x12.org
+32|CM|ID2||Centimeters|ANSI X.12 Element 355 www.x12.org
+33|CH|ID2||Container|ANSI X.12 Element 355 www.x12.org
+34|CG|ID2||Card|ANSI X.12 Element 355 www.x12.org
+35|CA|ID2||Case|ANSI X.12 Element 355 www.x12.org
+36|BX|ID2||Box|ANSI X.12 Element 355 www.x12.org
+37|BO|ID2||Bottle|ANSI X.12 Element 355 www.x12.org
+38|D.3.B|ID1/10||Biohazard Material|
+39|D.2.B|ID1/10||Toxic Material|
+40|D.2.A|ID1/10||Other Toxic Effects|
+41|D.1.B|ID1/10||Immediate Toxic Effects|
+42|D.1.A|ID1/10||Immediate Toxic Effects|
+43|C|ID1||Criteria C|
+44|BK|ID2||Book|ANSI X.12 Element 355 www.x12.org
+45|BIT|ID3||Bitmap|PIES
+46|BG|ID2||Bag|ANSI X.12 Element 355 www.x12.org
+47|BD|ID2||Bundle|ANSI X.12 Element 355 www.x12.org
+48|BC|ID2||Bucket|ANSI X.12 Element 355 www.x12.org
+49|1.5|ID1/4||Very Insensitive Explos|DOT CFR49 Section 172.101 http://www.ecfr.gov/cgi-bin/retrieveECFR?gp=&SID=aa9e902bd8b22eb0e98451d5959ab2d5&n=49y2.1.1.3.9&r=PART&ty=HTML#49:2.1.1.3.9.2
+50|1.6|ID1/4||Extremely Insensitive|DOT CFR49 Section 172.101 http://www.ecfr.gov/cgi-bin/retrieveECFR?gp=&SID=aa9e902bd8b22eb0e98451d5959ab2d5&n=49y2.1.1.3.9&r=PART&ty=HTML#49:2.1.1.3.9.2
+51|T|ID1||Truck (Canada:"Road")|PIES
+52|SVG|ID2/4||Scaler Vector Graphics format|PIES
+53|Superseded|AN1/80||Superseded|PIES
+54|STA|ID3|ID1|Stock Status|PIES
+55|1200|ID2/4||1200|PIES
+56|15|ID2||Stick|ANSI X.12 Element 355 www.x12.org
+57|2|ID1||Available to Order|PIES
+58|TH|ID2||Thailand|ISO 3166-1 www.iso.org
+59|Text Warranty Message|AN1/256||Text Warranty Message|PIES
+60|Temporarily Unavailable|AN1/80||Temporarily Unavailable|PIES
+61|TB|ID2||Tube|ANSI X.12 Element 355 www.x12.org
+62|TAX|ID3|ID1|Taxable|PIES
+63|2.1|ID1/4||Flammable Gas|DOT CFR49 Section 172.101 http://www.ecfr.gov/cgi-bin/retrieveECFR?gp=&SID=aa9e902bd8b22eb0e98451d5959ab2d5&n=49y2.1.1.3.9&r=PART&ty=HTML#49:2.1.1.3.9.2
+64|2.2|ID1/4||Non-flammable gas|DOT CFR49 Section 172.101 http://www.ecfr.gov/cgi-bin/retrieveECFR?gp=&SID=aa9e902bd8b22eb0e98451d5959ab2d5&n=49y2.1.1.3.9&r=PART&ty=HTML#49:2.1.1.3.9.2
+65|2.3|ID1/4||Poisonous gas|DOT CFR49 Section 172.101 http://www.ecfr.gov/cgi-bin/retrieveECFR?gp=&SID=aa9e902bd8b22eb0e98451d5959ab2d5&n=49y2.1.1.3.9&r=PART&ty=HTML#49:2.1.1.3.9.2
+66|3|ID1||Electronically Announced|PIES
+68|DAS|ID3||Datasheet|PIES
+69|CXP|ID3|N1/3|Core Return Days to Expiry|PIES
+70|CRW|ID3||WD Core|PIES
+71|CRJ|ID3||Jobber Core|PIES
+72|CRG|ID3||Good Core|PIES
+73|CRE|ID3||Created|PIES
+74|CR4|ID3||Core 4|PIES
+75|CR3|ID3||Core 3|PIES
+76|CR2|ID3||Core 2|PIES
+77|CR1|ID3||Core 1|PIES
+78|CPN|ID3|AN1/48|Core Part Number|PIES
+79|CON|ID3||Connector|PIES
+80|CMY|ID3||CMYK|PIES
+81|CLI|ID3||White w/clipping path|PIES
+82|CGR|ID3|AN1/8|Core Group|PIES
+83|CER|ID3||Certificate of Origin|PIES
+84|CCL|ID3|AN1/8|Core Class|PIES
+85|CAT|ID3||Catalog|PIES
+86|CAS|ID3||Case Study|PIES
+88|BUY|ID3||Buyers Guide|PIES
+89|BUL|ID3||Technical Bulletin|PIES
+90|BRO|ID3||Brochure|PIES
+91|BRD|ID3||Brand|PIES
+92|BPR|ID3||Brand Parent|PIES
+93|BOW|ID3||Brand Owner|PIES
+94|BOT|ID3||Bottom|PIES
+95|BMP|ID2/4||.bmp Bitmap Image|PIES
+96|DE|ID2||German|ISO 639-1 www.iso.org
+97|CNY|ID3||China Yuan Renminbi|ISO 4217 www.iso.org
+98|CAD|ID3||Canadian Dollar|ISO 4217 www.iso.org
+99|300|ID2/4||300|PIES
+100|THU|ID3||Thumbnail|PIES
+101|TIF|ID2/4||.tif Tagged Image File|PIES
+102|TLE|ID3|AN1/80|Title Description - 80|PIES
+103|TMC|ID3|AN2|Trading Partner Movement Code|PIES
+104|TON|ID3||Tone Art|PIES
+105|TOP|ID3||Top|PIES
+106|Top 60% of Product Group Sales Value (Units x $, Hits, etc.)|AN1/80||Top 60% of Product Group Sales Value (Units x $, Hits, etc.)|PIES
+108|EN|ID2||English|ISO 639-1 www.iso.org
+109|EMS|ID3|ID1|Emission Code|PIES
+110|EFF|ID3||Effective|PIES
+111|EBK|ID3||Ebook|PIES
+112|DOM|ID3||Domestic|PIES
+113|DOC|ID2/4||Word Doc|PIES
+114|DLV|ID3||Volume Dealer|PIES
+115|DLR|ID3||Dealer|PIES
+116|DLN|ID3||Non-Stock Dealer|PIES
+117|DES|ID3|AN1/80|Product Description - Long|PIES
+119|Discontinued|AN1/80||Discontinued|PIES
+120|360|ID3||360 Degree Image Set|PIES
+121|3DS|ID3||3D Models|PIES
+122|4|ID1||Announced|PIES
+123|4.1|ID1/4||Flammable Solid|DOT CFR49 Section 172.101 http://www.ecfr.gov/cgi-bin/retrieveECFR?gp=&SID=aa9e902bd8b22eb0e98451d5959ab2d5&n=49y2.1.1.3.9&r=PART&ty=HTML#49:2.1.1.3.9.2
+124|4.2|ID1/4||Combustible Material|DOT CFR49 Section 172.101 http://www.ecfr.gov/cgi-bin/retrieveECFR?gp=&SID=aa9e902bd8b22eb0e98451d5959ab2d5&n=49y2.1.1.3.9&r=PART&ty=HTML#49:2.1.1.3.9.2
+125|6|ID1||Renumbered|PIES
+126|5.2|ID1/4||Organic Peroxide|DOT CFR49 Section 172.101 http://www.ecfr.gov/cgi-bin/retrieveECFR?gp=&SID=aa9e902bd8b22eb0e98451d5959ab2d5&n=49y2.1.1.3.9&r=PART&ty=HTML#49:2.1.1.3.9.2
+127|5.1|ID1/4||Oxidizer|DOT CFR49 Section 172.101 http://www.ecfr.gov/cgi-bin/retrieveECFR?gp=&SID=aa9e902bd8b22eb0e98451d5959ab2d5&n=49y2.1.1.3.9&r=PART&ty=HTML#49:2.1.1.3.9.2
+128|5|ID1||Temporarily Unavailable|PIES
+129|4.3|ID1/4||Dangerous when wet|DOT CFR49 Section 172.101 http://www.ecfr.gov/cgi-bin/retrieveECFR?gp=&SID=aa9e902bd8b22eb0e98451d5959ab2d5&n=49y2.1.1.3.9&r=PART&ty=HTML#49:2.1.1.3.9.2
+130|Lifetime|AN1/256||Lifetime|PIES
+131|LIN|ID3||Line Art|PIES
+132|LIS|ID3|AN1/80|Life Cycle Status Description|PIES
+133|6.1|ID1/4||Poisonous materials|DOT CFR49 Section 172.101 http://www.ecfr.gov/cgi-bin/retrieveECFR?gp=&SID=aa9e902bd8b22eb0e98451d5959ab2d5&n=49y2.1.1.3.9&r=PART&ty=HTML#49:2.1.1.3.9.2
+134|6.2|ID1/4||Infectious substance|DOT CFR49 Section 172.101 http://www.ecfr.gov/cgi-bin/retrieveECFR?gp=&SID=aa9e902bd8b22eb0e98451d5959ab2d5&n=49y2.1.1.3.9&r=PART&ty=HTML#49:2.1.1.3.9.2
+135|600|ID2/4||600|PIES
+136|LST|ID3||List|PIES
+137|LT|ID2||Liter|ANSI X.12 Element 355 www.x12.org
+138|MAX|ID3||Maximum Used in any Vehicle|PIES
+139|MEC|ID3||Mechanic|PIES
+140|US|ID2||United States|ISO 3166-1 www.iso.org
+141|UPDATE|ID4/6||Change File|PIES
+142|UP|ID2||U.P.C./EAN Consumer Package Code (1-5-5-1)|ANSI X.12 Element 235 www.x12.org
+143|MIDI|ID2/4||.mid AUDIO FILE|PIES
+145|UNL|ID3||Unilateral Price|PIES
+146|TY|ID2||Tray|ANSI X.12 Element 355 www.x12.org
+147|TXT|ID2/4||.txt TEXT FILE|PIES
+148|TX|ID2||Text Warranty Message|PIES
+149|TW|ID2||Taiwan|ISO 3166-1 www.iso.org
+150|TRD|ID3||Trade|PIES
+151|MIN|ID3||Minimum Quantity Used in a Vehicle|PIES
+152|7|ID1/4||Radioactive|DOT CFR49 Section 172.101 http://www.ecfr.gov/cgi-bin/retrieveECFR?gp=&SID=aa9e902bd8b22eb0e98451d5959ab2d5&n=49y2.1.1.3.9&r=PART&ty=HTML#49:2.1.1.3.9.2
+153|72|ID2/4||72|PIES
+154|MKT|ID3|AN1/2000|Marketing Description|PIES
+155|MKV|ID2/4||.mkv VIDEO FILE|PIES
+156|mm|ID2||Minutes|PIES
+157|MOD|ID3||Modified|PIES
+158|MP3|ID2/4||.mp3 AUDIO FILE|PIES
+159|MP4|ID2/4||.mp4 VIDEO FILE|PIES
+160|MR|ID2||Meter|ANSI X.12 Element 355 www.x12.org
+161|MSD|ID3||Material Safety Data Sheet|PIES
+162|VAR|ID3||Variable - See ACES Application Field V91|PIES
+163|V|ID1||Vessel (Canada: Marine)|PIES
+164|USR|ID3||User|PIES
+165|USD|ID3||U.S. Dollar|ISO 4217 www.iso.org
+166|MSR|ID3|ID1|SDR Required Flag|PIES
+167|MX|ID2||Mexico|ISO 3166-1 www.iso.org
+168|MXN|ID3||Mexican Pesos|ISO 4217 www.iso.org
+169|N|ID1||New Item 3 Months, 6 Months, etc.|PIES
+170|NAF|ID3|ID1|NAFTA Preference Criterion Code|PIES
+171|VEC|ID3||Vector Color|PIES
+172|New Item 3 Months, 6 Months, etc.|AN1/80||New Item 3 Months, 6 Months, etc.|PIES
+173|VC|ID2||Vendor's (Seller's) Catalog Number|ANSI X.12 Element 235 www.x12.org
+174|Next 15% of Product Group Sales Value|AN1/80||Next 15% of Product Group Sales Value|PIES
+175|Next 20% of Product Group Sales Value|AN1/80||Next 20% of Product Group Sales Value|PIES
+176|AC1|ID3||Special Additional Cost 1|PIES
+177|ABR|ID3|AN1/12|Product Description - Abbreviated|PIES
+178|AAC|ID2/4||.aac AUDIO FILE|PIES
+179|A|ID1||Actual|PIES
+180|96|ID2/4||96|PIES
+181|9|ID1||Misc. Haz Material|PIES
+182|800|ID2/4||800|PIES
+183|8|ID1/4||Corrosive Material|DOT CFR49 Section 172.101 http://www.ecfr.gov/cgi-bin/retrieveECFR?gp=&SID=aa9e902bd8b22eb0e98451d5959ab2d5&n=49y2.1.1.3.9&r=PART&ty=HTML#49:2.1.1.3.9.2
+184|7z|ID2/4||.7z Archive File|PIES
+185|Non-Stock Item|AN1/80||Non-Stock Item|PIES
+186|NOR|ID3||Normal Quantity Used in a Vehicle|PIES
+187|NOT|ID3||Not Applicable to Vehicles|PIES
+188|AC3|ID2/4||.ac3 AUDIO FILE|PIES
+189|NPC|ID3|ID1|National Popularity Code|PIES
+190|AC2|ID3||Special Additional Cost 2|PIES
+191|NPD|ID3|AN1/80|National Popularity Description|PIES
+192|NUL|ID3||N/A|PIES
+193|O|ID1||Obsolete|PIES
+194|Obsolete|AN1/80||Obsolete|PIES
+195|OEM|ID3|AN1/35|Original Equipment Manufacturer|PIES
+196|OEP|ID3|AN1/48|OEM’s Part Number|PIES
+197|OGG|ID2/4||.ogg AUDIO FILE|PIES
+198|OGV|ID2/4||.ogv VIDEO VILE|PIES
+199|OP|ID2||Two Pack|ANSI X.12 Element 355 www.x12.org
+200|OSN|ID3|AN1/35|Original Supplier|PIES
+201|OSP|ID3|AN1/48|Original Supplier Part Number|PIES
+202|OTH|ID3||Other|PIES
+203|OWN|ID3||Owner's Manual|PIES
+204|P|ID1||Premium|PIES
+205|P01|ID3||Photo - out of package|PIES
+206|P02|ID3||Photo - in package|PIES
+207|P03|ID3||Photo - lifestyle view|PIES
+208|P04|ID3||Photo - Primary|PIES
+209|P05|ID3||Photo - Close Up|PIES
+210|P06|ID3||Photo - Mounted|PIES
+211|P07|ID3||Photo - Unmounted|PIES
+212|PA|ID2||Pail|ANSI X.12 Element 355 www.x12.org
+213|PAG|ID3||Link To Manufacturer Page|PIES
+214|PAL|ID3||Pallet Configuration Drawing|PIES
+215|PC|ID2||Piece|ANSI X.12 Element 355 www.x12.org
+216|PC1|ID3||Planogram Consumer Pack 1|PIES
+217|PC2|ID3||Planogram Consumer Pack 2|PIES
+218|PC3|ID3||Planogram Consumer Pack 3|PIES
+219|PCC|ID3||Product Category Code|PIES
+220|PCM|ID2/4||.pcm AUDIO FILE|PIES
+221|PD|ID2||Price per Dozen|ANSI X.12 Element 639 www.x12.org
+222|PDB|ID3||Product Brochure|PIES
+223|PDF|ID2/4||PDF File|PIES
+224|PE|ID2||Price per Each|ANSI X.12 Element 639 www.x12.org
+225|PF|ID2||Pallet|ANSI X.12 Element 355 www.x12.org
+226|PG|ID2||Gross Pounds|ANSI X.12 Element 355 www.x12.org
+227|ZZ9|ID3||User Defined|PIES
+228|ZZ8|ID3||User Defined|PIES
+229|ZZ7|ID3||User Defined|PIES
+230|ZZ6|ID3||User Defined|PIES
+231|ZZ5|ID3||User Defined|PIES
+232|ZZ4|ID3||User Defined|PIES
+233|ZZ3|ID3||User Defined|PIES
+234|ZZ2|ID3||User Defined|PIES
+235|ZZ1|ID3||User Defined|PIES
+236|ZIP|ID2/4||.zip Archive File|PIES
+237|Y|ID1||Yes|PIES
+238|XLS|ID2/4||Excel File|PIES
+239|XBB|ID3||European Monetary Unit|ISO 4217 www.iso.org
+240|XBA|ID3||European Composite Unit|ISO 4217 www.iso.org
+241|XAML|ID2/4||Extensible Application Markup Language|PIES
+242|WVP|ID3||Wholesale Unilateral Price|PIES
+243|WT2|ID3|ID2|Warranty Time UOM|PIES
+244|WT1|ID3|N1/4|Warranty Time|PIES
+245|WS2|ID3|ID2|Warranty Special UOM|PIES
+246|WS1|ID3|AN1/256|Warranty Special|PIES
+247|WMP|ID3||Wholesale MAP|PIES
+248|WMA|ID2/4||.wma AUDIO FILE|PIES
+249|WLS|ID3||Wholesaler|PIES
+250|WHP|ID3||Whitepaper|PIES
+251|WHI|ID3||White|PIES
+252|WEBM|ID2/4||.webm VIDEO FILE|PIES
+253|WEB|ID3||Vector B/W|PIES
+254|WDP|ID3||Master Wholesale Distributor Price|PIES
+255|WD2|ID3|ID2|Warranty Distance UOM|PIES
+256|WD1|ID3||Distributor|PIES
+257|WAV|ID2/4||.wav AUDIO FILE|PIES
+258|WAR|ID3||Warranty|PIES
+259|W|ID1||Non-Stock Item|PIES
+260|VS|ID2||Vendor's (Seller's) Supplemental Item Number|ANSI X.12 Element 235 www.x12.org
+261|VP|ID2||Vendor's (Seller's) Part Number|ANSI X.12 Element 235 www.x12.org
+262|VN|ID2||Vendor's (Seller's) Item Number|ANSI X.12 Element 235 www.x12.org
+264|VMC|ID3||Maintenance Care Video|PIES
+265|VLF|ID3||Lifestyle Video|PIES
+266|VIN|ID3||Installation Video|PIES
+267|VID|ID3||Primary Video|PIES
+268|VGL|ID3||General Information Video|PIES
+269|BAC|ID3||Back|PIES
+270|B.6|ID1/10||Reactive Flammable|
+271|B.5|ID1/10||Flammable Aerosol|
+272|B.4|ID1/10||Flammable Solid|
+273|B.3|ID1/10||Combustible Liquid|
+274|B.2|ID1/10||Flammable Liquid|
+275|B.1|ID1/10||Flammable Gas|
+276|B|ID1||Next 20% of Product Group Sales Value|PIES
+277|AVI|ID2/4||.avi VIDEO FILE|PIES
+278|Available to Order|AN1/80||Available to Order|PIES
+279|Available Only While Supplies Last|AN1/80||Available Only While Supplies Last|PIES
+280|AU|ID2||Austrailia|ISO 3166-1 www.iso.org
+281|AUD|ID3||Audio File|PIES
+282|ASM|ID3|AN1/2000|Application Summary - 2000|PIES
+283|ASC|ID3|AN1/2000|Associated Comments|PIES
+284|AS|ID2||Assortment|ANSI X.12 Element 355 www.x12.org
+285|APG|ID3||Application Guide|PIES
+286|Announced|AN1/80||Announced|PIES
+287|ANG|ID3||Angle|PIES
+288|AIF|ID2/4||.aif AUDIO FILE|PIES
+289|FT|ID2||Foot|ANSI X.12 Element 355 www.x12.org
+290|FRO|ID3||Front|PIES
+291|FR|ID2||France|ISO 3166-1 www.iso.org
+292|FLV|ID2/4||.flv VIDEO FILE|PIES
+293|FLT|ID3||Fleet|PIES
+294|FED|ID3||Full Engineering Drawing|PIES
+295|FAB|ID3||Features and Benefits|PIES
+296|F4V|ID2/4||.f4v VIDEO FILE|PIES
+297|F|ID1/10||Dangerous Reactive|
+298|EXP|ID3||Expired|PIES
+299|EV|ID2||Envelope|ANSI X.12 Element 355 www.x12.org
+300|EUR|ID3||European EURO|ISO 4217 www.iso.org
+301|Electronically Announced|AN1/80||Electronically Announced|PIES
+302|FULL|ID4/6||Full Refresh|PIES
+303|ST|ID2||Set|ANSI X.12 Element 355 www.x12.org
+304|ss|ID2||Seconds|PIES
+305|SR|ID2||See Rep|PIES
+306|SPE|ID3||Specification Sheet Filename|PIES
+307|SO|ID2||Spool|ANSI X.12 Element 355 www.x12.org
+308|SLA|ID3|AN1/2000|Slang Description - 2000|PIES
+309|SL|ID2||Sleeve|ANSI X.12 Element 355 www.x12.org
+310|SID|ID3||Side|PIES
+312|SHO|ID3|AN1/20|Product Description - Short|PIES
+313|SH|ID2||Sheet|ANSI X.12 Element 355 www.x12.org
+314|See Rep|AN1/256||See Rep|PIES
+315|SBR|ID3||SubBrand|PIES
+316|S|ID1||Shelf Stock|
+317|RST|ID3|ID2|Regulating State|PIES
+318|RPC|ID3|AN5/10|Regulating Postal Code|PIES
+319|RMP|ID3||Retail MAP|PIES
+320|RL|ID2||Roll|ANSI X.12 Element 355 www.x12.org
+321|RIT|ID3||Right|PIES
+322|RGB|ID3||RGB|PIES
+323|RET|ID3||Retail|PIES
+324|RES|ID3||Research Bulletin|PIES
+325|REQ|ID3||As Required|PIES
+326|Renumbered|AN1/80||Renumbered|PIES
+327|REM|ID3||Remanufactured|PIES
+328|Released|AN1/80||Released|PIES
+329|REF|ID3||Refurbished|PIES
+330|RE|ID2||Reel|ANSI X.12 Element 355 www.x12.org
+331|RDE|ID3|AN1/2000|Regulating Description|PIES
+332|RD|ID2||Rod|ANSI X.12 Element 355 www.x12.org
+333|RCT|ID3|AN1/50|Regulating City, State|PIES
+334|RCS|ID3|AN1/50|Regulating County, State|PIES
+335|RCC|ID3|AN1/50|Regulating Country|PIES
+336|RAR|ID2/4||.rar Archive File|PIES
+337|RAC|ID3||Racer|PIES
+338|R|ID1||Rail|PIES
+339|QT|ID2||Quart|ANSI X.12 Element 355 www.x12.org
+340|QPB|ID3||Quantity Price Break|PIES
+341|QOT|ID3||Quote|PIES
+342|Q|ID1||Quick-Ship|
+343|PY|ID2||Price per Yard|ANSI X.12 Element 639 www.x12.org
+344|PX|ID2||Pixels|PIES
+345|PTS|ID3|AN1/48|Part Number Superseded To|PIES
+346|PTN|ID3|AN1/48|Part Number - Old|PIES
+347|PTI|ID3||Part Terminology|PIES
+348|PT|ID2||Pint|ANSI X.12 Element 355 www.x12.org
+349|PST|ID3||Price Sheet|PIES
+350|PSS|ID3||Product Specifications Sheet|PIES
+351|PSG|ID3||Product SubGroup|PIES
+352|Proposed|AN1/80||Proposed|PIES
+353|PRO|ID3||Special Promo|PIES
+354|PR|ID2||Pair|ANSI X.12 Element 355 www.x12.org
+355|PP3|ID3||Planogram Case Pack 3|PIES
+356|PP2|ID3||Planogram Case Pack 2|PIES
+357|PP1|ID3||Planogram Case Pack 1|PIES
+358|PP|ID2||Price per Pound|ANSI X.12 Element 639 www.x12.org
+359|PO|ID2||Price per Ounce|ANSI X.12 Element 639 www.x12.org
+360|PNG|ID2/4||.png Portable Network Graphics|PIES
+361|PLM|ID3|N1/3|Pallet Layer Maximum|PIES
+362|PLC|ID3|N1/3|Maximum Cases per Pallet Layer|PIES
+363|PL|ID2||Pallet|ANSI X.12 Element 355 www.x12.org
+364|PKP|ID3||Pickup|PIES
+365|LB|ID2||Pound|ANSI X.12 Element 355 www.x12.org
+366|KT|ID2||Kit|ANSI X.12 Element 355 www.x12.org
+367|KG|ID2||Kilogram|ANSI X.12 Element 355 www.x12.org
+368|KE|ID2||Keg|ANSI X.12 Element 355 www.x12.org
+369|JR|ID2||Jar|ANSI X.12 Element 355 www.x12.org
+370|IN|ID2||Inches|ANSI X.12 Element 355 www.x12.org
+371|HU|ID2||Hundred|ANSI X.12 Element 355 www.x12.org
+372|HC|ID2||Hundred Count|ANSI X.12 Element 355 www.x12.org
+373|GT|ID2||Gross Kilograms|ANSI X.12 Element 355 www.x12.org
+374|GA|ID2||Gallon|ANSI X.12 Element 355 www.x12.org
+375|ES|ID2||Spanish|ISO 639-1 www.iso.org
+376|HKD|ID3||Hong Kong Dollar|ISO 4217 www.iso.org
+377|GBP|ID3||United Kingdom Pound Sterling|ISO 4217 www.iso.org
+378|KR|ID2||Korea, Republic of|ISO 3166-1 www.iso.org
+379|JP|ID2||Japan|ISO 3166-1 www.iso.org
+380|GB|ID2||United Kingdom|ISO 3166-1 www.iso.org
+381|HP|ID2||Price per 100|ANSI X.12 Element 639 www.x12.org
+382|HF|ID2||Per 100 Feet|ANSI X.12 Element 639 www.x12.org
+383|III|ID1/3||Low Danger|ANSI X.12 Element 254 www.x12.org
+384|II|ID1/3||Medium Danger|ANSI X.12 Element 254 www.x12.org
+385|I|ID1/3||Great Danger|ANSI X.12 Element 254 www.x12.org
+386|GRA|ID3||Gray Scale|PIES
+387|GIF|ID2/4||.gif Graphics Interchange Format|PIES
+388|GCC|ID3|AN1/2000|General Copy|PIES
+389|EPS|ID2/4||.eps Encapsulated PostScript|PIES
+390|JA|ID2||Japanese|ISO 639-1 www.iso.org
+391|IT|ID2||Italian|ISO 639-1 www.iso.org
+392|EXT|ID3|AN1/240|Product Description - Extended|PIES
+393|LEF|ID3||Left|PIES
+394|Last 5% of Product Group Sales Value|AN1/80||Last 5% of Product Group Sales Value|PIES
+395|LAB|ID3|AN1/80|Label Description|PIES
+396|KIT|ID3||Kit|PIES
+397|KEY|ID3|AN1/2000|Key Search Words - 2000|PIES
+398|JPG|ID2/4||.jpg Joint Photographic Experts Group|PIES
+399|JBR|ID3||Jobber|PIES
+400|JBN|ID3||NS Jobber|PIES
+401|JBC|ID3||Conf-Jobber|PIES
+402|ISG|ID3||Illustration Guide|PIES
+403|INV|ID3|AN1/40|Product Description - Invoice|PIES
+404|INT|ID3||International|PIES
+405|INS|ID3||Installation Instructions|PIES
+406|INP|ID3||Installer Preferred|PIES
+407|INN|ID3||NS Installer|PIES
+408|INM|ID3||Master Installer|PIES
+409|HZ1|ID3|ID2/3|Item (SKU) Level Special Handling Code|PIES
+410|HTS|ID3|ID10|Harmonized Tariff Code (HTS)|PIES
+411|HSB|ID3|ID10|Harmonized Tariff Code (Schedule B)|PIES
+412|HOT|ID3||Image Hotspotting|PIES
+413|HMS|ID3||Hazardous Materials Info Sheet|PIES
+414|hh|ID2||Hours|PIES
+415|HAC|ID3|AN1/48|Canadian Harmonizing Tariff Code|PIES
+416|1.3|ID1/4||Explosives Fire|DOT CFR49 Section 172.101 http://www.ecfr.gov/cgi-bin/retrieveECFR?gp=&SID=aa9e902bd8b22eb0e98451d5959ab2d5&n=49y2.1.1.3.9&r=PART&ty=HTML#49:2.1.1.3.9.2
+417|1|ID1||Released|PIES
+418|B|ID1||Bulk|PIES
+419|BX|ID2||Inner Pack (non-shippable)|ANSI X.12 Element 355 www.x12.org
+420|B|ID1||Criteria B|
+421|A|ID1||Top 60% of Product Group Sales Value (Units x $, Hits, etc.)|PIES
+422|A|ID1||Criteria A|
+423|A|ID1/10||Compressed Gas|
+424|A|ID1||Available Only While Supplies Last|PIES
+425|A|ID1||Air|PIES
+426|A|ID1||Add|PIES
+427|9|ID1||Obsolete|PIES
+428|8|ID1||Discontinued|PIES
+429|7|ID1||Superseded|PIES
+430|360|ID3||360 Rotation|PIES
+431|3|ID1||Racing or Pre-Emissions Use Only|PIES
+432|3|ID1/4||Flammable Liquid|DOT CFR49 Section 172.101 http://www.ecfr.gov/cgi-bin/retrieveECFR?gp=&SID=aa9e902bd8b22eb0e98451d5959ab2d5&n=49y2.1.1.3.9&r=PART&ty=HTML#49:2.1.1.3.9.2
+433|2|ID1||EPA Eligible|PIES
+434|PK|ID2||Price per Kilogram|ANSI X.12 Element 639 www.x12.org
+435|RET|ID3|AN1/3|Return Code|PIES
+436|R|ID1||Representative|PIES
+437|PL|ID2||Price per Liter|ANSI X.12 Element 639 www.x12.org
+438|PL|ID2||Pallet Unit Load|ANSI X.12 Element 355 www.x12.org
+439|PK|ID2||Package|ANSI X.12 Element 355 www.x12.org
+440|PF|ID2||Price per Foot|ANSI X.12 Element 639 www.x12.org
+441|O|ID1||OEM|PIES
+442|NUL|ID3||Not Applicable|PIES
+443|N|ID1||Northern|PIES
+444|N|ID1||Non-Stock (Made to Order)|
+445|N|ID1||Non-Bulk|PIES
+446|N|ID1||No Changes|PIES
+447|N|ID1||No|PIES
+448|MSD|ID3|AN1/35|SDS Sheet Number|PIES
+449|LIF|ID3||Lifestyle|PIES
+450|INS|ID3||Stocking Installer|PIES
+451|FR|ID2||French|ISO 639-1 www.iso.org
+452|FAB|ID3|AN1/240|Features and Benefits|PIES
+453|EN|ID2||European Article Number (EAN) (2-5-5-1)|ANSI X.12 Element 235 www.x12.org
+454|EA|ID2||Smallest Pack (Consumer Level)|ANSI X.12 Element 355 www.x12.org
+455|DE|ID2||Germany|ISO 3166-1 www.iso.org
+456|D|ID1||Last 5% of Product Group Sales Value|PIES
+457|D|ID1||Delete|PIES
+458|CN|ID2||China|ISO 3166-1 www.iso.org
+459|CA|ID2||Canada|ISO 3166-1 www.iso.org
+460|C|ID1/10||Oxidizing Material|
+461|C|ID1||Next 15% of Product Group Sales Value|PIES
+462|C|ID1||Change|PIES
+463|WD1|ID3|N1/7|Warranty Distance|PIES
+464|TRA|ID3||Transparent|PIES
+465|TH|ID2||Thousand|ANSI X.12 Element 355 www.x12.org
+466|S|ID1||Superseded|PIES
+467|S|ID1||Standard|PIES
+468|S|ID1||Southern|PIES
+469|D|ID1||Criteria D|PIES
+470|TE|ID2||Tote|ANSI X.12 Element 355 www.x12.org
+471|OZ|ID2||Ounce|ANSI X.12 Element 355 www.x12.org
+472|FI|ID2||Finland|ISO 3166-1 www.iso.org
+473|ES|ID2||Spain|ISO 3166-1 www.iso.org
+474|DO|ID2||Dominican Republic (the)|ISO 3166-1 www.iso.org
+475|DK|ID2||Denmark|ISO 3166-1 www.iso.org
+476|CZ|ID2||Czechia|ISO 3166-1 www.iso.org
+477|CO|ID2||Colombia|ISO 3166-1 www.iso.org
+478|CH|ID2||Switzerland|ISO 3166-1 www.iso.org
+479|BZ|ID2||Belize|ISO 3166-1 www.iso.org
+480|BE|ID2||Belgium|ISO 3166-1 www.iso.org
+481|BD|ID2||Bangladesh|ISO 3166-1 www.iso.org
+482|BA|ID2||Bosnia and Herzegovina|ISO 3166-1 www.iso.org
+483|AT|ID2||Austria|ISO 3166-1 www.iso.org
+484|AR|ID2||Argentina|ISO 3166-1 www.iso.org
+485|DH|ID2||Miles|ANSI X.12 Element 355
+486|DK|ID2||Kilometers|ANSI X.12 Element 355
+487|ZA|ID2||South Africa|ISO 3166-1 www.iso.org
+488|YT|ID2||Mayotte|ISO 3166-1 www.iso.org
+489|VN|ID2||Viet Nam|ISO 3166-1 www.iso.org
+490|VE|ID2||Venezuela (Bolivarian Republic of)|ISO 3166-1 www.iso.org
+491|UM|ID2||United States Minor Outlying Islands (the)|ISO 3166-1 www.iso.org
+492|UA|ID2||Ukraine|ISO 3166-1 www.iso.org
+493|TZ|ID2||Tanzania, United Republic of|ISO 3166-1 www.iso.org
+494|TR|ID2||Turkey|ISO 3166-1 www.iso.org
+495|TN|ID2||Tunisia|ISO 3166-1 www.iso.org
+496|SV|ID2||El Salvador|ISO 3166-1 www.iso.org
+497|SK|ID2||Slovakia|ISO 3166-1 www.iso.org
+498|SI|ID2||Slovenia|ISO 3166-1 www.iso.org
+499|SG|ID2||Singapore|ISO 3166-1 www.iso.org
+500|SE|ID2||Sweden|ISO 3166-1 www.iso.org
+501|SA|ID2||Saudi Arabia|ISO 3166-1 www.iso.org
+502|RU|ID2||Russian Federation (the)|ISO 3166-1 www.iso.org
+503|RO|ID2||Romania|ISO 3166-1 www.iso.org
+504|PT|ID2||Portugal|ISO 3166-1 www.iso.org
+505|PR|ID2||Puerto Rico|ISO 3166-1 www.iso.org
+506|PL|ID2||Poland|ISO 3166-1 www.iso.org
+507|PK|ID2||Pakistan|ISO 3166-1 www.iso.org
+508|PH|ID2||Philippines (the)|ISO 3166-1 www.iso.org
+509|PE|ID2||Peru|ISO 3166-1 www.iso.org
+510|NZ|ID2||New Zealand|ISO 3166-1 www.iso.org
+511|NL|ID2||Netherlands (the)|ISO 3166-1 www.iso.org
+512|NI|ID2||Nicaragua|ISO 3166-1 www.iso.org
+513|MY|ID2||Malaysia|ISO 3166-1 www.iso.org
+514|MT|ID2||Malta|ISO 3166-1 www.iso.org
+515|MO|ID2||Macao|ISO 3166-1 www.iso.org
+516|MG|ID2||Madagascar|ISO 3166-1 www.iso.org
+517|LT|ID2||Lithuania|ISO 3166-1 www.iso.org
+518|KP|ID2||Korea (the Democratic People's Republic of)|ISO 3166-1 www.iso.org
+519|IT|ID2||Italy|ISO 3166-1 www.iso.org
+520|IN|ID2||India|ISO 3166-1 www.iso.org
+521|IL|ID2||Israel|ISO 3166-1 www.iso.org
+522|IE|ID2||Ireland|ISO 3166-1 www.iso.org
+523|ID|ID2||Indonesia|ISO 3166-1 www.iso.org
+524|HU|ID2||Hungary|ISO 3166-1 www.iso.org
+525|HT|ID2||Haiti|ISO 3166-1 www.iso.org
+526|HN|ID2||Honduras|ISO 3166-1 www.iso.org
+527|HK|ID2||Hong Kong|ISO 3166-1 www.iso.org
+528|GT|ID2||Guatemala|ISO 3166-1 www.iso.org
+529|GR|ID2||Greece|ISO 3166-1 www.iso.org
+530|RGL|ID3||Regulatory Content Label|PIES
+531|PRC|ID3|ID3|Product Condition|PIES
+532|NEW|ID3||New|PIES
+533|USE|ID3||Used|PIES
+534|YR|ID2||Years|ANSI X.12 Element 355
+535|MO|ID2||Months|ANSI X.12 Element 355
+536|WK|ID2||Weeks|ANSI X.12 Element 355
+537|DA|ID2||Days|ANSI X.12 Element 355
+538|CWD|ID3||WD Cost|
+539|CC1|ID3||Core Cost|
+540|PP1|ID3||Pack Level 1 Price|
+541|PP2|ID3||Pack Level 2 Price|
+542|PP3|ID3||Pack Level 3 Price|
+543|PP4|ID3||Pack Level 4 Price|
+544|PP5|ID3||Pack Level 5 Price|
+545|PP6|ID3||Pack Level 6 Price|
+546|PP7|ID3||Pack Level 7 Price|
+547|PP8|ID3||Pack Level 8 Price|
+548|ZZA|ID3||User Defined|
+549|ZZB|ID3||User Defined|
+550|ZZC|ID3||User Defined|
+551|ZZD|ID3||User Defined|
+552|ZZE|ID3||User Defined|
+553|ZZF|ID3||User Defined|
+554|LTM|ID3|N1/3|Estimated Lead Time|
+556|CRF|ID3||Core 15|
+557|CRE|ID3||Core 14|
+558|CRD|ID3||Core 13|
+559|CRC|ID3||Core 12|
+560|CRB|ID3||Core 11|
+561|CRA|ID3||Core 10|
+562|CR9|ID3||Core 9|
+563|CR8|ID3||Core 8|
+564|CR7|ID3||Core 7|
+565|CR6|ID3||Core 6|
+566|CR5|ID3||Core 5|
+567|RPQ|ID3|N1/3|Return Pack Size|
+568|WHS|ID3|AN1/25|Supplier Warehouse ID|
+569|VMI|ID3|AN3|Alert Code|
+570|GCT|ID3|ID3/6|Green Certification, Regulation or Standard Met|
+571|GPV|ID3|ID3|Additional Green Attributes|
+572|ECN|ID3|ID5|ECCN|
+573|REC|ID3||Recycled Content|
+574|NTX|ID3||Non-toxic|
+575|DEG|ID3||Biodegradable|
+576|BIO|ID3||Biobased|
+577|ENR|ID3||Energy Reduction|
+578|NESHAP|ID6||NESHAP Compliant|
+579|OTC|ID3||OTC Compliant|
+580|LADCO|ID5||LADCO Compliant|
+581|ESTAR|ID5||Product has earned the Energy Star Label|
+582|ECO|ID3||EcoLogo Certified|
+583|FEMP|ID4||Meets Federal Energy Management Program (FEMP) energy efficiency levels|
+584|GSC|ID3||Green Seal Certified|
+585|NEMA|ID4||Meets NEMA Premium Efficiency Standards|
+586|SL|ID2||Sierra Leone|ISO 3166-1 www.iso.org
+587|RS|ID2||Serbia|ISO 3166-1 www.iso.org
+588|MU|ID2||Mauritius|ISO 3166-1 www.iso.org
+589|MA|ID2||Morocco|ISO 3166-1 www.iso.org
+590|LU|ID2||Luxembourg|ISO 3166-1 www.iso.org
+591|HR|ID2||Croatia|ISO 3166-1 www.iso.org
+592|BY|ID2||Belarus|ISO 3166-1 www.iso.org
+593|BG|ID2||Bulgaria|ISO 3166-1 www.iso.org
+595|AD|ID2||Andorra|ISO 3166-1 www.iso.org
+596|ME|ID2||Montenegro|ISO 3166-1 www.iso.org
+597|MD|ID2||Moldova (the Republic of)|ISO 3166-1 www.iso.org
+598|MC|ID2||Monaco|ISO 3166-1 www.iso.org
+599|LY|ID2||Libya|ISO 3166-1 www.iso.org
+600|LV|ID2||Latvia|ISO 3166-1 www.iso.org
+602|LR|ID2||Liberia|ISO 3166-1 www.iso.org
+603|LK|ID2||Sri Lanka|ISO 3166-1 www.iso.org
+604|LI|ID2||Liechtenstein|ISO 3166-1 www.iso.org
+605|LC|ID2||Saint Lucia|ISO 3166-1 www.iso.org
+606|LB|ID2||Lebanon|ISO 3166-1 www.iso.org
+607|LA|ID2||Lao People's Democratic Republic (the)|ISO 3166-1 www.iso.org
+608|KZ|ID2||Kazakhstan|ISO 3166-1 www.iso.org
+609|KY|ID2||Cayman Islands (the)|ISO 3166-1 www.iso.org
+610|KW|ID2||Kuwait|ISO 3166-1 www.iso.org
+611|KN|ID2||Saint Kitts and Nevis|ISO 3166-1 www.iso.org
+612|KM|ID2||Comoros (the)|ISO 3166-1 www.iso.org
+613|KI|ID2||Kiribati|ISO 3166-1 www.iso.org
+614|KH|ID2||Cambodia|ISO 3166-1 www.iso.org
+615|KG|ID2||Kyrgyzstan|ISO 3166-1 www.iso.org
+616|KE|ID2||Kenya|ISO 3166-1 www.iso.org
+617|JO|ID2||Jordan|ISO 3166-1 www.iso.org
+618|JM|ID2||Jamaica|ISO 3166-1 www.iso.org
+619|JE|ID2||Jersey|ISO 3166-1 www.iso.org
+620|IS|ID2||Iceland|ISO 3166-1 www.iso.org
+621|IR|ID2||Iran (Islamic Republic of)|ISO 3166-1 www.iso.org
+622|IQ|ID2||Iraq|ISO 3166-1 www.iso.org
+623|IO|ID2||British Indian Ocean Territory (the)|ISO 3166-1 www.iso.org
+624|IM|ID2||Isle of Man|ISO 3166-1 www.iso.org
+625|HM|ID2||Heard Island and McDonald Islands|ISO 3166-1 www.iso.org
+626|GY|ID2||Guyana|ISO 3166-1 www.iso.org
+627|GW|ID2||Guinea-Bissau|ISO 3166-1 www.iso.org
+628|GU|ID2||Guam|ISO 3166-1 www.iso.org
+629|GS|ID2||South Georgia and the South Sandwich Islands|ISO 3166-1 www.iso.org
+630|GQ|ID2||Equatorial Guinea|ISO 3166-1 www.iso.org
+631|GP|ID2||Guadeloupe|ISO 3166-1 www.iso.org
+632|GN|ID2||Guinea|ISO 3166-1 www.iso.org
+633|GM|ID2||Gambia (the)|ISO 3166-1 www.iso.org
+634|GL|ID2||Greenland|ISO 3166-1 www.iso.org
+635|GI|ID2||Gibraltar|ISO 3166-1 www.iso.org
+636|GH|ID2||Ghana|ISO 3166-1 www.iso.org
+637|GG|ID2||Guernsey|ISO 3166-1 www.iso.org
+638|GF|ID2||French Guiana|ISO 3166-1 www.iso.org
+639|GE|ID2||Georgia|ISO 3166-1 www.iso.org
+640|GD|ID2||Grenada|ISO 3166-1 www.iso.org
+641|GA|ID2||Gabon|ISO 3166-1 www.iso.org
+642|FO|ID2||Faroe Islands (the)|ISO 3166-1 www.iso.org
+643|FM|ID2||Micronesia (Federated States of)|ISO 3166-1 www.iso.org
+644|FK|ID2||Falkland Islands (the) [Malvinas]|ISO 3166-1 www.iso.org
+645|FJ|ID2||Fiji|ISO 3166-1 www.iso.org
+646|ET|ID2||Ethiopia|ISO 3166-1 www.iso.org
+647|ER|ID2||Eritrea|ISO 3166-1 www.iso.org
+648|EH|ID2||Western Sahara*|ISO 3166-1 www.iso.org
+649|EG|ID2||Egypt|ISO 3166-1 www.iso.org
+650|EE|ID2||Estonia|ISO 3166-1 www.iso.org
+651|EC|ID2||Ecuador|ISO 3166-1 www.iso.org
+652|DZ|ID2||Algeria|ISO 3166-1 www.iso.org
+653|DM|ID2||Dominica|ISO 3166-1 www.iso.org
+655|DJ|ID2||Djibouti|ISO 3166-1 www.iso.org
+656|CY|ID2||Cyprus|ISO 3166-1 www.iso.org
+657|CX|ID2||Christmas Island|ISO 3166-1 www.iso.org
+658|CW|ID2||Curaçao|ISO 3166-1 www.iso.org
+659|CV|ID2||Cabo Verde|ISO 3166-1 www.iso.org
+660|CU|ID2||Cuba|ISO 3166-1 www.iso.org
+661|CR|ID2||Costa Rica|ISO 3166-1 www.iso.org
+662|CL|ID2||Chile|ISO 3166-1 www.iso.org
+663|CK|ID2||Cook Islands (the)|ISO 3166-1 www.iso.org
+664|CI|ID2||Côte d'Ivoire|ISO 3166-1 www.iso.org
+665|CG|ID2||Congo (the)|ISO 3166-1 www.iso.org
+666|CF|ID2||Central African Republic (the)|ISO 3166-1 www.iso.org
+667|CD|ID2||Congo (the Democratic Republic of the)|ISO 3166-1 www.iso.org
+668|CC|ID2||Cocos (Keeling) Islands (the)|ISO 3166-1 www.iso.org
+670|BW|ID2||Botswana|ISO 3166-1 www.iso.org
+671|BV|ID2||Bouvet Island|ISO 3166-1 www.iso.org
+672|BT|ID2||Bhutan|ISO 3166-1 www.iso.org
+673|BS|ID2||Bahamas (the)|ISO 3166-1 www.iso.org
+674|BQ|ID2||Bonaire, Sint Eustatius and Saba|ISO 3166-1 www.iso.org
+675|BO|ID2||Bolivia (Plurinational State of)|ISO 3166-1 www.iso.org
+676|BN|ID2||Brunei Darussalam|ISO 3166-1 www.iso.org
+677|BM|ID2||Bermuda|ISO 3166-1 www.iso.org
+678|BL|ID2||Saint Barthélemy|ISO 3166-1 www.iso.org
+679|BJ|ID2||Benin|ISO 3166-1 www.iso.org
+680|BI|ID2||Burundi|ISO 3166-1 www.iso.org
+681|BH|ID2||Bahrain|ISO 3166-1 www.iso.org
+682|BF|ID2||Burkina Faso|ISO 3166-1 www.iso.org
+683|BB|ID2||Barbados|ISO 3166-1 www.iso.org
+684|AZ|ID2||Azerbaijan|ISO 3166-1 www.iso.org
+685|AX|ID2||Åland Islands|ISO 3166-1 www.iso.org
+686|AW|ID2||Aruba|ISO 3166-1 www.iso.org
+687|AS|ID2||American Samoa|ISO 3166-1 www.iso.org
+688|AQ|ID2||Antarctica|ISO 3166-1 www.iso.org
+689|AO|ID2||Angola|ISO 3166-1 www.iso.org
+690|AM|ID2||Armenia|ISO 3166-1 www.iso.org
+691|AL|ID2||Albania|ISO 3166-1 www.iso.org
+692|AI|ID2||Anguilla|ISO 3166-1 www.iso.org
+693|AG|ID2||Antigua and Barbuda|ISO 3166-1 www.iso.org
+694|AF|ID2||Afghanistan|ISO 3166-1 www.iso.org
+695|AE|ID2||United Arab Emirates (the)|ISO 3166-1 www.iso.org
+696|ZW|ID2||Zimbabwe|ISO 3166-1 www.iso.org
+697|ZM|ID2||Zambia|ISO 3166-1 www.iso.org
+698|YE|ID2||Yemen|ISO 3166-1 www.iso.org
+699|WS|ID2||Samoa|ISO 3166-1 www.iso.org
+700|WF|ID2||Wallis and Futuna|ISO 3166-1 www.iso.org
+701|VU|ID2||Vanuatu|ISO 3166-1 www.iso.org
+702|VI|ID2||Virgin Islands (U.S.)|ISO 3166-1 www.iso.org
+703|VG|ID2||Virgin Islands (British)|ISO 3166-1 www.iso.org
+704|VC|ID2||Saint Vincent and the Grenadines|ISO 3166-1 www.iso.org
+705|VA|ID2||Holy See (the)|ISO 3166-1 www.iso.org
+706|UZ|ID2||Uzbekistan|ISO 3166-1 www.iso.org
+707|UY|ID2||Uruguay|ISO 3166-1 www.iso.org
+708|UG|ID2||Uganda|ISO 3166-1 www.iso.org
+709|TV|ID2||Tuvalu|ISO 3166-1 www.iso.org
+710|TT|ID2||Trinidad and Tobago|ISO 3166-1 www.iso.org
+711|TO|ID2||Tonga|ISO 3166-1 www.iso.org
+712|TM|ID2||Turkmenistan|ISO 3166-1 www.iso.org
+713|TL|ID2||Timor-Leste|ISO 3166-1 www.iso.org
+714|TK|ID2||Tokelau|ISO 3166-1 www.iso.org
+715|TJ|ID2||Tajikistan|ISO 3166-1 www.iso.org
+716|TG|ID2||Togo|ISO 3166-1 www.iso.org
+717|TF|ID2||French Southern Territories (the)|ISO 3166-1 www.iso.org
+718|TD|ID2||Chad|ISO 3166-1 www.iso.org
+719|TC|ID2||Turks and Caicos Islands (the)|ISO 3166-1 www.iso.org
+720|SZ|ID2||Swaziland|ISO 3166-1 www.iso.org
+721|SY|ID2||Syrian Arab Republic|ISO 3166-1 www.iso.org
+722|SX|ID2||Sint Maarten (Dutch part)|ISO 3166-1 www.iso.org
+723|ST|ID2||Sao Tome and Principe|ISO 3166-1 www.iso.org
+724|SS|ID2||South Sudan|ISO 3166-1 www.iso.org
+725|SR|ID2||Suriname|ISO 3166-1 www.iso.org
+726|SO|ID2||Somalia|ISO 3166-1 www.iso.org
+727|SN|ID2||Senegal|ISO 3166-1 www.iso.org
+728|SM|ID2||San Marino|ISO 3166-1 www.iso.org
+730|SJ|ID2||Svalbard and Jan Mayen|ISO 3166-1 www.iso.org
+731|SH|ID2||Saint Helena, Ascension and Tristan da Cunha|ISO 3166-1 www.iso.org
+732|SD|ID2||Sudan (the)|ISO 3166-1 www.iso.org
+733|SC|ID2||Seychelles|ISO 3166-1 www.iso.org
+734|SB|ID2||Solomon Islands|ISO 3166-1 www.iso.org
+735|RW|ID2||Rwanda|ISO 3166-1 www.iso.org
+736|RE|ID2||Réunion|ISO 3166-1 www.iso.org
+737|QA|ID2||Qatar|ISO 3166-1 www.iso.org
+738|PY|ID2||Paraguay|ISO 3166-1 www.iso.org
+739|PW|ID2||Palau|ISO 3166-1 www.iso.org
+740|PS|ID2||Palestine, State of|ISO 3166-1 www.iso.org
+741|PN|ID2||Pitcairn|ISO 3166-1 www.iso.org
+742|PM|ID2||Saint Pierre and Miquelon|ISO 3166-1 www.iso.org
+743|PG|ID2||Papua New Guinea|ISO 3166-1 www.iso.org
+744|PF|ID2||French Polynesia|ISO 3166-1 www.iso.org
+745|PA|ID2||Panama|ISO 3166-1 www.iso.org
+746|OM|ID2||Oman|ISO 3166-1 www.iso.org
+747|NU|ID2||Niue|ISO 3166-1 www.iso.org
+748|NR|ID2||Nauru|ISO 3166-1 www.iso.org
+749|NP|ID2||Nepal|ISO 3166-1 www.iso.org
+750|NO|ID2||Norway|ISO 3166-1 www.iso.org
+751|NG|ID2||Nigeria|ISO 3166-1 www.iso.org
+752|NF|ID2||Norfolk Island|ISO 3166-1 www.iso.org
+753|NE|ID2||Niger (the)|ISO 3166-1 www.iso.org
+754|NC|ID2||New Caledonia|ISO 3166-1 www.iso.org
+755|NA|ID2||Namibia|ISO 3166-1 www.iso.org
+756|MZ|ID2||Mozambique|ISO 3166-1 www.iso.org
+757|MW|ID2||Malawi|ISO 3166-1 www.iso.org
+758|MV|ID2||Maldives|ISO 3166-1 www.iso.org
+760|MS|ID2||Montserrat|ISO 3166-1 www.iso.org
+761|MR|ID2||Mauritania|ISO 3166-1 www.iso.org
+762|MQ|ID2||Martinique|ISO 3166-1 www.iso.org
+763|MP|ID2||Northern Mariana Islands (the)|ISO 3166-1 www.iso.org
+764|MN|ID2||Mongolia|ISO 3166-1 www.iso.org
+765|MM|ID2||Myanmar|ISO 3166-1 www.iso.org
+766|ML|ID2||Mali|ISO 3166-1 www.iso.org
+767|MK|ID2||Macedonia (the former Yugoslav Republic of)|ISO 3166-1 www.iso.org
+768|MH|ID2||Marshall Islands (the)|ISO 3166-1 www.iso.org
+769|MF|ID2||Saint Martin (French part)|ISO 3166-1 www.iso.org
+770|CM|ID2||Cameroon|ISO 3166-1 www.iso.org
+771|LS|ID2||Lesotho|ISO 3166-1 www.iso.org
+772|TEST|ID4/6||Test File|PIES
+773|FN|ID2||Clamshell|ANSI X.12 Element 355 www.x12.org
+774|GR|ID2||Gram|ANSI X.12 Element 355 www.x12.org
+775|SRT|ID2/4||.srt - SubRip|PIES
+776|VTT|ID2/4||.vtt - WebVTT|PIES
+777|DXFP|ID2/4||.dxfp - DFXP/TTML|PIES
+778|SCC|ID2/4||.scc - Scenarist|PIES
+779|SAMI|ID2/4||.sami - SAMI|PIES
+780|4|ID1||Emissions Compliance Exempt|PIES
+781|5|ID1||Emissions Status Pending|PIES
+782|BSG|ID3||Brand Style Guide|
+783|FO|ID2||Fluid Ounce|ANSI X.12 Element 355 www.x12.org
+784|PT|ID2||Portuguese|ISO 639-1 www.iso.org
+785|QRC|ID3||Quick Response Code (QR Code)|PIES
+786|FRR|ID3||Front Right|PIES
+787|FRL|ID3||Front Left|PIES
+788|BAR|ID3||Back Right|PIES
+789|BAL|ID3||Back Left|PIES
+791|MM|ID2||Millimeter|ANSI X.12 Element 355 www.x12.org
+792|ADT|ID3|AN1/80|Asset Description - Title|PIES
+793|APS|ID3|AN1/240|Application Summary|PIES
+794|KSW|ID3|AN1/80|Key Search Word|PIES
+795|SLD|ID3|AN1/80|Slang Description|PIES

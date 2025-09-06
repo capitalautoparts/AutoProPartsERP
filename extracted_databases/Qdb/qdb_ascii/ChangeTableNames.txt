@@ -1,0 +1,5 @@
+TableNameID|TableName|TableDescription
+1|Qualifier|
+2|QualifierType|
+3|GroupNumber|
+4|QualifierGroup|

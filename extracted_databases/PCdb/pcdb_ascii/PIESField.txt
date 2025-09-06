@@ -1,0 +1,116 @@
+PIESFieldId|FieldName|ReferenceFieldNumber|PIESSegmentId
+1|Submission Type|A03|1
+2|Currency Code|A35|1
+3|Language Code|A37|1
+4|Maintenance Type|A51|2
+5|Currency Code|A60|2
+6|Maintenance Type|A81|3
+7|Market Copy Code|A82|3
+8|Market Copy Sub-Code|A84|3
+9|Market Copy Type|A86|3
+10|Language Code|A89|3
+11|Maintenance Type|M02|4
+12|Asset Maintenance Type|M71|4
+13|Maintenance Type|B02|5
+14|Packing Group Code|J50|11
+15|WHMIS Code|J46|11
+16|Hazardous Material Label Code|J34|11
+17|Hazardous Material Code Qualifier|J31|11
+18|Regulated|J20|11
+19|Transport Method|J15|11
+20|Regulating Country of Origin|J10|11
+21|Bulk|J05|11
+22|Shipping Scope|J04|11
+23|UOM for Weight|H46|10
+24|UOM for Dimensions|H40|10
+25|Orderable Package|H24|10
+26|Inner Quantity UOM|H22|10
+27|Package UOM|H15|10
+28|Language Code|F20|9
+29|PAdb Attribute|F07|9
+30|Maintenance Type|C02|6
+31|Language Code|C15|6
+32|Asset Type|M10|4
+33|Price Break Quantity UOM|D46|7
+34|Price UOM|D41|7
+35|Country Code|M98|4
+36|Asset Data Type|M95|4
+37|Hemisphere|M86|4
+38|Asset Description Language Code|M74|4
+40|Asset Description Code|M72|4
+41|Dimension UOM|M60|4
+42|Orientation View|M45|4
+43|Color Mode|M35|4
+44|Resolution|M30|4
+45|Representation|M20|4
+46|File Type|M15|4
+47|Price Type|D35|7
+48|Currency Code|D15|7
+49|Minimum Order Quantity UOM|B56|5
+50|Quantity per Application UOM|B41|5
+51|Vehicle Quantity Qualifier Codes|B35|5
+52|Container Type|B34|5
+53|Item Quantity Size UOM|B33|5
+54|ACES Applications|B30|5
+55|GTIN Qualifiers|B11|5
+56|Hazardous Material Code|B03|5
+57|Maintenance Type|F02|9
+58|Background|M40|4
+59|Duration UOM|M82|4
+60|Description Code|C05|6
+61|Maintenance Type|H02|10
+62|Maintenance Type|J02|11
+63|Language Code|K12|12
+64|Country of Origin 2|E10|8
+65|Country of Origin (Primary)|E10|8
+66|EXPI Code|E05|8
+67|Language Code|J70|11
+68|Language Code|M99|4
+69|Component ID Qualifier|K08|12
+70|Maintenance Type|D02|7
+71|Quantity UOM|K20|12
+72|Maintenance Type|K02|12
+73|Description Code|K09|12
+74|Maintenance Type|E02|8
+75|Language Code|E15|8
+76|Maintenance Type|N02|13
+77|Item Equivalent UOM|N16|13
+78|Quality Grade Level|N25|13
+79|Interchange Quantity UOM|N27|13
+80|Language Code|N40|13
+81|Warranty Special Codes|E10|8
+82|Taxable|E10|8
+83|Stock Status|E10|8
+86|PIES Standard National Popularity (Velocity) Descriptions|E10|8
+87|PIES Standard National Popularity (Velocity) Codes|E10|8
+88|NAFTA Preference Criterion Code|E10|8
+89|Country of Origin 3|E10|8
+90|Country of Origin 4|E10|8
+91|Country of Origin 5|E10|8
+92|Emission Code|E10|8
+93|Life Cycle Status Code|E10|8
+94|Life Cycle Status Description|E10|8
+95|SDR Required Flag|E10|8
+96|Maintenance Type|P02|14
+97|Asset Type|P10|14
+98|File Type|P15|14
+99|Representation|P20|14
+100|Resolution|P30|14
+101|Color Mode|P35|14
+102|Background|P40|14
+103|Orientation View|P45|14
+104|Dimension UOM|P60|14
+105|Asset Maintenance Type|P71|14
+106|Asset Description Code|P72|14
+108|Asset Description Language Code|P74|14
+109|Duration UOM|P82|14
+110|Hemisphere|P86|14
+111|Asset Date Type|P95|14
+112|Country Code|P98|14
+113|Language Code|P99|14
+114|Warranty Distance UOM|E10|8
+115|Product Condition|E10|8
+116|Warranty Time UOM|E10|8
+117|Additional Green Attributes|E10|8
+118|Green Certification, Regulation or Standard Met|E10|8
+119|Sold Separately|K31|12

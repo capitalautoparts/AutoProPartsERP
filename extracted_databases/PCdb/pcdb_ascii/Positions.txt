@@ -1,0 +1,19 @@
+PositionID|Position
+1|N/A
+2|Left
+12|Right
+22|Front
+30|Rear
+38|Inner
+42|Outer
+46|Upper
+50|Lower
+103|Front Left
+104|Front Right
+105|Rear Left
+106|Rear Right
+255|Intake Side
+256|Exhaust Side
+1902|Low Beam
+1903|High Beam
+1904|High Beam and Low Beam

@@ -5,7 +5,7 @@ A modern ERP + PIM system designed for the automotive aftermarket, replacing leg
 ## 🚀 Features
 
 ### Core ERP Modules
-- **Product Management (PIM)** - Complete ACES 4.1 and PIES 7.2 compliance
+- **Product Management (PIM)** - Complete ACES 4.2 and PIES 7.2 compliance
 - **Orders** - Sales orders, invoices, fulfillment
 - **Customers** - CRM, contact data, B2B accounts
 - **Marketing** - Campaign lists, feeds, advertisements
@@ -23,8 +23,15 @@ A modern ERP + PIM system designed for the automotive aftermarket, replacing leg
 
 ### PIM Structure
 - **Product Profile** - Mfg, Brand, Part#, SKU, descriptions, stock
-- **ACES Tabs** - Vehicle Fitment, Application Mapping, Attribute Filters, Validation
+- **ACES Applications** - Complete 4.2 builder with equipment support
 - **PIES Tabs** - Item, Description, Price, EXPI, Attributes, Package, Kit, Interchange, Assets, Assortments, Market Copy
+
+### Automotive Reference Databases
+- **VCdb** - Vehicle Configuration Database (Makes, Models, Engines, etc.)
+- **PCdb** - Part Category Database (Part Types, Categories, Positions)
+- **PAdb** - Part Attribute Database (Attributes, Valid Values)
+- **Qdb** - Qualifier Database (Application Qualifiers)
+- **Brand Table** - AAIA Brand Mappings
 
 ## 🛠 Tech Stack
 
@@ -81,22 +88,26 @@ The application will be available at:
 - **Products**: `GET|POST|PUT|DELETE /api/products`
 - **Customers**: `GET|POST|PUT|DELETE /api/customers`
 - **Orders**: `GET|POST|PUT|DELETE /api/orders`
+- **Reference Data**: `GET /api/vcdb/*` (All automotive databases)
 
 ### Import/Export Endpoints
 ```bash
-# Excel Import
+# Excel Import/Export
 POST /api/products/import/excel
-POST /api/customers/import/excel
-POST /api/orders/import/excel
-
-# Excel Export
 GET /api/products/export/excel
-GET /api/customers/export/excel
-GET /api/orders/export/excel
 
-# XML Import/Export (PIM only)
+# XML Import/Export (ACES/PIES)
 POST /api/products/import/xml
 GET /api/products/export/xml
+
+# Reference Data APIs
+GET /api/vcdb/makes
+GET /api/vcdb/models
+GET /api/vcdb/parttypes
+GET /api/vcdb/positions
+GET /api/vcdb/qualifiers
+GET /api/vcdb/brands
+# ... and 20+ more reference endpoints
 ```
 
 ## 🎯 Example Usage
@@ -253,12 +264,13 @@ Server logs show:
 
 ## 📚 ACES/PIES Compliance
 
-### ACES 4.1 Support
-- **Vehicle Fitment**: Year, Make, Model, Sub Model, Engine
-- **Application Mapping**: Position, Quantity, Part Type
-- **Extended Attributes**: Transmission, Drive Type, Body Type, Bed Length
-- **Qualifiers**: Custom application qualifiers
-- **Notes**: Application-specific notes and warnings
+### ACES 4.2 Support (Latest)
+- **Vehicle Applications**: BaseVehicle, Year/Make/Model patterns
+- **Equipment Applications**: Non-vehicle equipment (generators, pumps, etc.)
+- **Enhanced Assets**: Separate asset entities with digital asset linking
+- **Production Years**: Precise equipment production date ranges
+- **78+ Fields**: Complete specification with conditional logic
+- **Reference Integration**: Real VCdb/PCdb/PAdb/Qdb data
 
 ### PIES 7.2 Support
 - **Item Information**: GTIN, UNSPSC, Part Type, Category Code, Hazmat
@@ -307,24 +319,28 @@ For support and questions:
 
 ### ✅ Completed Implementation
 - [x] Full PIES 7.2 type definitions
-- [x] ACES 4.1 application mapping
-- [x] Seed data parser for PIES text files
+- [x] ACES 4.2 application builder with tabbed interface
+- [x] Complete automotive reference database integration
+- [x] VCdb, PCdb, PAdb, Qdb, Brand Table loading
+- [x] Real-time reference data APIs (20+ endpoints)
+- [x] Equipment application support (ACES 4.2)
+- [x] Enhanced asset management
 - [x] Comprehensive Excel import/export
 - [x] Product Detail UI with all PIES tabs
 - [x] Template generation and download
-- [x] Real-time data loading on startup
-- [x] Fallback sample data with PIES structure
-- [x] Multi-sheet Excel support
-- [x] Attribute and description management
+- [x] Seed data parser for PIES text files
 
 ### 🚀 Production Readiness
+- Complete automotive reference database integration
+- ACES 4.2 builder with conditional field logic
+- Real-time vehicle/part/qualifier lookups
 - DynamoDB schema for PIES JSON storage
 - Aurora Postgres for relational ERP data
 - S3 integration for file processing
 - Background job processing
 - AWS Lambda deployment ready
-- CloudWatch monitoring integration
 
 **Built with ❤️ for the automotive aftermarket industry**
 
-*Fully compliant with ACES 4.1 and PIES 7.2 standards*
+*Fully compliant with ACES 4.2 and PIES 7.2 standards*
+*Complete automotive reference database integration*

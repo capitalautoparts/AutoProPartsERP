@@ -1,0 +1,105 @@
+PAID	PAName	PADescr
+3	Friction Material Composition	Describes The Friction Material Of The Brake Pad
+4	Friction Material Attachment	Describes How Friction Material Is Attached To The Pad Or Shoe
+10	Material	Describes Material
+14	Length	Describes Measurement
+17	Color	Describes Color
+19	Thickness	Describes Measurement
+24	Width	Describes Measurement
+26	Type	Describes Type
+30	Mounting Hardware Included	Describes If Any Installation Hardware Is Included
+31	Height	Describes Measurement
+33	Shape	Describe Shape
+34	Pad Shims Included	Describes If Shims Are Included
+55	FMSI Number	Describes The Friction Materials Standard Institute (FMSI) Number.
+63	Waterproof	Describes If Product Is Impervious To Water
+79	Inner Pad Friction Material Thickness	Describes The Inner Pad Friction Material Thickness.
+89	Amperage Rating	Describes Maximum Current Draw Measurement Of A Device
+106	Outer Pad Friction Material Thickness	Describes The Outer Pad Friction Material Thickness.
+111	Diameter	Describes Measurement
+123	Voltage	Describes Voltage Measurement
+170	Slotted	Important for wet performance and resistance to pad glazing
+547	Center Electrode Core Material	Describes The Material Of The Center Electrode Core
+548	Center Electrode Tip Material	Describes The Material Of The Center Electrode Tip
+549	Pre-Gap Size	Describes The Pre-Gap Measurement From The Factory
+550	Ground Electrode Quantity	Describes Quantity
+551	Hex Size	Describes Measurement Of Hex Portion
+552	Insulator Height	Describes the height of the insulator of the spark plug as measured from the seat to the terminal
+553	Manufacturer Heat Range	Describes Heat Range Number
+555	Seat Type	Describes Seat Type
+556	Reach	Describes Measurement of length of the spark plug metal body from seat portion to the end of spark plug threads also can be described as the cylinder head thickness. Can be expressed as both inches and or millimeters.
+557	Thread Diameter	Describes The Outer Diameter Of The Threaded Portion Of The Fastener Measured In Metric or Standard. Also Known As Major Diameter.
+604	Insulator Material	Describes Material
+605	Resistor Type	Is the product radio frequency resistant
+975	Wattage	Describes Wattage Measurement
+1132	Resistance	Describes Measurement
+1155	Ground Electrode Tip Design	Describes the configuration of the ground electrode tip
+1156	Ground Configuration	Describes the configuration of the ground electrode or grounding method of the spark plug but not the quantity of ground electrodes as this is a separate category
+1159	Ground Electrode Core Material	Describes The Material Of The Ground Electrode Core Material
+1217	Pad Wear Sensor Included	Describes If Has Pad Wear Sensor Included
+1268	DOT Approved	Describes If Department of Transportation Approved
+1269	Filament Quantity	Describes Quantity
+1270	Beam Type	Describes Type
+1271	Street Legal	Describes If Street Legal
+1272	Bulb Color	Describes the Color of the Bulb Material
+1284	Bulb Base Type	Describes The Type Of Bulb Base. i.e. Wedge etc...
+1318	Size	Describes Size
+1671	Nylon Mesh Overwrap	Describes If Has Nylon Mesh Overwrap
+1672	Washable	Describes If Washable
+1681	Handle Included	Describes If Handle Is Included
+1822	Bulb Type	Describes the Bulb Shape Code Type, Category, or Trade Number i.e. S8, W16W. H1 etc...
+1917	Washer Included	Describes If Washer Is Included
+2393	Sleeve Length	Describes Measurement
+2705	Multi Surface	Describes If Has Multi Surfaces
+2786	Average Rated Life	Describes Average Rated Life
+3390	Grade Type	Describes Type Of Grade
+3596	Backing Material	Describes Material
+3858	Electrical Terminal Type	Describes Type Of Terminal
+4543	Brake Lubricant Included	Describes If Brake Lubricant Is Included
+4748	Pocket Quantity	Describes Quantity Of Pockets
+5217	Logo Location	Describes Where Logo Is Located
+5950	Bulb Material	Describes the Material of the Bulb
+6648	Skirt Length	Describes The Length Of The Piston Skirt
+7321	Pad Quantity	Describes Quantity
+7673	Backing Plate Color	Describes Color
+8363	Brightness	Describes The Brightness
+8701	Pad Shim Material	Describes Material
+9059	Abutment Clips Included	Describes If Abutment Clips Are Included
+9066	Pad Wear Sensor Type	Describes What Type of Pad Wear Sensor Is Included
+9076	Chamfered Edges	Describes if the product has chamfered edges
+9078	Light Color Temperature	Describes Light Color Temperature Measurement
+9079	Secondary Brightness	Describes The Brightness
+9080	Secondary Average Rated Life	Describes the Average Life-Span of the Product
+9081	Secondary Filament Type	Filament Type Number
+9082	Secondary Amperage Rating	Describes Amperage Measurement
+9083	Secondary Wattage	Describes Wattage Measurement
+9084	Secondary Voltage	Describes Voltage Measurement
+9085	Filament Type	Filament Type Number
+9086	Bulb Technology	Describes the Type of Bulb Technology. i.e. Halogen, LED, etc...
+9087	Bulb Finish	Describes the Finish of the Bulb
+9286	Prepared For Pad Wear Sensor	Describes If Product Is Prepared For A Pad Wear Sensor Or Not
+9294	Gender Category	Describes The Gender Category Of Apparel
+9383	Ground Electrode Tip Material	Describes The Material Of The Ground Electrode Tip
+9407	ECE-R90 Certified	Describes If Product Is ECE-R90 Certified
+9421	Pad Shim Color	Describes Color of the Pad Shim
+9422	Adhesive Backed Pad Shim	Describes if adhesive layer is used on the back of the pad shim.
+9423	Friction Surface Scorched	Describes if the Friction Surface has been Scorched.
+9433	Outer Pad Height	Describes The Height Of The Outer Portion Of The Pad
+9434	Inner Pad Height	Describes The Height Of The Inner Portion Of The Pad
+9435	Outer Pad Width	Describes The Width Of The Outer Portion Of The Pad
+9436	Inner Pad Width	Describes The Width Of The Inner Portion Of The Pad
+9459	Skirt	Describes If Product Has A Skirt As Part Of It's Construction.
+9478	Outer Pad Overall Thickness	Describes The Overall Thickness Of The Outer Pad.
+9479	Inner Pad Overall Thickness	Describes The Overall Thickness Of The Inner Pad.
+9506	Center Electrode Insulator Tip Projection	Describes The Projection Measurement Of The Center Electrode Insulator Tip.
+9507	Hex Type	Describes The Type Of Hex.
+9608	Center Electrode Design	Describes The Design Of The Center Electrode.
+9717	Color Rendering Index (CRI)	Describes The Color Rendering Index (CRI) Of The Product.
+9745	Washer Type	Describes The Type Of Washer.
+9746	Indexed	Describes If The Product Is Indexed.
+9748	Core Nose Length	This is the length of the ceramic section of the insulator inside an spark plug's shell.
+9793	Indicated Mean Effective Pressure (IMEP)	The Average Pressure Acting On A Piston During It's Cycles Different Sections From Inside It's Cylinder.
+9805	Center Electrode Projection	Describes The Projection Of The Center Electrode.
+9995	Primary Brightness	Describes the low/first filament in a bulb.
+10147	Flavor	Describes The Flavor Of The Candy.
+10148	Candy Type	Describes The Type Of Candy.

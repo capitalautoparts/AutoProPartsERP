@@ -1,0 +1,7 @@
+SubCategoryID|SubCategoryName
+138|Disc Pads and Brake Shoes
+180|Lighting - Exterior
+200|Secondary Ignition
+445|Clothing, Shoes, Jewelry and Accessories
+447|Food and Drink
+464|Cleaning Tools, Equipment and Supplies

@@ -1,0 +1,16 @@
+PIESSegmentId|SegmentAbb|SegmentName|SegmentDescription
+1|HEAD|Header|The Header Segment defines trading partner information as well as global value characteristics within the PIES file.
+2|PRCS|Price Sheet|The Price Sheet Header Segment is used to define zero to any number of price sheets.
+3|MKTC|Market Copy|The Market Copy Segment is intended for expressing marketing and descriptive copy that applies to many items, such as a product line or series, or a Brand or Sub-Brand of product, or an entire company.
+4|MKDA|Marketing Digital Assets|The Digital Asset Sub-Segment of the Market Copy Segment is used to relay information about any media types that support the related Market Copy Segment reference codes.
+5|ITEM|Item|The Item Segment is the core looping (or repeating) segment within the PIES standard. Each instance of this segment is responsible for defining individual Item Part Numbers.
+6|DESC|Description|The Description Segment allows you to send zero or as many descriptions about an Item record part number.
+7|PRCE|Price|The Pricing Segment allows you to define pricing about an Item record part number.
+8|EXPI|Extended Product Information|The Extended Product Information Segment is designed to relay extensive information about an Item record part number.
+9|ATRB|Attributes|The Attribute Segment allows you to express either industry-defined attributes from the Product Attribute Database (PAdb), or user-defined attributes about an Item record part number.
+10|PACK|Package|The Packaging Segment is used to express various volumetric details for different packaging levels of an Item record part number.
+11|HAZM|Hazardous Material|The Hazardous Material Segment allows you define Hazmat rules and regulations which may depend on the type of package about an Item record part number.
+12|KITS|Kits|The Kits Segment allows you to express the list of components contained within an Item record part number.
+13|INTE|Interchange|The Interchange Segment allows you to provide interchange data for the Item record part number.
+14|ASST|Digital Assets|The Digital Asset File Information Segment is used to relay information about many different media types which support the Item record part number.
+15|STOP|Trailer|The Trailer Segment is used to relay the Transaction Date for this PIES file along and with the Item count for validation by the receiver of the file.

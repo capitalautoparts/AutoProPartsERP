@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Save } from 'lucide-react';
 import { productsApi } from '../services/api';
 import { vcdbApi } from '../services/vcdbApi';
+import { ACESBuilder } from '../components/ACESBuilder';
 
 
 
@@ -40,7 +41,18 @@ const ProductDetailPage: React.FC = () => {
   }
 
   if (!product) {
-    return <div className="text-center py-8">Product not found</div>;
+    return (
+      <div className="text-center py-8">
+        <p>Product not found</p>
+        <p className="text-sm text-gray-500 mt-2">Product ID: {id}</p>
+        <button 
+          onClick={() => navigate('/products')}
+          className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          Back to Products
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -153,73 +165,16 @@ const ACESTab: React.FC<{ product: any }> = ({ product }) => {
   
   return (
     <div>
-      <h3 className="text-lg font-medium mb-4">ACES 4.1 - All 78 Fields</h3>
-      <p className="text-sm text-gray-600 mb-4">Complete ACES specification with vehicle fitment, applications, and qualifiers</p>
+      <h3 className="text-lg font-medium mb-4">ACES Applications</h3>
+      <p className="text-sm text-gray-600 mb-4">Vehicle fitment applications with full ACES 4.2 support</p>
       
-      {applications.length > 0 ? (
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-300">
-            <thead>
-              <tr>
-                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Year</th>
-                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Make</th>
-                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Model</th>
-                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sub Model</th>
-                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Engine</th>
-                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Transmission</th>
-                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Drive Type</th>
-                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Position</th>
-                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Qty</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {applications.map((app: any, index: number) => (
-                <tr key={index}>
-                  <td className="px-3 py-2">
-                    <input type="number" defaultValue={app.year || ''} className="w-full border border-gray-300 rounded px-2 py-1" />
-                  </td>
-                  <td className="px-3 py-2">
-                    <input type="text" defaultValue={app.make || ''} className="w-full border border-gray-300 rounded px-2 py-1" />
-                  </td>
-                  <td className="px-3 py-2">
-                    <input type="text" defaultValue={app.model || ''} className="w-full border border-gray-300 rounded px-2 py-1" />
-                  </td>
-                  <td className="px-3 py-2">
-                    <input type="text" defaultValue={app.subModel || ''} className="w-full border border-gray-300 rounded px-2 py-1" />
-                  </td>
-                  <td className="px-3 py-2">
-                    <input type="text" defaultValue={app.engine || ''} className="w-full border border-gray-300 rounded px-2 py-1" />
-                  </td>
-                  <td className="px-3 py-2">
-                    <input type="text" defaultValue={app.transmission || ''} className="w-full border border-gray-300 rounded px-2 py-1" />
-                  </td>
-                  <td className="px-3 py-2">
-                    <input type="text" defaultValue={app.driveType || ''} className="w-full border border-gray-300 rounded px-2 py-1" />
-                  </td>
-                  <td className="px-3 py-2">
-                    <input type="text" defaultValue={app.position || ''} className="w-full border border-gray-300 rounded px-2 py-1" />
-                  </td>
-                  <td className="px-3 py-2">
-                    <input type="number" defaultValue={app.quantity || ''} className="w-full border border-gray-300 rounded px-2 py-1" />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <div className="text-center py-8 text-gray-500">
-          <p>No vehicle applications defined for this product.</p>
-          <button className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-            Add Vehicle Application
-          </button>
-        </div>
-      )}
-      
-      <div className="mt-8">
-        <h4 className="text-md font-medium mb-4">Add New Vehicle Application</h4>
-        <VehicleSelector />
-      </div>
+      <ACESBuilder 
+        applications={applications} 
+        onUpdate={(updatedApps) => {
+          // TODO: Update product with new applications
+          console.log('Updated applications:', updatedApps);
+        }} 
+      />
     </div>
   );
 };

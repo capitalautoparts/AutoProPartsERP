@@ -1,0 +1,8 @@
+QualifierTypeID|QualifierType
+1|Fitment
+2|OE Only
+3|Informational
+4|Installation
+5|Product
+6|Caution
+9|Emission

@@ -1,0 +1,3 @@
+GroupNumberId|GroupNumberDescription
+1237|with/without Vertical Aim Control
+1239|with/without Sport Suspension

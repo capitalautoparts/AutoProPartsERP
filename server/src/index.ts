@@ -11,7 +11,9 @@ import debugRouter from './routes/debug.js';
 import referenceRouter from './routes/reference.js';
 import vcdbRouter from './routes/vcdb.js';
 import { dataService } from './services/dataService.js';
-import { vcdbService } from './services/vcdbService.js';
+import { fullVcdbService } from './services/fullVcdbService.js';
+import { pcdbPadbService } from './services/pcdbPadbService.js';
+import { qdbBrandService } from './services/qdbBrandService.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -86,8 +88,19 @@ async function startServer() {
     console.log(`✅ Loaded ${productCount} products with PIES/ACES data`);
     
     // Test VCdb loading
-    const makes = vcdbService.getAllMakes();
+    const makes = fullVcdbService.getAllMakes();
     console.log(`📊 VCdb makes loaded: ${makes.length}`);
+    
+    // Test PCdb/PAdb loading
+    const partTypes = pcdbPadbService.getAllPartTypes();
+    console.log(`📊 PCdb part types loaded: ${partTypes.length}`);
+    
+    // Test Qdb/Brand loading
+    const qualifiers = qdbBrandService.getAllQualifiers();
+    const brands = qdbBrandService.getAllBrands();
+    console.log(`📊 Qdb qualifiers loaded: ${qualifiers.length}`);
+    console.log(`📊 Brands loaded: ${brands.length}`);
+    
     if (makes.length > 0) {
       console.log(`📊 Sample makes: ${makes.slice(0, 3).map(m => m.name).join(', ')}`);
     }

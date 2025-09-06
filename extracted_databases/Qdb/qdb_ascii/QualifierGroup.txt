@@ -1,0 +1,5 @@
+QualifierGroupId|GroupNumberId|QualifierId
+2246|1237|24123
+2379|1237|24120
+2477|1239|25171
+2478|1239|25172

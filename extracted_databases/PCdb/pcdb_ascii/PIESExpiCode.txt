@@ -1,0 +1,54 @@
+PIESExpiCodeId|ExpiCode|ExpiCodeDescription|PIESExpiGroupId
+1|CCL|Core Class|1
+2|CGR|Core Group|1
+3|CPN|Core Part Number|1
+4|CXP|Core Return Days to Expiry|1
+5|EMS|Emission Code|2
+6|MSD|SDS Sheet Number|2
+7|MSR|SDR Required Flag|2
+8|OEM|Original Equipment Manufacturer|3
+9|OEP|OEM's Part Number|3
+10|OSN|Original Supplier|3
+11|OSP|Original Supplier Part Number|3
+12|PTN|Part Number - Old|3
+13|PTS|Part Number Superseded To|3
+16|RCC|Regulating Country|4
+17|RCS|Regulating County, State|4
+18|RCT|Regulating City, State|4
+19|RDE|Regulating Description|4
+20|RPC|Regulating Postal Code|4
+21|RST|Regulating State|4
+22|RET|Return Code|5
+23|WD1|Warranty Distance|5
+24|WD2|Warranty Distance UOM|5
+25|WS1|Warranty Special|5
+26|WS2|Warranty Special UOM|5
+27|WT1|Warranty Time|5
+28|WT2|Warranty Time UOM|5
+29|CTO|Country of Origin (Primary)|6
+30|CTP|Country of Origin 2|6
+31|CTQ|Country of Origin 3|6
+32|CTR|Country of Origin 4|6
+33|CTS|Country of Origin 5|6
+34|HAC|Canadian Harmonizing Tariff Code|6
+35|HSB|Harmonized Tariff Code (Schedule B)|6
+36|HTS|Harmonized Tariff Code (HTS)|6
+37|LIF|Life Cycle Status Code|6
+38|LIS|Life Cycle Status Description|6
+39|NAF|NAFTA Preference Criterion Code|6
+40|TAX|Taxable|6
+41|HZ1|Item (SKU) Level Special Handling Code|7
+42|NPC|National Popularity Code|7
+43|NPD|National Popularity Description|7
+45|PLM|Pallet Layer Maximum|7
+46|STA|Stock Status|7
+47|TMC|Trading Partner Movement Code|7
+48|PLC|Maximum Cases per Pallet Layer|7
+49|PRC|Product Condition|3
+50|GCT|Green Certification, Regulation or Standard Met|4
+51|GPV|Additional Green Attributes|4
+52|LTM|Estimated Lead Time|6
+53|ECN|ECCN|6
+54|WHS|Supplier Warehouse ID|6
+55|VMI|Alert Code|6
+56|RPQ|Return Pack Size|6

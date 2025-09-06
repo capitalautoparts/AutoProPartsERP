@@ -1,0 +1,20 @@
+QualifierID|QualifierText|ExampleText|QualifierTypeID|NewQualifierID|WhenModified
+6537|Mounting Ears at <p1 type="clock"/> O'Clock|Mounting Ears at 3 O'Clock|1||1/20/2010 2:31:00 PM
+22775|CARB Executive Order <p1 type="idlist"/>|CARB Executive Order D-160-61|9||5/21/2018 7:44:00 PM
+22940|<p1 type="size"/> - <p2 type="num"/> Spline|1.58 in - 36 Spline|1||10/8/2021 12:31:00 PM
+23487|Engine Family Number (EFN) <p1 type="idlist"/>|Engine Family Number (EFN) TGM5.7CPGAEA|1||5/21/2018 7:42:00 PM
+23683|with <p1 type="size"/> - <p2 type="size"/> Lift Kit (Dual shock Forward of Axle)|with 2" - 3" Lift Kit (Dual shock Forward of Axle|1||9/29/2015 7:48:00 AM
+23684|with <p1 type="size"/> Lift Kit (Dual shock Forward of Axle)|with 3" Lift Kit (Dual shock Forward of Axle)|1||9/29/2015 7:48:00 AM
+23925|After <p1 type="date"/>|After 01/01/2001|1||9/18/2017 6:50:00 PM
+24120|without Vertical Aim Control|without Vertical Aim Control|1||12/10/2019 3:34:00 PM
+24123|with Vertical Aim Control|with Vertical Aim Control|1||12/10/2019 3:26:00 PM
+24422|Must match OE Number # <p1 type="idlist"/> on back of Cluster|Must match OE Number # <p1 type="idlist"/> on back of Cluster|2||4/30/2021 5:09:00 PM
+24697|If vehicle has <p1 type="size"/> wide leaf springs, use bracket kit <p2 type="part"/>|If vehicle has 2.5 in wide leaf springs, use bracket kit RS5558|3||7/27/2020 3:55:00 PM
+25171|with Sport Suspension|with Sport Suspension|1||12/11/2020 9:10:00 PM
+25172|without Sport Suspension|without Sport Suspension|1||12/11/2020 9:10:00 PM
+26216|with <p1 type="weight"/> - <p2 type="weight"/> <p3 type="name"/> Air Suspension|with 38,000 lb - 40,000 lb Peterbilt Air Suspension|1||9/17/2021 6:31:00 PM
+26222|For <p1 type="type"/> Biodiesel Engines Only|For B5 Biodiesel Engines Only|1||9/17/2021 6:34:00 PM
+27136|with <p1 type="size"/> and <p2 type="size"/> Cabs with <p3 type="name"/> Model <p4 type="idlist"/>|with 89 in and 110 in Cabs with Link Cabmate Model NAV9876|1||4/14/2022 5:03:00 PM
+27230|Valve Cover Gasket(s) Included|Valve Cover Gasket(s) Included|5||9/15/2022 10:40:00 PM
+27470|Torque To Yield Bolts Must Be Replaced|Torque To Yield Bolts Must Be Replaced|6||1/6/2023 4:21:00 PM
+27866|Requires Removal of Factory Upper Arm Frame Droop Stops|Requires Removal of Factory Upper Arm Frame Droop Stops|4||6/27/2023 3:46:00 AM

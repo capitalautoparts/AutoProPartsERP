@@ -1,0 +1,6 @@
+MeasurementGroupID	MeasurementGroupName
+1	Linear Measurements
+5	Performance
+6	Time
+7	Temperature and Energy
+8	Electrical

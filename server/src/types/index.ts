@@ -1,7 +1,7 @@
 // Product Profile Types
 export interface Product {
-  id: string; // Internal UUID
-  uniqueId: string; // BrandID + PartNo for deduplication
+  id: string; // BrandID + PartNo (e.g., JVYDAFF120105512035MB)
+  uniqueId: string; // Same as id for deduplication
   manufacturer: string;
   brand: string;
   partNumber: string;
