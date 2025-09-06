@@ -1,21 +1,23 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import Layout from './components/Layout';
 import ProductsPage from './pages/ProductsPage';
+import ProductDetailPage from './pages/ProductDetailPage';
 import OrdersPage from './pages/OrdersPage';
 import CustomersPage from './pages/CustomersPage';
 import ModulePage from './pages/ModulePage';
 
 function App() {
   return (
-    <Layout>
-      <Routes>
-        <Route path="/" element={<Navigate to="/products" replace />} />
-        <Route path="/products" element={<ProductsPage />} />
-        <Route path="/orders" element={<OrdersPage />} />
-        <Route path="/customers" element={<CustomersPage />} />
+    <Routes>
+      <Route path="/" element={<Layout><Outlet /></Layout>}>
+        <Route index element={<Navigate to="/products" replace />} />
+        <Route path="products" element={<ProductsPage />} />
+        <Route path="products/:id" element={<ProductDetailPage />} />
+        <Route path="orders" element={<OrdersPage />} />
+        <Route path="customers" element={<CustomersPage />} />
         <Route 
-          path="/marketing" 
+          path="marketing" 
           element={
             <ModulePage 
               title="Marketing" 
@@ -25,7 +27,7 @@ function App() {
           } 
         />
         <Route 
-          path="/accounting" 
+          path="accounting" 
           element={
             <ModulePage 
               title="Accounting" 
@@ -35,7 +37,7 @@ function App() {
           } 
         />
         <Route 
-          path="/purchasing" 
+          path="purchasing" 
           element={
             <ModulePage 
               title="Purchasing" 
@@ -45,7 +47,7 @@ function App() {
           } 
         />
         <Route 
-          path="/warehouse" 
+          path="warehouse" 
           element={
             <ModulePage 
               title="Warehouse Management" 
@@ -54,8 +56,8 @@ function App() {
             />
           } 
         />
-      </Routes>
-    </Layout>
+      </Route>
+    </Routes>
   );
 }
 

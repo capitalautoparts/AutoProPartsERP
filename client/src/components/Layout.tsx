@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { 
   Package, 
   Users, 
@@ -7,10 +7,7 @@ import {
   TrendingUp, 
   Calculator, 
   ShoppingBag, 
-  Warehouse,
-  FileSpreadsheet,
-  Upload,
-  Download
+  Warehouse
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -18,8 +15,6 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const location = useLocation();
-
   const navigation = [
     { name: 'Products (PIM)', href: '/products', icon: Package },
     { name: 'Orders', href: '/orders', icon: ShoppingCart },
@@ -41,20 +36,21 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <ul className="space-y-2">
             {navigation.map((item) => {
               const Icon = item.icon;
-              const isActive = location.pathname.startsWith(item.href);
               return (
                 <li key={item.name}>
-                  <Link
+                  <NavLink
                     to={item.href}
-                    className={`flex items-center px-4 py-2 text-sm font-medium rounded-md ${
-                      isActive
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                    }`}
+                    className={({ isActive }) =>
+                      `flex items-center px-4 py-2 text-sm font-medium rounded-md ${
+                        isActive
+                          ? 'bg-blue-100 text-blue-700'
+                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                      }`
+                    }
                   >
                     <Icon className="mr-3 h-5 w-5" />
                     {item.name}
-                  </Link>
+                  </NavLink>
                 </li>
               );
             })}

@@ -1,8 +1,11 @@
 import express from 'express';
 import multer from 'multer';
 import { dataService } from '../services/dataService.js';
+import { jobService } from '../services/jobService.js';
 import { ExcelHandler } from '../utils/excelHandler.js';
+import { PIESExcelHandler } from '../utils/piesExcelHandler.js';
 import { XMLHandler } from '../utils/xmlHandler.js';
+import { S3Handler } from '../utils/s3Handler.js';
 import { Product } from '../types/index.js';
 
 const router = express.Router();
@@ -58,45 +61,20 @@ router.post('/import/excel', upload.single('file'), async (req, res) => {
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    const data = ExcelHandler.parseExcelFile(req.file.buffer);
-    const requiredFields = ['partNumber', 'productName', 'brand', 'manufacturer'];
-    const validation = ExcelHandler.validateImportData(data, requiredFields);
+    // Upload to S3
+    const s3Key = S3Handler.generateKey('products', 'imports', req.file.originalname);
+    await S3Handler.uploadFile(req.file.buffer, s3Key, req.file.mimetype);
 
-    if (!validation.success) {
-      return res.status(400).json(validation);
-    }
-
-    // Process the data (in production, this would be async)
-    let imported = 0;
-    data.forEach(row => {
-      try {
-        const product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'> = {
-          manufacturer: row.manufacturer || '',
-          brand: row.brand || '',
-          partNumber: row.partNumber || '',
-          sku: row.sku || row.partNumber || '',
-          productName: row.productName || '',
-          shortDescription: row.shortDescription || '',
-          longDescription: row.longDescription || '',
-          stock: parseInt(row.stock) || 0,
-          unitType: row.unitType || 'Each',
-          qtyOnHand: parseInt(row.qtyOnHand) || 0
-        };
-        dataService.createProduct(product);
-        imported++;
-      } catch (error) {
-        console.error('Error importing product:', error);
-      }
-    });
+    // Create async job
+    const job = jobService.createImportJob('excel', 'products', req.file.originalname, s3Key);
 
     res.json({
-      success: true,
-      recordsProcessed: imported,
-      errors: [],
-      warnings: []
+      jobId: job.id,
+      status: job.status,
+      message: 'Import job created successfully. Processing will begin shortly.'
     });
   } catch (error) {
-    res.status(500).json({ error: 'Import failed' });
+    res.status(500).json({ error: 'Import job creation failed' });
   }
 });
 
@@ -107,80 +85,79 @@ router.post('/import/xml', upload.single('file'), async (req, res) => {
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    const xmlData = await XMLHandler.parseXMLFile(req.file.buffer);
-    
-    // Determine if it's ACES or PIES XML
-    let validation;
-    if (xmlData.ACES) {
-      validation = XMLHandler.validateACESXML(xmlData);
-    } else if (xmlData.PIES) {
-      validation = XMLHandler.validatePIESXML(xmlData);
-    } else {
-      return res.status(400).json({ 
-        error: 'Invalid XML format. Expected ACES or PIES XML.' 
-      });
-    }
+    // Upload to S3
+    const s3Key = S3Handler.generateKey('products', 'imports', req.file.originalname);
+    await S3Handler.uploadFile(req.file.buffer, s3Key, req.file.mimetype);
 
-    res.json(validation);
+    // Create async job
+    const job = jobService.createImportJob('xml', 'products', req.file.originalname, s3Key);
+
+    res.json({
+      jobId: job.id,
+      status: job.status,
+      message: 'XML import job created successfully. Processing will begin shortly.'
+    });
   } catch (error) {
-    res.status(500).json({ error: 'XML import failed' });
+    res.status(500).json({ error: 'XML import job creation failed' });
   }
 });
 
-// Export products to Excel
-router.get('/export/excel', (req, res) => {
+// Export products to Excel with full PIES data
+router.get('/export/excel', async (req, res) => {
   try {
     const products = dataService.getAllProducts();
-    const buffer = ExcelHandler.createExcelFile(products, 'products.xlsx');
+    const buffer = PIESExcelHandler.exportToExcel(products);
     
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', 'attachment; filename=products.xlsx');
+    res.setHeader('Content-Disposition', 'attachment; filename=products-pies.xlsx');
     res.send(buffer);
   } catch (error) {
+    console.error('Export error:', error);
     res.status(500).json({ error: 'Export failed' });
   }
 });
 
-// Export products to XML (PIES format)
-router.get('/export/xml', (req, res) => {
+// Export PIES Excel template
+router.get('/export/template', async (req, res) => {
   try {
-    const products = dataService.getAllProducts();
+    const buffer = PIESExcelHandler.generateTemplate();
     
-    // Convert products to PIES XML format
-    const piesData = {
-      PIES: {
-        $: { version: '7.2' },
-        Header: {
-          PIESVersion: '7.2',
-          SubmissionType: 'FULL',
-          BuyerName: 'Auto Parts ERP',
-          SupplierName: 'Auto Parts ERP'
-        },
-        Items: {
-          Item: products.map(product => ({
-            $: { MaintenanceType: 'A' },
-            PartNumber: product.partNumber,
-            BrandAAIAID: product.brand,
-            BrandLabel: product.brand,
-            PartTerminologyID: '1234',
-            Descriptions: {
-              Description: {
-                $: { MaintenanceType: 'A', LanguageCode: 'EN', DescriptionCode: 'SHO' },
-                _: product.shortDescription
-              }
-            }
-          }))
-        }
-      }
-    };
-
-    const xmlString = XMLHandler.createXMLFile(piesData, 'PIES');
-    
-    res.setHeader('Content-Type', 'application/xml');
-    res.setHeader('Content-Disposition', 'attachment; filename=products.xml');
-    res.send(xmlString);
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename=pies-template.xlsx');
+    res.send(buffer);
   } catch (error) {
-    res.status(500).json({ error: 'XML export failed' });
+    console.error('Template export error:', error);
+    res.status(500).json({ error: 'Template export failed' });
+  }
+});
+
+// Export products to Excel (async job)
+router.post('/export/excel', (req, res) => {
+  try {
+    const job = jobService.createExportJob('excel', 'products');
+    
+    res.json({
+      jobId: job.id,
+      status: job.status,
+      message: 'Export job created successfully. Processing will begin shortly.'
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Export job creation failed' });
+  }
+});
+
+// Export products to XML (PIES format)
+router.post('/export/xml', (req, res) => {
+  try {
+    const job = jobService.createExportJob('xml', 'products');
+    
+    res.json({
+      jobId: job.id,
+      status: job.status,
+      message: 'XML export job created successfully. Processing will begin shortly.'
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'XML export job creation failed' });
   }
 });
 

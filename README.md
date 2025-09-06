@@ -101,11 +101,37 @@ GET /api/products/export/xml
 
 ## 🎯 Example Usage
 
-### Excel Import Format
-Products Excel file should have:
-- **Row 1**: `manufacturer, brand, partNumber, sku, productName, shortDescription, longDescription, stock, unitType, qtyOnHand`
-- **Row 2**: `string, string, string, string, string, string, string, number, string, number` (optional)
-- **Row 3+**: Data rows
+### Excel Import/Export Format
+
+#### PIES-Compliant Excel Structure
+The system supports comprehensive PIES 7.2 Excel import/export:
+
+**Products Sheet:**
+- Core fields: ID, Manufacturer, Brand, Part Number, SKU, Product Name
+- PIES fields: Mfg Code, Brand ID, GTIN, UNSPSC, Part Type, Category Code
+- Extended: Hazmat Code, Item Qty Size/UOM, VMRS Code
+
+**PIES Descriptions Sheet:**
+- Description codes: DES, LAB, MKT, FAB
+- Multi-language support
+- Sequence ordering
+
+**PIES Attributes Sheet:**
+- Attribute ID/Value pairs
+- UOM support
+- Unlimited attributes per product
+
+**PIES Packages Sheet:**
+- Dimensions and weight
+- Multiple UOM support
+- Package types and descriptions
+
+#### Template Download
+Use the "PIES Template" button to download a pre-formatted Excel template with:
+- Field names and data types
+- Sample data rows
+- All PIES 7.2 compliant fields
+- Multiple sheets for related data
 
 ### XML Import (ACES/PIES)
 The system accepts standard ACES 4.1 and PIES 7.2 XML formats:
@@ -152,12 +178,30 @@ cd server && npm run dev
 npm run build
 ```
 
-## 📋 Sample Data
+## 📋 Sample Data & PIES Seed Integration
 
-The system comes with sample data including:
-- **Products**: Brake pads and air filters with ACES/PIES compliance
+The system automatically loads comprehensive PIES data on startup:
+
+### PIES Text File Processing
+- **PIES_ITEM.txt** - Core product identifiers and classifications
+- **PIES_ITEM_DESC.txt** - Product descriptions (DES, LAB, MKT, FAB)
+- **PIES_ITEM_ATRB.txt** - Product attributes (material, dimensions, etc.)
+- **PIES_ITEM_PACK.txt** - Packaging information
+- **PIES_ITEM_ASSET.txt** - Digital assets and images
+- **PIES_ITEM_ASST.txt** - Product assortments
+
+### Fallback Sample Data
+If PIES files are not available, the system includes:
+- **Products**: Brake pads and air filters with full PIES compliance
 - **Customers**: B2B and B2C examples
 - **Orders**: Sample orders with line items
+
+### Data Loading Process
+1. Server startup attempts to parse PIES text files
+2. Converts pipe-delimited data to structured JSON
+3. Creates products with complete PIES relationships
+4. Falls back to sample data if PIES files unavailable
+5. All data immediately available in Product Detail tabs
 
 ## 🚀 Deployment
 
@@ -175,21 +219,67 @@ AWS_REGION=us-east-1
 DYNAMODB_TABLE_PREFIX=auto-parts-erp
 S3_BUCKET=auto-parts-erp-files
 COGNITO_USER_POOL_ID=your-pool-id
+
+# PIES Data Configuration
+PIES_DATA_PATH=/path/to/pies/files
+PIES_AUTO_LOAD=true
+PIES_VALIDATION_STRICT=false
 ```
+
+## 🔄 PIES Data Processing
+
+### Startup Sequence
+1. **File Detection**: Scans for PIES_*.txt files in project root
+2. **Parsing**: Processes pipe-delimited format with headers
+3. **Validation**: Checks required fields and data integrity
+4. **Conversion**: Maps to internal PIES 7.2 schema
+5. **Storage**: Populates in-memory store (DynamoDB in production)
+6. **UI Population**: Immediately available in Product Detail tabs
+
+### Supported PIES Files
+- `PIES_ITEM.txt` - Core product data
+- `PIES_ITEM_DESC.txt` - Descriptions and marketing copy
+- `PIES_ITEM_ATRB.txt` - Product attributes and specifications
+- `PIES_ITEM_PACK.txt` - Packaging and shipping data
+- `PIES_ITEM_ASSET.txt` - Digital assets and media
+- `PIES_ITEM_ASST.txt` - Product assortments and collections
+
+### Processing Statistics
+Server logs show:
+- Files processed and record counts
+- Validation errors and warnings
+- Products created with PIES relationships
+- Processing time and performance metrics
 
 ## 📚 ACES/PIES Compliance
 
 ### ACES 4.1 Support
-- Vehicle fitment data
-- Application mapping
-- Attribute filters
-- Schema validation
+- **Vehicle Fitment**: Year, Make, Model, Sub Model, Engine
+- **Application Mapping**: Position, Quantity, Part Type
+- **Extended Attributes**: Transmission, Drive Type, Body Type, Bed Length
+- **Qualifiers**: Custom application qualifiers
+- **Notes**: Application-specific notes and warnings
 
 ### PIES 7.2 Support
-- Complete product information
-- All required and conditional fields
-- Multi-language support
-- Digital asset management
+- **Item Information**: GTIN, UNSPSC, Part Type, Category Code, Hazmat
+- **Descriptions**: DES, LAB, MKT, FAB with multi-language support
+- **Pricing**: Multiple price types (LIST, MSRP, COST, JOBBER)
+- **EXPI**: Extended product information and country of origin
+- **Attributes**: Unlimited attribute/value pairs with UOM
+- **Packaging**: Dimensions, weight, package types
+- **Kits**: Multi-component kit relationships
+- **Interchange**: OE and aftermarket part cross-references
+- **Assets**: Digital images, documents, and media
+- **Assortments**: Product groupings and collections
+- **Market Copy**: SEO and marketing content
+
+### Field Coverage
+Implements **ALL** fields from:
+- PIES 7.2 Technical Specifications (Excel)
+- ACES 4.1 Technical Documentation
+- Supports both required and conditional fields
+- Color-coded field importance in UI
+- Real-time validation and error checking
 
 ## 🤝 Contributing
 
@@ -213,4 +303,28 @@ For support and questions:
 
 ---
 
+## 🎯 PIES/ACES Integration Features
+
+### ✅ Completed Implementation
+- [x] Full PIES 7.2 type definitions
+- [x] ACES 4.1 application mapping
+- [x] Seed data parser for PIES text files
+- [x] Comprehensive Excel import/export
+- [x] Product Detail UI with all PIES tabs
+- [x] Template generation and download
+- [x] Real-time data loading on startup
+- [x] Fallback sample data with PIES structure
+- [x] Multi-sheet Excel support
+- [x] Attribute and description management
+
+### 🚀 Production Readiness
+- DynamoDB schema for PIES JSON storage
+- Aurora Postgres for relational ERP data
+- S3 integration for file processing
+- Background job processing
+- AWS Lambda deployment ready
+- CloudWatch monitoring integration
+
 **Built with ❤️ for the automotive aftermarket industry**
+
+*Fully compliant with ACES 4.1 and PIES 7.2 standards*

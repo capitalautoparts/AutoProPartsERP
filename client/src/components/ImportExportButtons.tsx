@@ -1,12 +1,14 @@
 import React, { useRef } from 'react';
-import { Upload, Download, FileSpreadsheet, FileText } from 'lucide-react';
+import { Upload, Download, FileSpreadsheet, FileText, FileDown } from 'lucide-react';
 
 interface ImportExportButtonsProps {
   onImportExcel?: (file: File) => void;
   onImportXML?: (file: File) => void;
   onExportExcel?: () => void;
   onExportXML?: () => void;
+  onDownloadTemplate?: () => void;
   showXML?: boolean;
+  showTemplate?: boolean;
 }
 
 const ImportExportButtons: React.FC<ImportExportButtonsProps> = ({
@@ -14,7 +16,9 @@ const ImportExportButtons: React.FC<ImportExportButtonsProps> = ({
   onImportXML,
   onExportExcel,
   onExportXML,
+  onDownloadTemplate,
   showXML = false,
+  showTemplate = false,
 }) => {
   const excelInputRef = useRef<HTMLInputElement>(null);
   const xmlInputRef = useRef<HTMLInputElement>(null);
@@ -40,7 +44,18 @@ const ImportExportButtons: React.FC<ImportExportButtonsProps> = ({
   };
 
   return (
-    <div className="flex space-x-2">
+    <div className="flex flex-wrap gap-2">
+      {/* PIES Template Download */}
+      {showTemplate && (
+        <button
+          onClick={onDownloadTemplate}
+          className="inline-flex items-center px-3 py-2 border border-green-300 shadow-sm text-sm leading-4 font-medium rounded-md text-green-700 bg-green-50 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+        >
+          <FileDown className="h-4 w-4 mr-2" />
+          PIES Template
+        </button>
+      )}
+
       {/* Excel Import */}
       <input
         ref={excelInputRef}

@@ -7,6 +7,8 @@ const OrdersPage: React.FC = () => {
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ['orders'],
     queryFn: () => ordersApi.getAll().then(res => res.data),
+    staleTime: Infinity,
+    cacheTime: Infinity,
   });
 
   const handleImportExcel = (file: File) => {

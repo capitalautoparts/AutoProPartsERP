@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Product, Customer, Order, ImportResult } from '../types';
+import { Product, Customer, Order, ImportResult, JobResponse, ImportJob, ExportJob } from '../types';
 
 const api = axios.create({
   baseURL: '/api',
@@ -20,19 +20,19 @@ export const productsApi = {
   importExcel: (file: File) => {
     const formData = new FormData();
     formData.append('file', file);
-    return api.post<ImportResult>('/products/import/excel', formData, {
+    return api.post<JobResponse>('/products/import/excel', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
   },
   importXML: (file: File) => {
     const formData = new FormData();
     formData.append('file', file);
-    return api.post<ImportResult>('/products/import/xml', formData, {
+    return api.post<JobResponse>('/products/import/xml', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
   },
-  exportExcel: () => api.get('/products/export/excel', { responseType: 'blob' }),
-  exportXML: () => api.get('/products/export/xml', { responseType: 'blob' }),
+  exportExcel: () => api.post<JobResponse>('/products/export/excel'),
+  exportXML: () => api.post<JobResponse>('/products/export/xml'),
 };
 
 // Customers API
@@ -69,6 +69,14 @@ export const ordersApi = {
     });
   },
   exportExcel: () => api.get('/orders/export/excel', { responseType: 'blob' }),
+};
+
+// Jobs API
+export const jobsApi = {
+  getImportJobs: () => api.get<ImportJob[]>('/jobs/imports'),
+  getExportJobs: () => api.get<ExportJob[]>('/jobs/exports'),
+  getImportJob: (id: string) => api.get<ImportJob>(`/jobs/imports/${id}`),
+  getExportJob: (id: string) => api.get<ExportJob>(`/jobs/exports/${id}`),
 };
 
 export default api;

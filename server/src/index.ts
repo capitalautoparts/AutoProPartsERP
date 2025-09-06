@@ -3,6 +3,8 @@ import cors from 'cors';
 import productsRouter from './routes/products.js';
 import customersRouter from './routes/customers.js';
 import ordersRouter from './routes/orders.js';
+import jobsRouter from './routes/jobs.js';
+import { dataService } from './services/dataService.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -16,13 +18,15 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/products', productsRouter);
 app.use('/api/customers', customersRouter);
 app.use('/api/orders', ordersRouter);
+app.use('/api/jobs', jobsRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'OK', 
     message: 'Auto Parts ERP API is running',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    productsLoaded: dataService.getAllProducts().length
   });
 });
 
@@ -55,10 +59,30 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Auto Parts ERP Server running on port ${PORT}`);
-  console.log(`📊 API Health Check: http://localhost:${PORT}/api/health`);
-  console.log(`🔧 Products API: http://localhost:${PORT}/api/products`);
-  console.log(`👥 Customers API: http://localhost:${PORT}/api/customers`);
-  console.log(`📦 Orders API: http://localhost:${PORT}/api/orders`);
-});
+// Initialize data and start server
+async function startServer() {
+  try {
+    console.log('🚀 Starting Auto Parts ERP Server...');
+    console.log('📊 Initializing PIES/ACES data...');
+    
+    // Data service initialization happens in constructor
+    // Give it a moment to complete async initialization
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    const productCount = dataService.getAllProducts().length;
+    console.log(`✅ Loaded ${productCount} products with PIES/ACES data`);
+    
+    app.listen(PORT, () => {
+      console.log(`🚀 Auto Parts ERP Server running on port ${PORT}`);
+      console.log(`📊 API Health Check: http://localhost:${PORT}/api/health`);
+      console.log(`🔧 Products API: http://localhost:${PORT}/api/products`);
+      console.log(`👥 Customers API: http://localhost:${PORT}/api/customers`);
+      console.log(`📦 Orders API: http://localhost:${PORT}/api/orders`);
+    });
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+startServer();
