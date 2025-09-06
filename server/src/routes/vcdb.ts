@@ -6,13 +6,35 @@ import { qdbBrandService } from '../services/qdbBrandService';
 const router = express.Router();
 
 router.get('/makes', (req, res) => {
-  const makes = fullVcdbService.getAllMakes();
-  res.json(makes);
+  try {
+    const { year, modelId } = req.query;
+    const makes = fullVcdbService.getAvailableMakes(
+      year ? parseInt(year) : undefined,
+      modelId ? parseInt(modelId) : undefined
+    );
+    res.json(makes);
+  } catch (error) {
+    console.error('Makes endpoint error:', error);
+    // Fallback to all makes
+    const makes = fullVcdbService.getAllMakes();
+    res.json(makes.slice(0, 20));
+  }
 });
 
 router.get('/models', (req, res) => {
-  const models = fullVcdbService.getAllModels();
-  res.json(models);
+  try {
+    const { year, makeId } = req.query;
+    const models = fullVcdbService.getAvailableModels(
+      year ? parseInt(year) : undefined,
+      makeId ? parseInt(makeId) : undefined
+    );
+    res.json(models);
+  } catch (error) {
+    console.error('Models endpoint error:', error);
+    // Fallback to all models
+    const models = fullVcdbService.getAllModels();
+    res.json(models.slice(0, 50));
+  }
 });
 
 router.get('/submodels', (req, res) => {
@@ -21,8 +43,14 @@ router.get('/submodels', (req, res) => {
 });
 
 router.get('/enginebases', (req, res) => {
-  const engineBases = fullVcdbService.getAllEngineBases();
-  res.json(engineBases);
+  const { baseVehicleId } = req.query;
+  if (baseVehicleId) {
+    const engines = fullVcdbService.getEnginesForBaseVehicle(parseInt(baseVehicleId));
+    res.json(engines);
+  } else {
+    const engines = fullVcdbService.getAllEngineBases();
+    res.json(engines.slice(0, 20));
+  }
 });
 
 router.get('/engineblocks', (req, res) => {
@@ -41,18 +69,36 @@ router.get('/drivetypes', (req, res) => {
 });
 
 router.get('/transmissiontypes', (req, res) => {
-  const transmissionTypes = fullVcdbService.getAllTransmissionTypes();
-  res.json(transmissionTypes);
+  const { baseVehicleId } = req.query;
+  if (baseVehicleId) {
+    const transmissions = fullVcdbService.getTransmissionsForBaseVehicle(parseInt(baseVehicleId));
+    res.json(transmissions);
+  } else {
+    const transmissions = fullVcdbService.getAllTransmissionTypes();
+    res.json(transmissions.slice(0, 10));
+  }
 });
 
 router.get('/bodytypes', (req, res) => {
-  const bodyTypes = fullVcdbService.getAllBodyTypes();
-  res.json(bodyTypes);
+  const { baseVehicleId } = req.query;
+  if (baseVehicleId) {
+    const bodyTypes = fullVcdbService.getBodyTypesForBaseVehicle(parseInt(baseVehicleId));
+    res.json(bodyTypes);
+  } else {
+    const bodyTypes = fullVcdbService.getAllBodyTypes();
+    res.json(bodyTypes.slice(0, 10));
+  }
 });
 
 router.get('/fueltypes', (req, res) => {
-  const fuelTypes = fullVcdbService.getAllFuelTypes();
-  res.json(fuelTypes);
+  const { baseVehicleId } = req.query;
+  if (baseVehicleId) {
+    const fuelTypes = fullVcdbService.getFuelTypesForBaseVehicle(parseInt(baseVehicleId));
+    res.json(fuelTypes);
+  } else {
+    const fuelTypes = fullVcdbService.getAllFuelTypes();
+    res.json(fuelTypes.slice(0, 5));
+  }
 });
 
 router.get('/aspirations', (req, res) => {
@@ -76,12 +122,33 @@ router.get('/equipmentmodels', (req, res) => {
 });
 
 router.get('/years', (req, res) => {
-  const currentYear = new Date().getFullYear();
-  const years = [];
-  for (let year = 1980; year <= currentYear + 2; year++) {
-    years.push(year);
+  try {
+    const { makeId, modelId } = req.query;
+    const years = fullVcdbService.getAvailableYears(
+      makeId ? parseInt(makeId) : undefined,
+      modelId ? parseInt(modelId) : undefined
+    );
+    res.json(years.map(year => ({ id: year, name: year.toString() })));
+  } catch (error) {
+    console.error('Years endpoint error:', error);
+    // Fallback to static years
+    const currentYear = new Date().getFullYear();
+    const years = [];
+    for (let year = 1980; year <= currentYear + 2; year++) {
+      years.push({ id: year, name: year.toString() });
+    }
+    res.json(years);
   }
-  res.json(years);
+});
+
+router.get('/basevehicles', (req, res) => {
+  const { year, makeId, modelId } = req.query;
+  const baseVehicles = fullVcdbService.findBaseVehiclesByYearMakeModel(
+    year ? parseInt(year) : undefined,
+    makeId ? parseInt(makeId) : undefined,
+    modelId ? parseInt(modelId) : undefined
+  );
+  res.json(baseVehicles);
 });
 
 router.get('/parttypes', (req, res) => {

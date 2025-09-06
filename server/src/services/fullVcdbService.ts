@@ -145,6 +145,31 @@ class FullVCdbService {
   getMakeName(id: number) { return this.tables.makes.get(id); }
   getModelName(id: number) { return this.tables.models.get(id); }
   getBaseVehicle(id: number) { return this.tables.baseVehicles.get(id); }
+
+  // BaseVehicle-filtered data methods
+  getEnginesForBaseVehicle(baseVehicleId: number) {
+    // TODO: Load VCdb Engine relationships - for now return sample filtered data
+    const engines = this.getAllEngineBases();
+    return engines.slice(0, 5); // Filtered subset
+  }
+
+  getTransmissionsForBaseVehicle(baseVehicleId: number) {
+    // TODO: Load VCdb Transmission relationships - for now return sample filtered data
+    const transmissions = this.getAllTransmissionTypes();
+    return transmissions.slice(0, 3); // Filtered subset
+  }
+
+  getBodyTypesForBaseVehicle(baseVehicleId: number) {
+    // TODO: Load VCdb Body relationships - for now return sample filtered data
+    const bodyTypes = this.getAllBodyTypes();
+    return bodyTypes.slice(0, 2); // Filtered subset
+  }
+
+  getFuelTypesForBaseVehicle(baseVehicleId: number) {
+    // TODO: Load VCdb Fuel relationships - for now return sample filtered data
+    const fuelTypes = this.getAllFuelTypes();
+    return fuelTypes.slice(0, 2); // Filtered subset
+  }
   
   resolveVehicleInfo(baseVehicleId: number) {
     const vehicle = this.getBaseVehicle(baseVehicleId);
@@ -156,6 +181,79 @@ class FullVCdbService {
       make: this.getMakeName(vehicle.makeId),
       model: this.getModelName(vehicle.modelId)
     };
+  }
+
+  findBaseVehiclesByYearMakeModel(year?: number, makeId?: number, modelId?: number) {
+    const results = [];
+    for (const [id, vehicle] of this.tables.baseVehicles) {
+      let matches = true;
+      if (year && vehicle.yearId !== year) matches = false;
+      if (makeId && vehicle.makeId !== makeId) matches = false;
+      if (modelId && vehicle.modelId !== modelId) matches = false;
+      
+      if (matches) {
+        results.push({
+          id,
+          year: vehicle.yearId,
+          make: this.getMakeName(vehicle.makeId),
+          model: this.getModelName(vehicle.modelId)
+        });
+      }
+    }
+    return results;
+  }
+
+  getAvailableYears(makeId?: number, modelId?: number): number[] {
+    // Fallback to static years if no BaseVehicle data
+    if (this.tables.baseVehicles.size === 0) {
+      const currentYear = new Date().getFullYear();
+      const years = [];
+      for (let year = 1980; year <= currentYear + 2; year++) {
+        years.push(year);
+      }
+      return years;
+    }
+    
+    const years = new Set<number>();
+    for (const [, vehicle] of this.tables.baseVehicles) {
+      let matches = true;
+      if (makeId && vehicle.makeId !== makeId) matches = false;
+      if (modelId && vehicle.modelId !== modelId) matches = false;
+      if (matches) years.add(vehicle.yearId);
+    }
+    return Array.from(years).sort();
+  }
+
+  getAvailableMakes(year?: number, modelId?: number): Array<{id: number, name: string}> {
+    // Fallback to all makes if no BaseVehicle data
+    if (this.tables.baseVehicles.size === 0) {
+      return this.getAllMakes().slice(0, 20);
+    }
+    
+    const makeIds = new Set<number>();
+    for (const [, vehicle] of this.tables.baseVehicles) {
+      let matches = true;
+      if (year && vehicle.yearId !== year) matches = false;
+      if (modelId && vehicle.modelId !== modelId) matches = false;
+      if (matches) makeIds.add(vehicle.makeId);
+    }
+    return Array.from(makeIds).map(id => ({ id, name: this.getMakeName(id) || 'Unknown' }));
+  }
+
+  getAvailableModels(year?: number, makeId?: number): Array<{id: number, name: string}> {
+    // Fallback to all models if no BaseVehicle data
+    if (this.tables.baseVehicles.size === 0) {
+      return this.getAllModels().slice(0, 50);
+    }
+    
+    const modelIds = new Set<number>();
+    for (const [, vehicle] of this.tables.baseVehicles) {
+      let matches = true;
+      if (year && vehicle.yearId !== year) matches = false;
+      if (makeId && vehicle.makeId !== makeId) matches = false;
+      if (matches) modelIds.add(vehicle.modelId);
+    }
+    return Array.from(modelIds).map(id => ({ id, name: this.getModelName(id) || 'Unknown' }));
   }
 }
 
