@@ -39,30 +39,57 @@ export interface ACESApplication {
   yearId?: number;
   makeId?: number;
   modelId?: number;
-  engineId?: number;
-  // Vehicle attributes
+  // Engine attributes
+  engineBaseId?: number;
+  engineBlockId?: number;
+  engineVINId?: number;
+  aspirationId?: number;
+  // Transmission attributes
+  transmissionTypeId?: number;
+  driveTypeId?: number;
+  numSpeeds?: number;
+  controlType?: string;
+  // Body attributes
+  bodyTypeId?: number;
+  numDoors?: number;
+  bedLength?: string;
+  wheelbase?: string;
+  // Fuel attributes
+  fuelTypeId?: number;
+  fuelDeliveryType?: string;
+  fuelSystemDesign?: string;
+  ignitionSystem?: string;
+  // Brake attributes
+  brakeSystem?: string;
+  abs?: string;
+  frontBrakeType?: string;
+  rearBrakeType?: string;
+  // Equipment attributes (ACES 4.2)
+  manufacturerId?: number;
+  equipmentModelId?: number;
+  vehicleTypeId?: number;
+  productionStart?: number;
+  productionEnd?: number;
+  // Vehicle attributes (resolved)
   year?: number;
   make?: string;
   model?: string;
   subModel?: string;
-  engine?: string;
-  engineVIN?: string;
-  transmission?: string;
-  driveType?: string;
-  steering?: string;
-  bodyType?: string;
-  bodyNumDoors?: string;
-  bedLength?: string;
-  bedType?: string;
-  wheelBase?: string;
   // Application attributes
-  position?: string;
+  positionId?: number;
   quantity?: number;
-  partType?: string;
+  partTypeId?: number;
   mfrLabel?: string;
+  // Asset attributes (ACES 4.2)
+  assetName?: string;
+  assetItemOrder?: number;
+  validateApplication?: boolean;
   // Qualifiers
   qualifiers?: ACESQualifier[];
   notes?: string[];
+  // Timestamps
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ACESQualifier {

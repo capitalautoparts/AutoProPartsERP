@@ -46,8 +46,9 @@ export const vcdbApi = {
     return response.json();
   },
 
-  getSubModels: async (): Promise<Array<{id: number, name: string}>> => {
-    const response = await fetch(`${API_BASE}/submodels`);
+  getSubModels: async (baseVehicleId?: number): Promise<Array<{id: number, name: string}>> => {
+    const url = baseVehicleId ? `${API_BASE}/submodels?baseVehicleId=${baseVehicleId}` : `${API_BASE}/submodels`;
+    const response = await fetch(url);
     return response.json();
   },
 
@@ -117,16 +118,6 @@ export const vcdbApi = {
 
   getPositions: async (): Promise<Array<{id: number, name: string}>> => {
     const response = await fetch(`${API_BASE}/positions`);
-    return response.json();
-  },
-
-  getQualifiers: async (): Promise<Array<{id: number, name: string}>> => {
-    const response = await fetch(`${API_BASE}/qualifiers`);
-    return response.json();
-  },
-
-  getBrands: async (): Promise<Array<{id: string, name: string}>> => {
-    const response = await fetch(`${API_BASE}/brands`);
     return response.json();
   },
 

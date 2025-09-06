@@ -52,16 +52,40 @@ export interface ACESApplication {
   productionEnd?: number;
   
   // Engine specifications
-  engineId?: number;
   engineBaseId?: number;
-  engineVINId?: number;
   engineBlockId?: number;
+  engineVINId?: number;
   aspirationId?: number;
+  
+  // Transmission attributes
+  transmissionTypeId?: number;
+  driveTypeId?: number;
+  numSpeeds?: number;
+  controlType?: string;
+  
+  // Body attributes
+  bodyTypeId?: number;
+  numDoors?: number;
+  bedLength?: string;
+  wheelbase?: string;
+  
+  // Fuel attributes
+  fuelTypeId?: number;
+  fuelDeliveryType?: string;
+  fuelSystemDesign?: string;
+  ignitionSystem?: string;
+  
+  // Brake attributes
+  brakeSystem?: string;
+  abs?: string;
+  frontBrakeType?: string;
+  rearBrakeType?: string;
   
   // Application details
   quantity: number;
   partTypeId: number;
   positionId?: number;
+  mfrLabel?: string;
   
   // Qualifiers and notes
   qualifiers?: ACESQualifier[];

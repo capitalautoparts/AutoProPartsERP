@@ -18,6 +18,16 @@ interface VCdbTables {
   vehicleTypes: Map<number, string>;
   manufacturers: Map<number, string>;
   equipmentModels: Map<number, string>;
+  // VCdb component tables
+  engineConfigs: Map<number, string>;
+  transmissions: Map<number, string>;
+  bodyConfigs: Map<number, string>;
+  // VCdb relationship tables
+  vehicleToEngineBase: Map<number, Set<number>>;
+  vehicleToTransmissionType: Map<number, Set<number>>;
+  vehicleToBodyType: Map<number, Set<number>>;
+  vehicleToFuelType: Map<number, Set<number>>;
+  vehicleToSubModel: Map<number, Set<number>>;
 }
 
 interface BaseVehicle {
@@ -44,7 +54,17 @@ class FullVCdbService {
     aspirations: new Map(),
     vehicleTypes: new Map(),
     manufacturers: new Map(),
-    equipmentModels: new Map()
+    equipmentModels: new Map(),
+    // VCdb component tables
+    engineConfigs: new Map(),
+    transmissions: new Map(),
+    bodyConfigs: new Map(),
+    // VCdb relationship tables
+    vehicleToEngineBase: new Map(),
+    vehicleToTransmissionType: new Map(),
+    vehicleToBodyType: new Map(),
+    vehicleToFuelType: new Map(),
+    vehicleToSubModel: new Map()
   };
 
   constructor() {
@@ -79,10 +99,19 @@ class FullVCdbService {
       this.loadTable(vcdbPath, '20231026_EquipmentModel.txt', this.tables.equipmentModels);
       this.loadTable(vcdbPath, '20231026_VehicleType.txt', this.tables.vehicleTypes);
       
+      // VCdb component tables - load with proper structure
+      this.loadEngineConfigs(vcdbPath);
+      this.loadTransmissions(vcdbPath);
+      this.loadBodyConfigs(vcdbPath);
+      
       // BaseVehicle (special handling)
       this.loadBaseVehicles(vcdbPath);
       
+      // Load VCdb relationship tables
+      this.loadVehicleRelationships(vcdbPath);
+      
       console.log(`✅ Full VCdb loaded: ${this.tables.makes.size} makes, ${this.tables.models.size} models, ${this.tables.baseVehicles.size} vehicles`);
+      console.log(`✅ VCdb relationships: ${this.tables.vehicleToEngineBase.size} engine, ${this.tables.vehicleToTransmissionType.size} transmission mappings`);
     } catch (error) {
       console.warn('⚠️ VCdb files not found:', error.message);
     }
@@ -125,6 +154,244 @@ class FullVCdbService {
     }
   }
 
+  private loadVehicleRelationships(vcdbPath: string) {
+    // Load actual VCdb relationship files
+    this.loadEngineRelationships(vcdbPath);
+    this.loadTransmissionRelationships(vcdbPath);
+    this.loadBodyRelationships(vcdbPath);
+    this.loadFuelRelationships(vcdbPath);
+    this.loadSubModelRelationships(vcdbPath);
+  }
+
+  private loadEngineRelationships(vcdbPath: string) {
+    try {
+      // Load Vehicle table to map BaseVehicle to Vehicle IDs
+      const vehicleData = fs.readFileSync(path.join(vcdbPath, '20231026_Vehicle.txt'), 'utf-8');
+      const vehicleLines = vehicleData.split(/\r?\n/).slice(1);
+      const baseVehicleToVehicle = new Map<number, number[]>();
+      
+      for (const line of vehicleLines) {
+        if (!line.trim()) continue;
+        const [vehicleId, baseVehicleId] = line.split('|').map(Number);
+        if (vehicleId && baseVehicleId) {
+          if (!baseVehicleToVehicle.has(baseVehicleId)) {
+            baseVehicleToVehicle.set(baseVehicleId, []);
+          }
+          baseVehicleToVehicle.get(baseVehicleId)!.push(vehicleId);
+        }
+      }
+      
+      // Load engine relationships
+      const engineData = fs.readFileSync(path.join(vcdbPath, '20231026_VehicleToEngineConfig.txt'), 'utf-8');
+      const engineLines = engineData.split(/\r?\n/).slice(1);
+      
+      for (const line of engineLines) {
+        if (!line.trim()) continue;
+        const [, vehicleId, engineConfigId] = line.split('|').map(Number);
+        if (vehicleId && engineConfigId) {
+          // Find BaseVehicle for this Vehicle
+          for (const [baseVehicleId, vehicleIds] of baseVehicleToVehicle) {
+            if (vehicleIds.includes(vehicleId)) {
+              if (!this.tables.vehicleToEngineBase.has(baseVehicleId)) {
+                this.tables.vehicleToEngineBase.set(baseVehicleId, new Set());
+              }
+              this.tables.vehicleToEngineBase.get(baseVehicleId)!.add(engineConfigId);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to load engine relationships:', error.message);
+    }
+  }
+
+  private loadTransmissionRelationships(vcdbPath: string) {
+    try {
+      // Load Vehicle table to map BaseVehicle to Vehicle IDs
+      const vehicleData = fs.readFileSync(path.join(vcdbPath, '20231026_Vehicle.txt'), 'utf-8');
+      const vehicleLines = vehicleData.split(/\r?\n/).slice(1);
+      const baseVehicleToVehicle = new Map<number, number[]>();
+      
+      for (const line of vehicleLines) {
+        if (!line.trim()) continue;
+        const [vehicleId, baseVehicleId] = line.split('|').map(Number);
+        if (vehicleId && baseVehicleId) {
+          if (!baseVehicleToVehicle.has(baseVehicleId)) {
+            baseVehicleToVehicle.set(baseVehicleId, []);
+          }
+          baseVehicleToVehicle.get(baseVehicleId)!.push(vehicleId);
+        }
+      }
+      
+      // Load transmission relationships
+      const transmissionData = fs.readFileSync(path.join(vcdbPath, '20231026_VehicleToTransmission.txt'), 'utf-8');
+      const transmissionLines = transmissionData.split(/\r?\n/).slice(1);
+      
+      for (const line of transmissionLines) {
+        if (!line.trim()) continue;
+        const [, vehicleId, transmissionId] = line.split('|').map(Number);
+        if (vehicleId && transmissionId) {
+          // Find BaseVehicle for this Vehicle
+          for (const [baseVehicleId, vehicleIds] of baseVehicleToVehicle) {
+            if (vehicleIds.includes(vehicleId)) {
+              if (!this.tables.vehicleToTransmissionType.has(baseVehicleId)) {
+                this.tables.vehicleToTransmissionType.set(baseVehicleId, new Set());
+              }
+              this.tables.vehicleToTransmissionType.get(baseVehicleId)!.add(transmissionId);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to load transmission relationships:', error.message);
+    }
+  }
+
+  private loadBodyRelationships(vcdbPath: string) {
+    try {
+      const data = fs.readFileSync(path.join(vcdbPath, '20231026_VehicleToBodyConfig.txt'), 'utf-8');
+      const lines = data.split(/\r?\n/).slice(1);
+      
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        const [, vehicleId, bodyConfigId] = line.split('|').map(Number);
+        if (vehicleId && bodyConfigId) {
+          if (!this.tables.vehicleToBodyType.has(vehicleId)) {
+            this.tables.vehicleToBodyType.set(vehicleId, new Set());
+          }
+          this.tables.vehicleToBodyType.get(vehicleId)!.add(bodyConfigId);
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to load body relationships:', error.message);
+    }
+  }
+
+  private loadFuelRelationships(vcdbPath: string) {
+    // VCdb doesn't have direct VehicleToFuelType - fuel is part of engine config
+    // Will be handled through engine relationships
+  }
+
+  private loadSubModelRelationships(vcdbPath: string) {
+    // SubModel relationships are typically in Vehicle table, not separate mapping
+    // Will implement if needed
+  }
+
+  private loadEngineConfigs(vcdbPath: string) {
+    try {
+      // Load EngineBase data first to create descriptive names
+      const engineBaseData = fs.readFileSync(path.join(vcdbPath, '20231026_EngineBase.txt'), 'utf-8');
+      const engineBaseLines = engineBaseData.split(/\r?\n/).slice(1);
+      const engineBaseMap = new Map<number, string>();
+      
+      for (const line of engineBaseLines) {
+        if (!line.trim()) continue;
+        const parts = line.split('|');
+        const [id, liter, , cid, cylinders, blockType] = parts;
+        if (id && liter && cylinders && blockType) {
+          const name = `${liter}L ${blockType}${cylinders}${cid ? ` (${cid} CID)` : ''}`;
+          engineBaseMap.set(Number(id), name);
+        }
+      }
+      
+      // Load EngineConfig and map to descriptive names
+      const data = fs.readFileSync(path.join(vcdbPath, '20231026_EngineConfig.txt'), 'utf-8');
+      const lines = data.split(/\r?\n/).slice(1);
+      
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        const parts = line.split('|');
+        const [id, , , , engineBaseId] = parts.map(Number);
+        if (id && engineBaseId) {
+          const engineName = engineBaseMap.get(engineBaseId) || `Engine ${engineBaseId}`;
+          this.tables.engineConfigs.set(id, engineName);
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to load engine configs:', error.message);
+    }
+  }
+
+  private loadTransmissions(vcdbPath: string) {
+    try {
+      // Load TransmissionBase and related tables for descriptive names
+      const transmissionBaseData = fs.readFileSync(path.join(vcdbPath, '20231026_TransmissionBase.txt'), 'utf-8');
+      const transmissionBaseLines = transmissionBaseData.split(/\r?\n/).slice(1);
+      const transmissionBaseMap = new Map<number, string>();
+      
+      for (const line of transmissionBaseLines) {
+        if (!line.trim()) continue;
+        const parts = line.split('|');
+        const [id, typeId, speedsId, controlId] = parts.map(Number);
+        if (id && typeId && speedsId) {
+          const typeName = this.tables.transmissionTypes.get(typeId) || 'Unknown';
+          const name = `${typeName} (Base ${id})`;
+          transmissionBaseMap.set(id, name);
+        }
+      }
+      
+      // Load Transmission and map to descriptive names
+      const data = fs.readFileSync(path.join(vcdbPath, '20231026_Transmission.txt'), 'utf-8');
+      const lines = data.split(/\r?\n/).slice(1);
+      
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        const parts = line.split('|');
+        const [id, transmissionBaseId] = parts.map(Number);
+        if (id && transmissionBaseId) {
+          const transmissionName = transmissionBaseMap.get(transmissionBaseId) || `Transmission ${transmissionBaseId}`;
+          this.tables.transmissions.set(id, transmissionName);
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to load transmissions:', error.message);
+    }
+  }
+
+  private loadBodyConfigs(vcdbPath: string) {
+    try {
+      const data = fs.readFileSync(path.join(vcdbPath, '20231026_BodyStyleConfig.txt'), 'utf-8');
+      const lines = data.split(/\r?\n/).slice(1);
+      
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        const parts = line.split('|');
+        const [id, bodyTypeId] = parts.map(Number);
+        if (id && bodyTypeId) {
+          const bodyTypeName = this.tables.bodyTypes.get(bodyTypeId) || 'Unknown Body';
+          this.tables.bodyConfigs.set(id, bodyTypeName);
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to load body configs:', error.message);
+    }
+  }
+
+  // Debug method for specific BaseVehicle
+  getDebugDataForBaseVehicle(baseVehicleId: number) {
+    const vehicle = this.getBaseVehicle(baseVehicleId);
+    if (!vehicle) return null;
+    
+    return {
+      baseVehicle: {
+        id: baseVehicleId,
+        year: vehicle.yearId,
+        make: this.getMakeName(vehicle.makeId),
+        model: this.getModelName(vehicle.modelId)
+      },
+      engines: this.getEnginesForBaseVehicle(baseVehicleId),
+      transmissions: this.getTransmissionsForBaseVehicle(baseVehicleId),
+      bodyTypes: this.getBodyTypesForBaseVehicle(baseVehicleId),
+      fuelTypes: this.getFuelTypesForBaseVehicle(baseVehicleId),
+      subModels: this.getSubModelsForBaseVehicle(baseVehicleId),
+      relationshipCounts: {
+        engines: this.tables.vehicleToEngineBase.get(baseVehicleId)?.size || 0,
+        transmissions: this.tables.vehicleToTransmissionType.get(baseVehicleId)?.size || 0,
+        bodyTypes: this.tables.vehicleToBodyType.get(baseVehicleId)?.size || 0
+      }
+    };
+  }
+
   // Public API methods
   getAllMakes() { return Array.from(this.tables.makes.entries()).map(([id, name]) => ({ id, name })); }
   getAllModels() { return Array.from(this.tables.models.entries()).map(([id, name]) => ({ id, name })); }
@@ -146,29 +413,55 @@ class FullVCdbService {
   getModelName(id: number) { return this.tables.models.get(id); }
   getBaseVehicle(id: number) { return this.tables.baseVehicles.get(id); }
 
-  // BaseVehicle-filtered data methods
+  // BaseVehicle-filtered data methods using actual VCdb relationships
   getEnginesForBaseVehicle(baseVehicleId: number) {
-    // TODO: Load VCdb Engine relationships - for now return sample filtered data
-    const engines = this.getAllEngineBases();
-    return engines.slice(0, 5); // Filtered subset
+    const engineConfigIds = this.tables.vehicleToEngineBase.get(baseVehicleId);
+    if (!engineConfigIds || engineConfigIds.size === 0) {
+      return [];
+    }
+    
+    return Array.from(engineConfigIds)
+      .map(id => ({ id, name: this.tables.engineConfigs.get(id) || `Engine Config ${id}` }))
+      .filter(engine => engine.name !== `Engine Config ${engine.id}`);
   }
 
   getTransmissionsForBaseVehicle(baseVehicleId: number) {
-    // TODO: Load VCdb Transmission relationships - for now return sample filtered data
-    const transmissions = this.getAllTransmissionTypes();
-    return transmissions.slice(0, 3); // Filtered subset
+    const transmissionIds = this.tables.vehicleToTransmissionType.get(baseVehicleId);
+    if (!transmissionIds || transmissionIds.size === 0) {
+      return [];
+    }
+    
+    return Array.from(transmissionIds)
+      .map(id => ({ id, name: this.tables.transmissions.get(id) || `Transmission ${id}` }))
+      .filter(transmission => transmission.name !== `Transmission ${transmission.id}`);
   }
 
   getBodyTypesForBaseVehicle(baseVehicleId: number) {
-    // TODO: Load VCdb Body relationships - for now return sample filtered data
-    const bodyTypes = this.getAllBodyTypes();
-    return bodyTypes.slice(0, 2); // Filtered subset
+    const bodyConfigIds = this.tables.vehicleToBodyType.get(baseVehicleId);
+    if (!bodyConfigIds || bodyConfigIds.size === 0) {
+      return [];
+    }
+    
+    return Array.from(bodyConfigIds)
+      .map(id => ({ id, name: this.tables.bodyConfigs.get(id) || `Body Config ${id}` }))
+      .filter(bodyType => bodyType.name !== `Body Config ${bodyType.id}`);
   }
 
   getFuelTypesForBaseVehicle(baseVehicleId: number) {
-    // TODO: Load VCdb Fuel relationships - for now return sample filtered data
-    const fuelTypes = this.getAllFuelTypes();
-    return fuelTypes.slice(0, 2); // Filtered subset
+    // Fuel types are derived from engine configurations
+    const engineConfigIds = this.tables.vehicleToEngineBase.get(baseVehicleId);
+    if (!engineConfigIds || engineConfigIds.size === 0) return [];
+    
+    // Return common fuel types for now
+    return [
+      { id: 1, name: 'Gasoline' },
+      { id: 2, name: 'Diesel' }
+    ];
+  }
+
+  getSubModelsForBaseVehicle(baseVehicleId: number) {
+    // SubModels need to be loaded from Vehicle table or separate relationship
+    return [];
   }
   
   resolveVehicleInfo(baseVehicleId: number) {

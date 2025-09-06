@@ -38,8 +38,14 @@ router.get('/models', (req, res) => {
 });
 
 router.get('/submodels', (req, res) => {
-  const subModels = fullVcdbService.getAllSubModels();
-  res.json(subModels);
+  const { baseVehicleId } = req.query;
+  if (baseVehicleId) {
+    const subModels = fullVcdbService.getSubModelsForBaseVehicle(parseInt(baseVehicleId));
+    res.json(subModels);
+  } else {
+    const subModels = fullVcdbService.getAllSubModels();
+    res.json(subModels.slice(0, 20));
+  }
 });
 
 router.get('/enginebases', (req, res) => {
@@ -204,6 +210,13 @@ router.get('/qualifiergroups', (req, res) => {
 router.get('/brands', (req, res) => {
   const brands = qdbBrandService.getAllBrands();
   res.json(brands);
+});
+
+// Debug endpoint for 2005 Dodge Ram 1500 (BaseVehicleID 18253)
+router.get('/debug/ram1500', (req, res) => {
+  const baseVehicleId = 18253; // 2005 Dodge Ram 1500
+  const debugData = fullVcdbService.getDebugDataForBaseVehicle(baseVehicleId);
+  res.json(debugData);
 });
 
 export default router;

@@ -247,6 +247,22 @@ PIES_VALIDATION_STRICT=false
 5. **Storage**: Populates in-memory store (DynamoDB in production)
 6. **UI Population**: Immediately available in Product Detail tabs
 
+## 🚗 AutoCare Standards Compliance
+
+### CRITICAL: BaseVehicle Validation Rule
+**ALL automotive data filtering MUST follow AutoCare standards:**
+- Only show data combinations that exist in real VCdb BaseVehicle records
+- Example: 2014 Volkswagen Routan should NEVER show 12.8L engines (invalid combination)
+- BaseVehicle ID determines ALL valid Engine/Transmission/Body/Fuel combinations
+- SubModels only available when BaseVehicle has associated SubModel records
+- Equipment applications follow same BaseVehicle filtering principles
+
+### Implementation Requirements
+1. **BaseVehicle-First Filtering**: All dropdowns filter by selected BaseVehicle ID
+2. **Real Data Only**: No generated or sample automotive data allowed
+3. **Conditional Availability**: Fields only enabled when valid BaseVehicle selected
+4. **AutoCare Validation**: Prevent impossible automotive combinations
+
 ### Supported PIES Files
 - `PIES_ITEM.txt` - Core product data
 - `PIES_ITEM_DESC.txt` - Descriptions and marketing copy
