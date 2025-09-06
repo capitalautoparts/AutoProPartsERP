@@ -371,12 +371,14 @@ export class ACESServiceCorrected {
    * Get PCdb Reference Data for Item specifications
    */
   async getPCdbReferenceData(): Promise<any> {
+    const categories = extractedDatabaseService.getTableData('PCdb', 'Categories');
+    const subCategories = extractedDatabaseService.getTableData('PCdb', 'Subcategories');
     const parts = extractedDatabaseService.getTableData('PCdb', 'Parts');
     const positions = extractedDatabaseService.getTableData('PCdb', 'Positions');
     
     return {
-      categories: [...new Set(parts.map(p => p.Category).filter(c => c))],
-      subCategories: [...new Set(parts.map(p => p.SubCategory).filter(sc => sc))],
+      categories: categories,
+      subCategories: subCategories,
       partTypes: parts,
       positions: positions
     };

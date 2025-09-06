@@ -1337,8 +1337,8 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                   className="w-full p-2 border rounded text-sm"
                 >
                   <option value="">Select Category</option>
-                  {pcdbRefData.categories?.map((cat: string) => (
-                    <option key={cat} value={cat}>{cat}</option>
+                  {pcdbRefData.categories?.map((cat: any) => (
+                    <option key={cat.CategoryID} value={cat.CategoryID}>{cat.CategoryName}</option>
                   ))}
                 </select>
               </div>
@@ -1351,8 +1351,8 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                   className="w-full p-2 border rounded text-sm"
                 >
                   <option value="">Select Sub Category</option>
-                  {pcdbRefData.subCategories?.map((subCat: string) => (
-                    <option key={subCat} value={subCat}>{subCat}</option>
+                  {pcdbRefData.subCategories?.map((subCat: any) => (
+                    <option key={subCat.SubCategoryID} value={subCat.SubCategoryID}>{subCat.SubCategoryName}</option>
                   ))}
                 </select>
               </div>
@@ -1366,7 +1366,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                 >
                   <option value="">Select Part Type</option>
                   {pcdbRefData.partTypes?.map((pt: any) => (
-                    <option key={pt.PartTypeID} value={pt.PartTypeID}>{pt.PartTypeName}</option>
+                    <option key={pt.PartTerminologyID} value={pt.PartTerminologyID}>{pt.PartTerminologyName}</option>
                   ))}
                 </select>
               </div>
@@ -1382,7 +1382,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                 >
                   <option value="">Select Position</option>
                   {pcdbRefData.positions?.map((pos: any) => (
-                    <option key={pos.PositionID} value={pos.PositionID}>{pos.PositionName}</option>
+                    <option key={pos.PositionID} value={pos.PositionID}>{pos.Position}</option>
                   ))}
                 </select>
               </div>
