@@ -17,7 +17,11 @@ class DataService {
     if (this.initialized) return;
     
     try {
-      // First try to load PIES seed data
+      // Load reference databases first
+      const { referenceDataService } = await import('./referenceDataService.js');
+      await referenceDataService.loadAllReferenceDatabases();
+      
+      // Then load PIES seed data
       console.log('Loading PIES seed data...');
       const seedResult = await piesSeedService.processSeedData();
       
@@ -29,7 +33,7 @@ class DataService {
         this.initializeSampleData();
       }
     } catch (error) {
-      console.warn('Failed to load PIES seed data, using sample data:', error);
+      console.warn('Failed to load data, using sample data:', error);
       this.initializeSampleData();
     }
     
@@ -41,6 +45,7 @@ class DataService {
     this.products = [
       {
         id: uuidv4(),
+        uniqueId: 'PROBRAND_PB-12345',
         manufacturer: 'AutoParts Inc',
         brand: 'ProBrand',
         partNumber: 'PB-12345',
@@ -111,6 +116,7 @@ class DataService {
       },
       {
         id: uuidv4(),
+        uniqueId: 'CLEANAIR_CA-67890',
         manufacturer: 'FilterTech',
         brand: 'CleanAir',
         partNumber: 'CA-67890',

@@ -1,6 +1,7 @@
 // Product Profile Types
 export interface Product {
-  id: string;
+  id: string; // Internal UUID
+  uniqueId: string; // BrandID + PartNo for deduplication
   manufacturer: string;
   brand: string;
   partNumber: string;
@@ -15,6 +16,7 @@ export interface Product {
   updatedAt: string;
   // ACES/PIES related data
   acesApplications?: ACESApplication[];
+  aces42Applications?: ACES42ApplicationInternal[];
   piesItem?: PIESItem;
   piesDescriptions?: PIESDescription[];
   piesPrices?: PIESPrice[];
@@ -28,7 +30,84 @@ export interface Product {
   piesMarketCopy?: PIESMarketCopy[];
 }
 
-// ACES 4.1 Types
+// ACES 4.2 Types
+export interface ACES42ApplicationInternal {
+  id: string;
+  productId: string;
+  action: 'A' | 'D';
+  validate?: 'no';
+  
+  // Vehicle identification
+  baseVehicle?: {
+    id: number;
+    subModel?: { id: number };
+    engineBase?: { id: number };
+    engineVIN?: { id: number };
+    engineBlock?: { id: number };
+    aspiration?: { id: number };
+  };
+  
+  // Year/Make/Model pattern
+  years?: { from: number; to: number };
+  make?: { id: number };
+  model?: { id: number };
+  subModel?: { id: number };
+  
+  // Equipment applications (NEW in 4.2)
+  manufacturer?: { id: number };
+  equipmentModel?: { id: number };
+  equipmentBase?: { id: number };
+  vehicleType?: { id: number };
+  productionYears?: {
+    productionStart: number;
+    productionEnd: number;
+  };
+  
+  // Engine specifications
+  engineBase?: { id: number };
+  engineVIN?: { id: number };
+  engineBlock?: { id: number };
+  aspiration?: { id: number };
+  
+  // Application details
+  quantity: number;
+  partType: { id: number };
+  position?: { id: number };
+  part: {
+    partNumber: string;
+    brandAAIAID?: string;
+    subBrandAAIAID?: string;
+  };
+  
+  // Qualifiers and notes
+  qualifiers?: {
+    id: number;
+    text?: string;
+    parameters?: { value: string }[];
+  }[];
+  notes?: string[];
+  
+  // Asset references (NEW in 4.2)
+  assetName?: string;
+  assetItemOrder?: number;
+  
+  // Resolved data for display
+  year?: number;
+  make?: string;
+  model?: string;
+  subModelName?: string;
+  engine?: string;
+  manufacturerName?: string;
+  equipmentModelName?: string;
+  vehicleTypeName?: string;
+  positionName?: string;
+  partTypeName?: string;
+  
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ACES 4.1 Types (Legacy)
 export interface ACESApplication {
   id: string;
   productId: string;
@@ -271,7 +350,7 @@ export interface JobResponse {
 export interface ImportJob {
   id: string;
   type: 'excel' | 'xml';
-  module: 'products' | 'customers' | 'orders';
+  module: 'products' | 'customers' | 'orders' | 'aces42';
   status: 'pending' | 'processing' | 'completed' | 'failed';
   fileName: string;
   recordsProcessed?: number;
@@ -285,10 +364,20 @@ export interface ImportJob {
 export interface ExportJob {
   id: string;
   type: 'excel' | 'xml';
-  module: 'products' | 'customers' | 'orders';
+  module: 'products' | 'customers' | 'orders' | 'aces42';
   status: 'pending' | 'processing' | 'completed' | 'failed';
   fileName: string;
   downloadUrl?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+// ACES 4.2 specific types
+export interface ACES42ImportResult {
+  success: boolean;
+  applicationsProcessed: number;
+  assetsProcessed: number;
+  digitalAssetsProcessed: number;
+  errors: string[];
+  warnings: string[];
 }

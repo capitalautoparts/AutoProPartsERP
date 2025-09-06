@@ -1,6 +1,7 @@
 // Product Profile Types
 export interface Product {
-  id: string;
+  id: string; // Internal UUID
+  uniqueId: string; // BrandID + PartNo for deduplication
   manufacturer: string;
   brand: string;
   partNumber: string;
@@ -15,6 +16,7 @@ export interface Product {
   updatedAt: string;
   // ACES/PIES related data
   acesApplications?: ACESApplication[];
+  aces42Applications?: import('./aces42').ACES42ApplicationInternal[];
   piesItem?: PIESItem;
   piesDescriptions?: PIESDescription[];
   piesPrices?: PIESPrice[];
@@ -28,7 +30,7 @@ export interface Product {
   piesMarketCopy?: PIESMarketCopy[];
 }
 
-// ACES 4.1 Types
+// ACES 4.1 Types (Legacy - use ACES42 for new implementations)
 export interface ACESApplication {
   id: string;
   productId: string;
@@ -69,6 +71,9 @@ export interface ACESQualifier {
   qualifierType: string;
   qualifierValue: string;
 }
+
+// Re-export ACES 4.2 types
+export * from './aces42';
 
 // PIES 7.2 Types
 export interface PIESItem {

@@ -4,6 +4,11 @@ import productsRouter from './routes/products.js';
 import customersRouter from './routes/customers.js';
 import ordersRouter from './routes/orders.js';
 import jobsRouter from './routes/jobs.js';
+import acesRouter from './routes/aces.js';
+import aces42Router from './routes/aces42.js';
+import databaseRouter from './routes/database.js';
+import debugRouter from './routes/debug.js';
+import referenceRouter from './routes/reference.js';
 import { dataService } from './services/dataService.js';
 
 const app = express();
@@ -19,6 +24,11 @@ app.use('/api/products', productsRouter);
 app.use('/api/customers', customersRouter);
 app.use('/api/orders', ordersRouter);
 app.use('/api/jobs', jobsRouter);
+app.use('/api/aces', acesRouter);
+app.use('/api/aces42', aces42Router);
+app.use('/api/database', databaseRouter);
+app.use('/api/debug', debugRouter);
+app.use('/api/reference', referenceRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {

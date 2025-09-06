@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Save } from 'lucide-react';
 import { productsApi } from '../services/api';
+import { acesService } from '../services/acesService';
+import { ACES42Tab } from '../components/ACES42Tab';
 
 const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -19,19 +21,18 @@ const ProductDetailPage: React.FC = () => {
 
   const tabs = [
     { id: 'profile', name: 'Profile' },
-    { id: 'aces-fitment', name: 'ACES - Vehicle Fitment' },
-    { id: 'aces-application', name: 'ACES - Application Mapping' },
-    { id: 'pies-item', name: 'PIES - Item' },
-    { id: 'pies-description', name: 'PIES - Description' },
-    { id: 'pies-price', name: 'PIES - Price' },
-    { id: 'pies-expi', name: 'PIES - EXPI' },
-    { id: 'pies-attributes', name: 'PIES - Attributes' },
-    { id: 'pies-package', name: 'PIES - Package' },
-    { id: 'pies-kit', name: 'PIES - Kit' },
-    { id: 'pies-interchange', name: 'PIES - Interchange' },
-    { id: 'pies-assets', name: 'PIES - Assets' },
-    { id: 'pies-assortments', name: 'PIES - Assortments' },
-    { id: 'pies-market-copy', name: 'PIES - Market Copy' },
+    { id: 'aces', name: 'ACES 4.1 (78 fields)' },
+    { id: 'aces42', name: 'ACES 4.2 (Equipment + Assets)' },
+    { id: 'pies-item', name: 'PIES Item (28 fields)' },
+    { id: 'pies-desc', name: 'PIES Description (6 fields)' },
+    { id: 'pies-price', name: 'PIES Price (13 fields)' },
+    { id: 'pies-expi', name: 'PIES EXPI (6 fields)' },
+    { id: 'pies-attributes', name: 'PIES Attributes (9 fields)' },
+    { id: 'pies-package', name: 'PIES Package (44 fields)' },
+    { id: 'pies-kits', name: 'PIES Kits (14 fields)' },
+    { id: 'pies-interchange', name: 'PIES Interchange (18 fields)' },
+    { id: 'pies-assets', name: 'PIES Assets (40 fields)' },
+    { id: 'pies-market-copy', name: 'PIES Market Copy (46 fields)' },
   ];
 
   if (isLoading) {
@@ -83,18 +84,18 @@ const ProductDetailPage: React.FC = () => {
       {/* Tab Content */}
       <div className="bg-white shadow rounded-lg p-6">
         {activeTab === 'profile' && <ProfileTab product={product} />}
-        {activeTab === 'aces-fitment' && <ACESFitmentTab product={product} />}
-        {activeTab === 'aces-application' && <ACESApplicationTab />}
+        {activeTab === 'aces' && <ACESTab product={product} />}
+        {activeTab === 'aces42' && <ACES42Tab product={product} onUpdate={() => {}} />}
         {activeTab === 'pies-item' && <PIESItemTab product={product} />}
-        {activeTab === 'pies-description' && <PIESDescriptionTab product={product} />}
+        {activeTab === 'pies-desc' && <PIESDescriptionTab product={product} />}
         {activeTab === 'pies-price' && <PIESPriceTab />}
         {activeTab === 'pies-expi' && <PIESEXPITab />}
         {activeTab === 'pies-attributes' && <PIESAttributesTab product={product} />}
         {activeTab === 'pies-package' && <PIESPackageTab product={product} />}
-        {activeTab === 'pies-kit' && <PIESKitTab />}
+        {activeTab === 'pies-kits' && <PIESKitTab />}
         {activeTab === 'pies-interchange' && <PIESInterchangeTab />}
         {activeTab === 'pies-assets' && <PIESAssetsTab />}
-        {activeTab === 'pies-assortments' && <PIESAssortmentsTab />}
+        {activeTab === 'pies-assets' && <PIESAssetsTab />}
         {activeTab === 'pies-market-copy' && <PIESMarketCopyTab />}
       </div>
     </div>
@@ -147,12 +148,13 @@ const ProfileTab: React.FC<{ product: any }> = ({ product }) => (
   </div>
 );
 
-const ACESFitmentTab: React.FC<{ product: any }> = ({ product }) => {
+const ACESTab: React.FC<{ product: any }> = ({ product }) => {
   const applications = product.acesApplications || [];
   
   return (
     <div>
-      <h3 className="text-lg font-medium mb-4">Vehicle Fitment Data (ACES 4.1)</h3>
+      <h3 className="text-lg font-medium mb-4">ACES 4.1 - All 78 Fields</h3>
+      <p className="text-sm text-gray-600 mb-4">Complete ACES specification with vehicle fitment, applications, and qualifiers</p>
       
       {applications.length > 0 ? (
         <div className="overflow-x-auto">
@@ -216,86 +218,13 @@ const ACESFitmentTab: React.FC<{ product: any }> = ({ product }) => {
       
       <div className="mt-8">
         <h4 className="text-md font-medium mb-4">Add New Vehicle Application</h4>
-        <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
-            <input type="number" placeholder="2020" className="w-full border border-gray-300 rounded-md px-3 py-2" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Make</label>
-            <input type="text" placeholder="Toyota" className="w-full border border-gray-300 rounded-md px-3 py-2" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Model</label>
-            <input type="text" placeholder="Camry" className="w-full border border-gray-300 rounded-md px-3 py-2" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Sub Model</label>
-            <input type="text" placeholder="LE" className="w-full border border-gray-300 rounded-md px-3 py-2" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Engine</label>
-            <input type="text" placeholder="2.5L L4" className="w-full border border-gray-300 rounded-md px-3 py-2" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Transmission</label>
-            <select className="w-full border border-gray-300 rounded-md px-3 py-2">
-              <option value="">Select...</option>
-              <option value="Automatic">Automatic</option>
-              <option value="Manual">Manual</option>
-              <option value="CVT">CVT</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Drive Type</label>
-            <select className="w-full border border-gray-300 rounded-md px-3 py-2">
-              <option value="">Select...</option>
-              <option value="FWD">FWD</option>
-              <option value="RWD">RWD</option>
-              <option value="AWD">AWD</option>
-              <option value="4WD">4WD</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
-            <select className="w-full border border-gray-300 rounded-md px-3 py-2">
-              <option value="">Select...</option>
-              <option value="Front">Front</option>
-              <option value="Rear">Rear</option>
-              <option value="Left">Left</option>
-              <option value="Right">Right</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
-            <input type="number" placeholder="2" className="w-full border border-gray-300 rounded-md px-3 py-2" />
-          </div>
-          <div className="col-span-3">
-            <button className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
-              Add Application
-            </button>
-          </div>
-        </div>
+        <VehicleSelector />
       </div>
     </div>
   );
 };
 
-const ACESApplicationTab: React.FC = () => (
-  <div>
-    <h3 className="text-lg font-medium mb-4">Application Mapping</h3>
-    <div className="grid grid-cols-2 gap-6">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Position</label>
-        <input type="text" placeholder="Front" className="w-full border border-gray-300 rounded-md px-3 py-2" />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
-        <input type="number" placeholder="2" className="w-full border border-gray-300 rounded-md px-3 py-2" />
-      </div>
-    </div>
-  </div>
-);
+
 
 const PIESItemTab: React.FC<{ product: any }> = ({ product }) => {
   const piesItem = product.piesItem;
@@ -660,5 +589,156 @@ const PIESMarketCopyTab: React.FC = () => (
     </div>
   </div>
 );
+
+const VehicleSelector: React.FC = () => {
+  const [selectedYear, setSelectedYear] = useState<number | null>(null);
+  const [selectedMake, setSelectedMake] = useState<string>('');
+  const [selectedModel, setSelectedModel] = useState<string>('');
+
+  const { data: years = [] } = useQuery({
+    queryKey: ['aces-years'],
+    queryFn: acesService.getYears
+  });
+
+  const { data: makes = [] } = useQuery({
+    queryKey: ['aces-makes', selectedYear],
+    queryFn: () => acesService.getMakes(selectedYear!),
+    enabled: !!selectedYear
+  });
+
+  const { data: models = [] } = useQuery({
+    queryKey: ['aces-models', selectedYear, selectedMake],
+    queryFn: () => acesService.getModels(selectedYear!, selectedMake),
+    enabled: !!selectedYear && !!selectedMake
+  });
+
+  const { data: subModels = [] } = useQuery({
+    queryKey: ['aces-submodels', selectedYear, selectedMake, selectedModel],
+    queryFn: () => acesService.getSubModels(selectedYear!, selectedMake, selectedModel),
+    enabled: !!selectedYear && !!selectedMake && !!selectedModel
+  });
+
+  const { data: engines = [] } = useQuery({
+    queryKey: ['aces-engines', selectedYear, selectedMake, selectedModel],
+    queryFn: () => acesService.getEngines(selectedYear!, selectedMake, selectedModel),
+    enabled: !!selectedYear && !!selectedMake && !!selectedModel
+  });
+
+  return (
+    <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
+        <select 
+          value={selectedYear || ''} 
+          onChange={(e) => {
+            const year = e.target.value ? parseInt(e.target.value) : null;
+            setSelectedYear(year);
+            setSelectedMake('');
+            setSelectedModel('');
+          }}
+          className="w-full border border-gray-300 rounded-md px-3 py-2"
+        >
+          <option value="">Select Year...</option>
+          {years.map(year => (
+            <option key={year} value={year}>{year}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Make</label>
+        <select 
+          value={selectedMake} 
+          onChange={(e) => {
+            setSelectedMake(e.target.value);
+            setSelectedModel('');
+          }}
+          disabled={!selectedYear}
+          className="w-full border border-gray-300 rounded-md px-3 py-2 disabled:bg-gray-100"
+        >
+          <option value="">Select Make...</option>
+          {makes.map(make => (
+            <option key={make} value={make}>{make}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Model</label>
+        <select 
+          value={selectedModel} 
+          onChange={(e) => setSelectedModel(e.target.value)}
+          disabled={!selectedMake}
+          className="w-full border border-gray-300 rounded-md px-3 py-2 disabled:bg-gray-100"
+        >
+          <option value="">Select Model...</option>
+          {models.map(model => (
+            <option key={model} value={model}>{model}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Sub Model</label>
+        <select 
+          disabled={!selectedModel}
+          className="w-full border border-gray-300 rounded-md px-3 py-2 disabled:bg-gray-100"
+        >
+          <option value="">Select Sub Model...</option>
+          {subModels.map(subModel => (
+            <option key={subModel} value={subModel}>{subModel}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Engine</label>
+        <select 
+          disabled={!selectedModel}
+          className="w-full border border-gray-300 rounded-md px-3 py-2 disabled:bg-gray-100"
+        >
+          <option value="">Select Engine...</option>
+          {engines.map(engine => (
+            <option key={engine} value={engine}>{engine}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Transmission</label>
+        <select className="w-full border border-gray-300 rounded-md px-3 py-2">
+          <option value="">Select...</option>
+          <option value="Automatic">Automatic</option>
+          <option value="Manual">Manual</option>
+          <option value="CVT">CVT</option>
+        </select>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Drive Type</label>
+        <select className="w-full border border-gray-300 rounded-md px-3 py-2">
+          <option value="">Select...</option>
+          <option value="FWD">FWD</option>
+          <option value="RWD">RWD</option>
+          <option value="AWD">AWD</option>
+          <option value="4WD">4WD</option>
+        </select>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
+        <select className="w-full border border-gray-300 rounded-md px-3 py-2">
+          <option value="">Select...</option>
+          <option value="Front">Front</option>
+          <option value="Rear">Rear</option>
+          <option value="Left">Left</option>
+          <option value="Right">Right</option>
+        </select>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+        <input type="number" placeholder="2" className="w-full border border-gray-300 rounded-md px-3 py-2" />
+      </div>
+      <div className="col-span-3">
+        <button className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+          Add Application
+        </button>
+      </div>
+    </div>
+  );
+};
 
 export default ProductDetailPage;

@@ -99,7 +99,7 @@ export class PIESSeedService {
   }
 
   private async parsePIESAssets(): Promise<PIESAssetSeed[]> {
-    const filePath = path.join(this.rootPath, 'PIES_ITEM_ASSET.txt');
+    const filePath = path.join(this.rootPath, 'PIES_ITEM_ASST.txt');
     return this.parseDelimitedFile<PIESAssetSeed>(filePath);
   }
 
@@ -157,7 +157,7 @@ export class PIESSeedService {
     assortments: PIESAssortmentSeed[]
   ): Product[] {
     const products: Product[] = [];
-    const processedPartNos = new Set<string>();
+    const processedUniqueIds = new Set<string>();
 
     // Group data by part number
     const descriptionsByPartNo = this.groupByPartNo(descriptions);
@@ -167,15 +167,19 @@ export class PIESSeedService {
     const assortmentsByPartNo = this.groupByPartNo(assortments);
 
     for (const item of items) {
-      if (!item.PartNo || processedPartNos.has(item.PartNo)) {
+      if (!item.PartNo) continue;
+      
+      const uniqueId = `${item.BrandID || 'UNKNOWN'}_${item.PartNo}`;
+      if (processedUniqueIds.has(uniqueId)) {
         continue;
       }
 
-      processedPartNos.add(item.PartNo);
+      processedUniqueIds.add(uniqueId);
 
       const productId = uuidv4();
       const product: Product = {
         id: productId,
+        uniqueId,
         manufacturer: item.MfgCode || 'Unknown',
         brand: item.BrandLabel || item.BrandID || 'Unknown',
         partNumber: item.PartNo,

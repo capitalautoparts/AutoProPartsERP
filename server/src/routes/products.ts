@@ -5,6 +5,7 @@ import { jobService } from '../services/jobService.js';
 import { ExcelHandler } from '../utils/excelHandler.js';
 import { PIESExcelHandler } from '../utils/piesExcelHandler.js';
 import { XMLHandler } from '../utils/xmlHandler.js';
+import { piesXmlService } from '../services/piesXmlService.js';
 import { S3Handler } from '../utils/s3Handler.js';
 import { Product } from '../types/index.js';
 
@@ -147,17 +148,33 @@ router.post('/export/excel', (req, res) => {
 });
 
 // Export products to XML (PIES format)
-router.post('/export/xml', (req, res) => {
+router.get('/export/xml', async (req, res) => {
   try {
-    const job = jobService.createExportJob('xml', 'products');
+    const products = dataService.getAllProducts();
+    const xmlContent = await piesXmlService.exportToXML(products);
     
-    res.json({
-      jobId: job.id,
-      status: job.status,
-      message: 'XML export job created successfully. Processing will begin shortly.'
-    });
+    res.setHeader('Content-Type', 'application/xml');
+    res.setHeader('Content-Disposition', 'attachment; filename=products-pies.xml');
+    res.send(xmlContent);
   } catch (error) {
-    res.status(500).json({ error: 'XML export job creation failed' });
+    console.error('XML export error:', error);
+    res.status(500).json({ error: 'XML export failed' });
+  }
+});
+
+// Validate PIES XML
+router.post('/validate/xml', upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const xmlContent = req.file.buffer.toString('utf8');
+    const validation = await piesXmlService.validateXML(xmlContent);
+    
+    res.json(validation);
+  } catch (error) {
+    res.status(500).json({ error: 'XML validation failed' });
   }
 });
 
