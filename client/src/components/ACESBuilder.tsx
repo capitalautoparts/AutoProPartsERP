@@ -56,7 +56,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
   const [physicalSpecsRefData, setPhysicalSpecsRefData] = useState<any>({});
   const [pcdbRefData, setPcdbRefData] = useState<any>({});
   
-  // Engine filter selections
+  // Engine filter selections with smart relationships
   const [engineFilters, setEngineFilters] = useState({
     liter: '',
     cc: '',
@@ -78,8 +78,44 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
     engineVIN: '',
     engineVersion: ''
   });
+
+  // Smart engine relationship handler
+  const handleEngineSelection = (field: string, value: string) => {
+    let updates: any = { [field]: value };
+    
+    // Auto-populate related engine fields based on liter selection
+    if (field === 'liter' && value) {
+      const literValue = parseFloat(value);
+      if (literValue) {
+        updates.cc = Math.round(literValue * 1000).toString(); // Convert L to CC
+        updates.cid = Math.round(literValue * 61.024).toString(); // Convert L to CID
+        
+        // Estimate cylinders based on displacement
+        if (literValue <= 1.5) updates.cylinders = '4';
+        else if (literValue <= 3.0) updates.cylinders = '4';
+        else if (literValue <= 4.5) updates.cylinders = '6';
+        else updates.cylinders = '8';
+        
+        // Estimate block type based on cylinders
+        if (updates.cylinders === '4') updates.blockType = 'I';
+        else if (updates.cylinders === '6') updates.blockType = 'V';
+        else updates.blockType = 'V';
+      }
+    }
+    
+    // Auto-populate CC when liter changes
+    if (field === 'cc' && value) {
+      const ccValue = parseInt(value);
+      if (ccValue) {
+        updates.liter = (ccValue / 1000).toFixed(1);
+        updates.cid = Math.round(ccValue * 0.061024).toString();
+      }
+    }
+    
+    setEngineFilters(prev => ({ ...prev, ...updates }));
+  };
   
-  // Transmission filter selections
+  // Transmission filter selections with smart relationships
   const [transmissionFilters, setTransmissionFilters] = useState({
     speeds: '',
     control: '',
@@ -88,8 +124,35 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
     mfrCode: '',
     elecControlled: ''
   });
+
+  // Smart transmission relationship handler
+  const handleTransmissionSelection = (field: string, value: string) => {
+    let updates: any = { [field]: value };
+    
+    // Auto-populate related transmission fields
+    if (field === 'type' && value) {
+      // Auto-determine control type based on transmission type
+      if (value.toLowerCase().includes('automatic') || value.toLowerCase().includes('cvt')) {
+        updates.control = 'Automatic';
+        updates.elecControlled = 'Yes';
+      } else if (value.toLowerCase().includes('manual')) {
+        updates.control = 'Manual';
+        updates.elecControlled = 'No';
+      }
+    }
+    
+    // Auto-populate speeds based on type
+    if (field === 'speeds' && value) {
+      const speedNum = parseInt(value);
+      if (speedNum >= 6) {
+        updates.elecControlled = 'Yes';
+      }
+    }
+    
+    setTransmissionFilters(prev => ({ ...prev, ...updates }));
+  };
   
-  // Vehicle systems filter selections
+  // Vehicle systems filter selections with smart relationships
   const [vehicleSystemsFilters, setVehicleSystemsFilters] = useState({
     driveType: '',
     frontBrake: '',
@@ -101,8 +164,32 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
     steeringType: '',
     steeringSystem: ''
   });
+
+  // Smart vehicle systems relationship handler
+  const handleVehicleSystemSelection = (field: string, value: string) => {
+    let updates: any = { [field]: value };
+    
+    // Auto-populate brake system relationships
+    if (field === 'frontBrake' && value) {
+      if (value.toLowerCase().includes('disc')) {
+        updates.brakeSystem = 'Hydraulic';
+        updates.brakeABS = 'Available';
+      }
+    }
+    
+    // Auto-populate steering relationships
+    if (field === 'steeringType' && value) {
+      if (value.toLowerCase().includes('power')) {
+        updates.steeringSystem = 'Power Assisted';
+      } else {
+        updates.steeringSystem = 'Manual';
+      }
+    }
+    
+    setVehicleSystemsFilters(prev => ({ ...prev, ...updates }));
+  };
   
-  // Physical specifications filter selections
+  // Physical specifications filter selections with smart relationships
   const [physicalSpecsFilters, setPhysicalSpecsFilters] = useState({
     wheelbaseInches: '',
     wheelbaseMetric: '',
@@ -113,8 +200,55 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
     numDoors: '',
     mfrBodyCode: ''
   });
+
+  // Smart physical specs relationship handler
+  const handlePhysicalSpecSelection = (field: string, value: string) => {
+    let updates: any = { [field]: value };
+    
+    // Auto-convert wheelbase measurements
+    if (field === 'wheelbaseInches' && value) {
+      const inches = parseFloat(value);
+      if (inches) {
+        updates.wheelbaseMetric = Math.round(inches * 25.4).toString();
+      }
+    }
+    
+    if (field === 'wheelbaseMetric' && value) {
+      const mm = parseFloat(value);
+      if (mm) {
+        updates.wheelbaseInches = (mm / 25.4).toFixed(1);
+      }
+    }
+    
+    // Auto-convert bed length measurements
+    if (field === 'bedLengthInches' && value) {
+      const inches = parseFloat(value);
+      if (inches) {
+        updates.bedLengthMetric = Math.round(inches * 25.4).toString();
+      }
+    }
+    
+    if (field === 'bedLengthMetric' && value) {
+      const mm = parseFloat(value);
+      if (mm) {
+        updates.bedLengthInches = (mm / 25.4).toFixed(1);
+      }
+    }
+    
+    // Auto-populate door count based on body type
+    if (field === 'bodyType' && value) {
+      const bodyTypeLower = value.toLowerCase();
+      if (bodyTypeLower.includes('coupe')) updates.numDoors = '2';
+      else if (bodyTypeLower.includes('sedan')) updates.numDoors = '4';
+      else if (bodyTypeLower.includes('wagon')) updates.numDoors = '4';
+      else if (bodyTypeLower.includes('suv')) updates.numDoors = '4';
+      else if (bodyTypeLower.includes('pickup')) updates.numDoors = '2';
+    }
+    
+    setPhysicalSpecsFilters(prev => ({ ...prev, ...updates }));
+  };
   
-  // Item specifications
+  // Item specifications with smart relationships
   const [itemSpecs, setItemSpecs] = useState({
     category: '',
     subCategory: '',
@@ -124,6 +258,52 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
     mfrLabel: '',
     notes: ''
   });
+
+  // Smart item specs relationship handler
+  const handleItemSpecSelection = (field: string, value: string) => {
+    let updates: any = { [field]: value };
+    
+    // Auto-populate subcategory based on category
+    if (field === 'category' && value && pcdbRefData.subCategories) {
+      const relatedSubCats = pcdbRefData.subCategories.filter((sc: any) => 
+        sc.CategoryID === value
+      );
+      if (relatedSubCats.length === 1) {
+        updates.subCategory = relatedSubCats[0].SubCategoryID;
+      }
+    }
+    
+    // Auto-populate part type based on subcategory
+    if (field === 'subCategory' && value && pcdbRefData.partTypes) {
+      const relatedPartTypes = pcdbRefData.partTypes.filter((pt: any) => 
+        pt.SubCategoryID === value
+      );
+      if (relatedPartTypes.length === 1) {
+        updates.partType = relatedPartTypes[0].PartTerminologyID;
+      }
+    }
+    
+    // Auto-suggest quantity based on part type
+    if (field === 'partType' && value) {
+      const partTypeName = pcdbRefData.partTypes?.find((pt: any) => 
+        pt.PartTerminologyID === value
+      )?.PartTerminologyName?.toLowerCase();
+      
+      if (partTypeName) {
+        if (partTypeName.includes('brake pad') || partTypeName.includes('brake shoe')) {
+          updates.quantity = 4; // Typically 4 brake pads per axle
+        } else if (partTypeName.includes('spark plug')) {
+          updates.quantity = parseInt(engineFilters.cylinders) || 4;
+        } else if (partTypeName.includes('tire')) {
+          updates.quantity = 4;
+        } else if (partTypeName.includes('wiper blade')) {
+          updates.quantity = 2;
+        }
+      }
+    }
+    
+    setItemSpecs(prev => ({ ...prev, ...updates }));
+  };
   
   // Validation state
   const [validationFilter, setValidationFilter] = useState('All');
@@ -204,22 +384,34 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
     }
   }, [vehicleData.year, vehicleData.make, allBaseVehicles, allModels]);
 
-  // Filter BaseVehicles when model selected
+  // Auto-determine BaseVehicle when Year/Make/Model selected
   useEffect(() => {
     if (vehicleData.year && vehicleData.make && vehicleData.model) {
-      const filteredBaseVehicles = allBaseVehicles.filter(bv => 
+      const matchingBaseVehicles = allBaseVehicles.filter(bv => 
         bv.YearID === vehicleData.year && 
         bv.MakeID === vehicleData.make && 
         bv.ModelID === vehicleData.model
       );
-      setAvailableBaseVehicles(filteredBaseVehicles);
-      setVehicleData(prev => ({ ...prev, baseVehicleId: '' }));
+      
+      if (matchingBaseVehicles.length === 1) {
+        // Single match - auto-select
+        setVehicleData(prev => ({ ...prev, baseVehicleId: matchingBaseVehicles[0].BaseVehicleID }));
+      } else if (matchingBaseVehicles.length > 1) {
+        // Multiple matches - need submodel selection
+        setAvailableBaseVehicles(matchingBaseVehicles);
+        setVehicleData(prev => ({ ...prev, baseVehicleId: '' }));
+      } else {
+        // No matches
+        setAvailableBaseVehicles([]);
+        setVehicleData(prev => ({ ...prev, baseVehicleId: '' }));
+      }
     } else {
       setAvailableBaseVehicles([]);
+      setVehicleData(prev => ({ ...prev, baseVehicleId: '' }));
     }
   }, [vehicleData.year, vehicleData.make, vehicleData.model, allBaseVehicles]);
 
-  // Load components when BaseVehicle selected
+  // Load components and auto-populate vehicle attributes when BaseVehicle selected
   useEffect(() => {
     if (vehicleData.baseVehicleId) {
       Promise.all([
@@ -246,9 +438,24 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
         setTransmissionRefData(transRef);
         setVehicleSystemsRefData(systemsRef);
         setPhysicalSpecsRefData(specsRef);
+        
+        // Auto-populate vehicle attributes based on BaseVehicle
+        const selectedModel = allModels.find(m => m.ModelID === vehicleData.model);
+        if (selectedModel) {
+          const vehicleType = vehicleTypes.find(vt => vt.VehicleTypeID === selectedModel.VehicleTypeID);
+          if (vehicleType) {
+            setVehicleData(prev => ({
+              ...prev,
+              type: vehicleType.VehicleTypeID,
+              group: vehicleType.VehicleTypeName?.toLowerCase().includes('truck') ? 'truck' : 'passenger',
+              region: 'north_america', // Default region
+              class: vehicleType.VehicleTypeName?.toLowerCase().includes('truck') ? 'truck' : 'midsize'
+            }));
+          }
+        }
       });
     }
-  }, [vehicleData.baseVehicleId]);
+  }, [vehicleData.baseVehicleId, allModels, vehicleTypes]);
 
   const addApplication = () => {
     if (!vehicleData.baseVehicleId) return;
@@ -422,13 +629,15 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                 <select 
                   value={vehicleData.group} 
                   onChange={(e) => setVehicleData({...vehicleData, group: e.target.value})}
-                  className="w-full p-2 border rounded text-sm"
+                  className="w-full p-2 border rounded text-sm bg-green-50"
+                  title="Auto-populated based on vehicle selection"
                 >
                   <option value="">Select Group</option>
                   {vehicleGroups.map(group => (
                     <option key={group.id} value={group.id}>{group.name}</option>
                   ))}
                 </select>
+                {vehicleData.group && <p className="text-xs text-green-600 mt-1">✓ Auto-selected</p>}
               </div>
               
               <div>
@@ -436,13 +645,15 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                 <select 
                   value={vehicleData.type} 
                   onChange={(e) => setVehicleData({...vehicleData, type: e.target.value})}
-                  className="w-full p-2 border rounded text-sm"
+                  className="w-full p-2 border rounded text-sm bg-green-50"
+                  title="Auto-populated based on vehicle selection"
                 >
                   <option value="">Select Type</option>
                   {vehicleTypes.map(type => (
                     <option key={type.VehicleTypeID} value={type.VehicleTypeID}>{type.VehicleTypeName}</option>
                   ))}
                 </select>
+                {vehicleData.type && <p className="text-xs text-green-600 mt-1">✓ Auto-selected</p>}
               </div>
               
               <div>
@@ -497,9 +708,24 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                 <label className="block text-sm font-medium mb-1">Submodel</label>
                 <select 
                   value={vehicleData.submodel} 
-                  onChange={(e) => setVehicleData({...vehicleData, submodel: e.target.value})}
+                  onChange={(e) => {
+                    const newSubmodel = e.target.value;
+                    setVehicleData({...vehicleData, submodel: newSubmodel});
+                    
+                    // Auto-select BaseVehicle if submodel helps narrow it down
+                    if (newSubmodel && availableBaseVehicles.length > 1) {
+                      // Find BaseVehicle that matches this submodel
+                      const matchingBV = availableBaseVehicles.find(bv => {
+                        const vehicles = components.subModels.filter(sm => sm.SubModelID === newSubmodel);
+                        return vehicles.some(v => v.BaseVehicleID === bv.BaseVehicleID);
+                      });
+                      if (matchingBV) {
+                        setVehicleData(prev => ({...prev, baseVehicleId: matchingBV.BaseVehicleID}));
+                      }
+                    }
+                  }}
                   className="w-full p-2 border rounded text-sm"
-                  disabled={!vehicleData.baseVehicleId}
+                  disabled={!vehicleData.baseVehicleId && availableBaseVehicles.length <= 1}
                 >
                   <option value="">Select Submodel</option>
                   {components.subModels.map(sub => (
@@ -513,13 +739,15 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                 <select 
                   value={vehicleData.region} 
                   onChange={(e) => setVehicleData({...vehicleData, region: e.target.value})}
-                  className="w-full p-2 border rounded text-sm"
+                  className="w-full p-2 border rounded text-sm bg-green-50"
+                  title="Auto-populated based on vehicle selection"
                 >
                   <option value="">Select Region</option>
                   {regions.map(region => (
                     <option key={region.id} value={region.id}>{region.name}</option>
                   ))}
                 </select>
+                {vehicleData.region && <p className="text-xs text-green-600 mt-1">✓ Auto-selected</p>}
               </div>
               
               <div>
@@ -527,32 +755,41 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                 <select 
                   value={vehicleData.class} 
                   onChange={(e) => setVehicleData({...vehicleData, class: e.target.value})}
-                  className="w-full p-2 border rounded text-sm"
+                  className="w-full p-2 border rounded text-sm bg-green-50"
+                  title="Auto-populated based on vehicle selection"
                 >
                   <option value="">Select Class</option>
                   {vehicleClasses.map(cls => (
                     <option key={cls.id} value={cls.id}>{cls.name}</option>
                   ))}
                 </select>
+                {vehicleData.class && <p className="text-xs text-green-600 mt-1">✓ Auto-selected</p>}
               </div>
             </div>
             
-            {availableBaseVehicles.length > 0 && (
-              <div>
-                <label className="block text-sm font-medium mb-1">BaseVehicle</label>
-                <select 
-                  value={vehicleData.baseVehicleId} 
-                  onChange={(e) => setVehicleData({...vehicleData, baseVehicleId: e.target.value})}
-                  className="w-full p-2 border rounded text-sm"
-                >
-                  <option value="">Select BaseVehicle</option>
+            {availableBaseVehicles.length > 1 && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded p-3">
+                <p className="text-sm text-yellow-800 mb-2">Multiple vehicle configurations found. Please select submodel to specify:</p>
+                <div className="grid grid-cols-2 gap-2">
                   {availableBaseVehicles.map(bv => (
-                    <option key={bv.BaseVehicleID} value={bv.BaseVehicleID}>
-                      BaseVehicle {bv.BaseVehicleID}
-                    </option>
+                    <button
+                      key={bv.BaseVehicleID}
+                      onClick={() => setVehicleData({...vehicleData, baseVehicleId: bv.BaseVehicleID})}
+                      className="text-left p-2 bg-white border rounded text-sm hover:bg-blue-50"
+                    >
+                      Configuration {bv.BaseVehicleID}
+                    </button>
                   ))}
-                </select>
-                <p className="text-xs text-gray-500">{availableBaseVehicles.length} available</p>
+                </div>
+              </div>
+            )}
+            
+            {vehicleData.baseVehicleId && (
+              <div className="bg-green-50 border border-green-200 rounded p-3">
+                <p className="text-sm text-green-800">
+                  ✓ Vehicle Configuration: {vehicleData.year} {allMakes.find(m => m.MakeID === vehicleData.make)?.MakeName} {allModels.find(m => m.ModelID === vehicleData.model)?.ModelName}
+                  <span className="ml-2 text-xs">(BaseVehicle: {vehicleData.baseVehicleId})</span>
+                </p>
               </div>
             )}
           </div>
@@ -569,7 +806,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                     <label className="block text-sm font-medium mb-1">Liter</label>
                     <select 
                       value={engineFilters.liter}
-                      onChange={(e) => setEngineFilters({...engineFilters, liter: e.target.value})}
+                      onChange={(e) => handleEngineSelection('liter', e.target.value)}
                       className="w-full p-2 border rounded text-sm"
                     >
                       <option value="">Any Liter</option>
@@ -583,42 +820,48 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                     <label className="block text-sm font-medium mb-1">CC</label>
                     <select 
                       value={engineFilters.cc}
-                      onChange={(e) => setEngineFilters({...engineFilters, cc: e.target.value})}
-                      className="w-full p-2 border rounded text-sm"
+                      onChange={(e) => handleEngineSelection('cc', e.target.value)}
+                      className={`w-full p-2 border rounded text-sm ${engineFilters.cc && engineFilters.liter ? 'bg-green-50' : ''}`}
+                      title={engineFilters.cc && engineFilters.liter ? 'Auto-populated from Liter selection' : ''}
                     >
                       <option value="">Any CC</option>
                       {engineRefData.ccs?.map((cc: string) => (
                         <option key={cc} value={cc}>{cc} CC</option>
                       ))}
                     </select>
+                    {engineFilters.cc && engineFilters.liter && <p className="text-xs text-green-600 mt-1">✓ Auto-calculated</p>}
                   </div>
                   
                   <div>
                     <label className="block text-sm font-medium mb-1">CID</label>
                     <select 
                       value={engineFilters.cid}
-                      onChange={(e) => setEngineFilters({...engineFilters, cid: e.target.value})}
-                      className="w-full p-2 border rounded text-sm"
+                      onChange={(e) => handleEngineSelection('cid', e.target.value)}
+                      className={`w-full p-2 border rounded text-sm ${engineFilters.cid && engineFilters.liter ? 'bg-green-50' : ''}`}
+                      title={engineFilters.cid && engineFilters.liter ? 'Auto-populated from Liter selection' : ''}
                     >
                       <option value="">Any CID</option>
                       {engineRefData.cids?.map((cid: string) => (
                         <option key={cid} value={cid}>{cid} CID</option>
                       ))}
                     </select>
+                    {engineFilters.cid && engineFilters.liter && <p className="text-xs text-green-600 mt-1">✓ Auto-calculated</p>}
                   </div>
                   
                   <div>
                     <label className="block text-sm font-medium mb-1">Cylinders</label>
                     <select 
                       value={engineFilters.cylinders}
-                      onChange={(e) => setEngineFilters({...engineFilters, cylinders: e.target.value})}
-                      className="w-full p-2 border rounded text-sm"
+                      onChange={(e) => handleEngineSelection('cylinders', e.target.value)}
+                      className={`w-full p-2 border rounded text-sm ${engineFilters.cylinders && engineFilters.liter ? 'bg-green-50' : ''}`}
+                      title={engineFilters.cylinders && engineFilters.liter ? 'Auto-estimated from displacement' : ''}
                     >
                       <option value="">Any Cylinders</option>
                       {engineRefData.cylinders?.map((cyl: string) => (
                         <option key={cyl} value={cyl}>{cyl} Cylinders</option>
                       ))}
                     </select>
+                    {engineFilters.cylinders && engineFilters.liter && <p className="text-xs text-green-600 mt-1">✓ Auto-estimated</p>}
                   </div>
                 </div>
                 
@@ -628,21 +871,23 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                     <label className="block text-sm font-medium mb-1">Block Type</label>
                     <select 
                       value={engineFilters.blockType}
-                      onChange={(e) => setEngineFilters({...engineFilters, blockType: e.target.value})}
-                      className="w-full p-2 border rounded text-sm"
+                      onChange={(e) => handleEngineSelection('blockType', e.target.value)}
+                      className={`w-full p-2 border rounded text-sm ${engineFilters.blockType && engineFilters.cylinders ? 'bg-green-50' : ''}`}
+                      title={engineFilters.blockType && engineFilters.cylinders ? 'Auto-estimated from cylinder count' : ''}
                     >
                       <option value="">Any Block Type</option>
                       {engineRefData.blockTypes?.map((bt: string) => (
                         <option key={bt} value={bt}>{bt}</option>
                       ))}
                     </select>
+                    {engineFilters.blockType && engineFilters.cylinders && <p className="text-xs text-green-600 mt-1">✓ Auto-estimated</p>}
                   </div>
                   
                   <div>
                     <label className="block text-sm font-medium mb-1">Bore Inches</label>
                     <select 
                       value={engineFilters.boreInches}
-                      onChange={(e) => setEngineFilters({...engineFilters, boreInches: e.target.value})}
+                      onChange={(e) => handleEngineSelection('boreInches', e.target.value)}
                       className="w-full p-2 border rounded text-sm"
                     >
                       <option value="">Any Bore (in)</option>
@@ -656,7 +901,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                     <label className="block text-sm font-medium mb-1">Bore Metric</label>
                     <select 
                       value={engineFilters.boreMetric}
-                      onChange={(e) => setEngineFilters({...engineFilters, boreMetric: e.target.value})}
+                      onChange={(e) => handleEngineSelection('boreMetric', e.target.value)}
                       className="w-full p-2 border rounded text-sm"
                     >
                       <option value="">Any Bore (mm)</option>
@@ -670,7 +915,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                     <label className="block text-sm font-medium mb-1">Stroke Inches</label>
                     <select 
                       value={engineFilters.strokeInches}
-                      onChange={(e) => setEngineFilters({...engineFilters, strokeInches: e.target.value})}
+                      onChange={(e) => handleEngineSelection('strokeInches', e.target.value)}
                       className="w-full p-2 border rounded text-sm"
                     >
                       <option value="">Any Stroke (in)</option>
@@ -687,7 +932,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                     <label className="block text-sm font-medium mb-1">Cylinder Head Type</label>
                     <select 
                       value={engineFilters.cylinderHeadType}
-                      onChange={(e) => setEngineFilters({...engineFilters, cylinderHeadType: e.target.value})}
+                      onChange={(e) => handleEngineSelection('cylinderHeadType', e.target.value)}
                       className="w-full p-2 border rounded text-sm"
                     >
                       <option value="">Any Head Type</option>
@@ -701,7 +946,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                     <label className="block text-sm font-medium mb-1">Aspiration</label>
                     <select 
                       value={engineFilters.aspiration}
-                      onChange={(e) => setEngineFilters({...engineFilters, aspiration: e.target.value})}
+                      onChange={(e) => handleEngineSelection('aspiration', e.target.value)}
                       className="w-full p-2 border rounded text-sm"
                     >
                       <option value="">Any Aspiration</option>
@@ -715,7 +960,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                     <label className="block text-sm font-medium mb-1">Valves Per Engine</label>
                     <select 
                       value={engineFilters.valvesPerEngine}
-                      onChange={(e) => setEngineFilters({...engineFilters, valvesPerEngine: e.target.value})}
+                      onChange={(e) => handleEngineSelection('valvesPerEngine', e.target.value)}
                       className="w-full p-2 border rounded text-sm"
                     >
                       <option value="">Any Valves</option>
@@ -732,7 +977,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                     <label className="block text-sm font-medium mb-1">Horse Power</label>
                     <select 
                       value={engineFilters.horsePower}
-                      onChange={(e) => setEngineFilters({...engineFilters, horsePower: e.target.value})}
+                      onChange={(e) => handleEngineSelection('horsePower', e.target.value)}
                       className="w-full p-2 border rounded text-sm"
                     >
                       <option value="">Any HP</option>
@@ -746,7 +991,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                     <label className="block text-sm font-medium mb-1">Engine Manufacturer</label>
                     <select 
                       value={engineFilters.engineManufacturer}
-                      onChange={(e) => setEngineFilters({...engineFilters, engineManufacturer: e.target.value})}
+                      onChange={(e) => handleEngineSelection('engineManufacturer', e.target.value)}
                       className="w-full p-2 border rounded text-sm"
                     >
                       <option value="">Any Manufacturer</option>
@@ -760,7 +1005,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                     <label className="block text-sm font-medium mb-1">Engine VIN</label>
                     <select 
                       value={engineFilters.engineVIN}
-                      onChange={(e) => setEngineFilters({...engineFilters, engineVIN: e.target.value})}
+                      onChange={(e) => handleEngineSelection('engineVIN', e.target.value)}
                       className="w-full p-2 border rounded text-sm"
                     >
                       <option value="">Any VIN</option>
@@ -794,7 +1039,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                     <label className="block text-sm font-medium mb-1">Speeds</label>
                     <select 
                       value={transmissionFilters.speeds}
-                      onChange={(e) => setTransmissionFilters({...transmissionFilters, speeds: e.target.value})}
+                      onChange={(e) => handleTransmissionSelection('speeds', e.target.value)}
                       className="w-full p-2 border rounded text-sm"
                     >
                       <option value="">Any Speeds</option>
@@ -810,8 +1055,9 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                     <label className="block text-sm font-medium mb-1">Control</label>
                     <select 
                       value={transmissionFilters.control}
-                      onChange={(e) => setTransmissionFilters({...transmissionFilters, control: e.target.value})}
-                      className="w-full p-2 border rounded text-sm"
+                      onChange={(e) => handleTransmissionSelection('control', e.target.value)}
+                      className={`w-full p-2 border rounded text-sm ${transmissionFilters.control && transmissionFilters.type ? 'bg-green-50' : ''}`}
+                      title={transmissionFilters.control && transmissionFilters.type ? 'Auto-populated from Type selection' : ''}
                     >
                       <option value="">Any Control</option>
                       {transmissionRefData.controlTypes?.map((control: any) => (
@@ -820,13 +1066,14 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                         </option>
                       ))}
                     </select>
+                    {transmissionFilters.control && transmissionFilters.type && <p className="text-xs text-green-600 mt-1">✓ Auto-determined</p>}
                   </div>
                   
                   <div>
                     <label className="block text-sm font-medium mb-1">Type</label>
                     <select 
                       value={transmissionFilters.type}
-                      onChange={(e) => setTransmissionFilters({...transmissionFilters, type: e.target.value})}
+                      onChange={(e) => handleTransmissionSelection('type', e.target.value)}
                       className="w-full p-2 border rounded text-sm"
                     >
                       <option value="">Any Type</option>
@@ -845,7 +1092,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                     <label className="block text-sm font-medium mb-1">Mfr Name</label>
                     <select 
                       value={transmissionFilters.mfrName}
-                      onChange={(e) => setTransmissionFilters({...transmissionFilters, mfrName: e.target.value})}
+                      onChange={(e) => handleTransmissionSelection('mfrName', e.target.value)}
                       className="w-full p-2 border rounded text-sm"
                     >
                       <option value="">Any Manufacturer</option>
@@ -859,7 +1106,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                     <label className="block text-sm font-medium mb-1">Mfr Code</label>
                     <select 
                       value={transmissionFilters.mfrCode}
-                      onChange={(e) => setTransmissionFilters({...transmissionFilters, mfrCode: e.target.value})}
+                      onChange={(e) => handleTransmissionSelection('mfrCode', e.target.value)}
                       className="w-full p-2 border rounded text-sm"
                     >
                       <option value="">Any Mfr Code</option>
@@ -875,8 +1122,9 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                     <label className="block text-sm font-medium mb-1">Elec Controlled</label>
                     <select 
                       value={transmissionFilters.elecControlled}
-                      onChange={(e) => setTransmissionFilters({...transmissionFilters, elecControlled: e.target.value})}
-                      className="w-full p-2 border rounded text-sm"
+                      onChange={(e) => handleTransmissionSelection('elecControlled', e.target.value)}
+                      className={`w-full p-2 border rounded text-sm ${transmissionFilters.elecControlled && (transmissionFilters.type || transmissionFilters.speeds) ? 'bg-green-50' : ''}`}
+                      title={transmissionFilters.elecControlled && (transmissionFilters.type || transmissionFilters.speeds) ? 'Auto-determined from Type/Speeds' : ''}
                     >
                       <option value="">Any</option>
                       {transmissionRefData.elecControlled?.map((ec: any) => (
@@ -885,6 +1133,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                         </option>
                       ))}
                     </select>
+                    {transmissionFilters.elecControlled && (transmissionFilters.type || transmissionFilters.speeds) && <p className="text-xs text-green-600 mt-1">✓ Auto-determined</p>}
                   </div>
                 </div>
                 
@@ -910,7 +1159,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                     <label className="block text-sm font-medium mb-1">Front Brake</label>
                     <select 
                       value={vehicleSystemsFilters.frontBrake}
-                      onChange={(e) => setVehicleSystemsFilters({...vehicleSystemsFilters, frontBrake: e.target.value})}
+                      onChange={(e) => handleVehicleSystemSelection('frontBrake', e.target.value)}
                       className="w-full p-2 border rounded text-sm"
                     >
                       <option value="">Any Front Brake</option>
@@ -926,7 +1175,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                     <label className="block text-sm font-medium mb-1">Rear Brake</label>
                     <select 
                       value={vehicleSystemsFilters.rearBrake}
-                      onChange={(e) => setVehicleSystemsFilters({...vehicleSystemsFilters, rearBrake: e.target.value})}
+                      onChange={(e) => handleVehicleSystemSelection('rearBrake', e.target.value)}
                       className="w-full p-2 border rounded text-sm"
                     >
                       <option value="">Any Rear Brake</option>
@@ -944,8 +1193,9 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                     <label className="block text-sm font-medium mb-1">Brake System</label>
                     <select 
                       value={vehicleSystemsFilters.brakeSystem}
-                      onChange={(e) => setVehicleSystemsFilters({...vehicleSystemsFilters, brakeSystem: e.target.value})}
-                      className="w-full p-2 border rounded text-sm"
+                      onChange={(e) => handleVehicleSystemSelection('brakeSystem', e.target.value)}
+                      className={`w-full p-2 border rounded text-sm ${vehicleSystemsFilters.brakeSystem && vehicleSystemsFilters.frontBrake ? 'bg-green-50' : ''}`}
+                      title={vehicleSystemsFilters.brakeSystem && vehicleSystemsFilters.frontBrake ? 'Auto-determined from brake type' : ''}
                     >
                       <option value="">Any Brake System</option>
                       {vehicleSystemsRefData.brakeSystems?.map((system: any) => (
@@ -954,14 +1204,16 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                         </option>
                       ))}
                     </select>
+                    {vehicleSystemsFilters.brakeSystem && vehicleSystemsFilters.frontBrake && <p className="text-xs text-green-600 mt-1">✓ Auto-determined</p>}
                   </div>
                   
                   <div>
                     <label className="block text-sm font-medium mb-1">Brake ABS</label>
                     <select 
                       value={vehicleSystemsFilters.brakeABS}
-                      onChange={(e) => setVehicleSystemsFilters({...vehicleSystemsFilters, brakeABS: e.target.value})}
-                      className="w-full p-2 border rounded text-sm"
+                      onChange={(e) => handleVehicleSystemSelection('brakeABS', e.target.value)}
+                      className={`w-full p-2 border rounded text-sm ${vehicleSystemsFilters.brakeABS && vehicleSystemsFilters.frontBrake ? 'bg-green-50' : ''}`}
+                      title={vehicleSystemsFilters.brakeABS && vehicleSystemsFilters.frontBrake ? 'Auto-determined from brake type' : ''}
                     >
                       <option value="">Any ABS</option>
                       {vehicleSystemsRefData.brakeABS?.map((abs: any) => (
@@ -970,6 +1222,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                         </option>
                       ))}
                     </select>
+                    {vehicleSystemsFilters.brakeABS && vehicleSystemsFilters.frontBrake && <p className="text-xs text-green-600 mt-1">✓ Auto-determined</p>}
                   </div>
                 </div>
                 
@@ -993,7 +1246,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                 <label className="block text-sm font-medium mb-1">Drive Type</label>
                 <select 
                   value={vehicleSystemsFilters.driveType}
-                  onChange={(e) => setVehicleSystemsFilters({...vehicleSystemsFilters, driveType: e.target.value})}
+                  onChange={(e) => handleVehicleSystemSelection('driveType', e.target.value)}
                   className="w-full p-2 border rounded text-sm max-w-md"
                 >
                   <option value="">Any Drive Type</option>
@@ -1023,7 +1276,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                     <label className="block text-sm font-medium mb-1">Front Spring</label>
                     <select 
                       value={vehicleSystemsFilters.frontSpring}
-                      onChange={(e) => setVehicleSystemsFilters({...vehicleSystemsFilters, frontSpring: e.target.value})}
+                      onChange={(e) => handleVehicleSystemSelection('frontSpring', e.target.value)}
                       className="w-full p-2 border rounded text-sm"
                     >
                       <option value="">Any Front Spring</option>
@@ -1039,7 +1292,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                     <label className="block text-sm font-medium mb-1">Rear Spring</label>
                     <select 
                       value={vehicleSystemsFilters.rearSpring}
-                      onChange={(e) => setVehicleSystemsFilters({...vehicleSystemsFilters, rearSpring: e.target.value})}
+                      onChange={(e) => handleVehicleSystemSelection('rearSpring', e.target.value)}
                       className="w-full p-2 border rounded text-sm"
                     >
                       <option value="">Any Rear Spring</option>
@@ -1074,7 +1327,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                     <label className="block text-sm font-medium mb-1">Steering Type</label>
                     <select 
                       value={vehicleSystemsFilters.steeringType}
-                      onChange={(e) => setVehicleSystemsFilters({...vehicleSystemsFilters, steeringType: e.target.value})}
+                      onChange={(e) => handleVehicleSystemSelection('steeringType', e.target.value)}
                       className="w-full p-2 border rounded text-sm"
                     >
                       <option value="">Any Steering Type</option>
@@ -1090,8 +1343,9 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                     <label className="block text-sm font-medium mb-1">Steering System</label>
                     <select 
                       value={vehicleSystemsFilters.steeringSystem}
-                      onChange={(e) => setVehicleSystemsFilters({...vehicleSystemsFilters, steeringSystem: e.target.value})}
-                      className="w-full p-2 border rounded text-sm"
+                      onChange={(e) => handleVehicleSystemSelection('steeringSystem', e.target.value)}
+                      className={`w-full p-2 border rounded text-sm ${vehicleSystemsFilters.steeringSystem && vehicleSystemsFilters.steeringType ? 'bg-green-50' : ''}`}
+                      title={vehicleSystemsFilters.steeringSystem && vehicleSystemsFilters.steeringType ? 'Auto-determined from steering type' : ''}
                     >
                       <option value="">Any Steering System</option>
                       {vehicleSystemsRefData.steeringSystems?.map((system: any) => (
@@ -1100,6 +1354,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                         </option>
                       ))}
                     </select>
+                    {vehicleSystemsFilters.steeringSystem && vehicleSystemsFilters.steeringType && <p className="text-xs text-green-600 mt-1">✓ Auto-determined</p>}
                   </div>
                 </div>
                 
@@ -1125,7 +1380,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                     <label className="block text-sm font-medium mb-1">Base Inches</label>
                     <select 
                       value={physicalSpecsFilters.wheelbaseInches}
-                      onChange={(e) => setPhysicalSpecsFilters({...physicalSpecsFilters, wheelbaseInches: e.target.value})}
+                      onChange={(e) => handlePhysicalSpecSelection('wheelbaseInches', e.target.value)}
                       className="w-full p-2 border rounded text-sm"
                     >
                       <option value="">Any Wheelbase (in)</option>
@@ -1141,8 +1396,9 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                     <label className="block text-sm font-medium mb-1">Base Metric</label>
                     <select 
                       value={physicalSpecsFilters.wheelbaseMetric}
-                      onChange={(e) => setPhysicalSpecsFilters({...physicalSpecsFilters, wheelbaseMetric: e.target.value})}
-                      className="w-full p-2 border rounded text-sm"
+                      onChange={(e) => handlePhysicalSpecSelection('wheelbaseMetric', e.target.value)}
+                      className={`w-full p-2 border rounded text-sm ${physicalSpecsFilters.wheelbaseMetric && physicalSpecsFilters.wheelbaseInches ? 'bg-green-50' : ''}`}
+                      title={physicalSpecsFilters.wheelbaseMetric && physicalSpecsFilters.wheelbaseInches ? 'Auto-converted from inches' : ''}
                     >
                       <option value="">Any Wheelbase (mm)</option>
                       {physicalSpecsRefData.wheelbases?.map((wb: any) => (
@@ -1151,6 +1407,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                         </option>
                       ))}
                     </select>
+                    {physicalSpecsFilters.wheelbaseMetric && physicalSpecsFilters.wheelbaseInches && <p className="text-xs text-green-600 mt-1">✓ Auto-converted</p>}
                   </div>
                 </div>
                 
@@ -1177,7 +1434,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                       <label className="block text-sm font-medium mb-1">Bed Type</label>
                       <select 
                         value={physicalSpecsFilters.bedType}
-                        onChange={(e) => setPhysicalSpecsFilters({...physicalSpecsFilters, bedType: e.target.value})}
+                        onChange={(e) => handlePhysicalSpecSelection('bedType', e.target.value)}
                         className="w-full p-2 border rounded text-sm"
                       >
                         <option value="">Any Bed Type</option>
@@ -1193,7 +1450,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                       <label className="block text-sm font-medium mb-1">Length Inches</label>
                       <select 
                         value={physicalSpecsFilters.bedLengthInches}
-                        onChange={(e) => setPhysicalSpecsFilters({...physicalSpecsFilters, bedLengthInches: e.target.value})}
+                        onChange={(e) => handlePhysicalSpecSelection('bedLengthInches', e.target.value)}
                         className="w-full p-2 border rounded text-sm"
                       >
                         <option value="">Any Length (in)</option>
@@ -1210,8 +1467,9 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                     <label className="block text-sm font-medium mb-1">Length Metric</label>
                     <select 
                       value={physicalSpecsFilters.bedLengthMetric}
-                      onChange={(e) => setPhysicalSpecsFilters({...physicalSpecsFilters, bedLengthMetric: e.target.value})}
-                      className="w-full p-2 border rounded text-sm max-w-md"
+                      onChange={(e) => handlePhysicalSpecSelection('bedLengthMetric', e.target.value)}
+                      className={`w-full p-2 border rounded text-sm max-w-md ${physicalSpecsFilters.bedLengthMetric && physicalSpecsFilters.bedLengthInches ? 'bg-green-50' : ''}`}
+                      title={physicalSpecsFilters.bedLengthMetric && physicalSpecsFilters.bedLengthInches ? 'Auto-converted from inches' : ''}
                     >
                       <option value="">Any Length (mm)</option>
                       {physicalSpecsRefData.bedLengths?.map((bl: any) => (
@@ -1220,6 +1478,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                         </option>
                       ))}
                     </select>
+                    {physicalSpecsFilters.bedLengthMetric && physicalSpecsFilters.bedLengthInches && <p className="text-xs text-green-600 mt-1">✓ Auto-converted</p>}
                   </div>
                   
                   <div className="text-sm text-gray-600 mt-4">
@@ -1250,7 +1509,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                     <label className="block text-sm font-medium mb-1">Body Type</label>
                     <select 
                       value={physicalSpecsFilters.bodyType}
-                      onChange={(e) => setPhysicalSpecsFilters({...physicalSpecsFilters, bodyType: e.target.value})}
+                      onChange={(e) => handlePhysicalSpecSelection('bodyType', e.target.value)}
                       className="w-full p-2 border rounded text-sm"
                     >
                       <option value="">Any Body Type</option>
@@ -1266,8 +1525,9 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                     <label className="block text-sm font-medium mb-1">Num Doors</label>
                     <select 
                       value={physicalSpecsFilters.numDoors}
-                      onChange={(e) => setPhysicalSpecsFilters({...physicalSpecsFilters, numDoors: e.target.value})}
-                      className="w-full p-2 border rounded text-sm"
+                      onChange={(e) => handlePhysicalSpecSelection('numDoors', e.target.value)}
+                      className={`w-full p-2 border rounded text-sm ${physicalSpecsFilters.numDoors && physicalSpecsFilters.bodyType ? 'bg-green-50' : ''}`}
+                      title={physicalSpecsFilters.numDoors && physicalSpecsFilters.bodyType ? 'Auto-estimated from body type' : ''}
                     >
                       <option value="">Any Doors</option>
                       {physicalSpecsRefData.bodyNumDoors?.map((bnd: any) => (
@@ -1276,6 +1536,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                         </option>
                       ))}
                     </select>
+                    {physicalSpecsFilters.numDoors && physicalSpecsFilters.bodyType && <p className="text-xs text-green-600 mt-1">✓ Auto-estimated</p>}
                   </div>
                 </div>
                 
@@ -1300,7 +1561,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                   <label className="block text-sm font-medium mb-1">Body Code</label>
                   <select 
                     value={physicalSpecsFilters.mfrBodyCode}
-                    onChange={(e) => setPhysicalSpecsFilters({...physicalSpecsFilters, mfrBodyCode: e.target.value})}
+                    onChange={(e) => handlePhysicalSpecSelection('mfrBodyCode', e.target.value)}
                     className="w-full p-2 border rounded text-sm max-w-md"
                   >
                     <option value="">Any Manufacturer Body Code</option>
@@ -1333,7 +1594,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                 <label className="block text-sm font-medium mb-1">Category</label>
                 <select 
                   value={itemSpecs.category}
-                  onChange={(e) => setItemSpecs({...itemSpecs, category: e.target.value})}
+                  onChange={(e) => handleItemSpecSelection('category', e.target.value)}
                   className="w-full p-2 border rounded text-sm"
                 >
                   <option value="">Select Category</option>
@@ -1347,28 +1608,32 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                 <label className="block text-sm font-medium mb-1">Sub Category</label>
                 <select 
                   value={itemSpecs.subCategory}
-                  onChange={(e) => setItemSpecs({...itemSpecs, subCategory: e.target.value})}
-                  className="w-full p-2 border rounded text-sm"
+                  onChange={(e) => handleItemSpecSelection('subCategory', e.target.value)}
+                  className={`w-full p-2 border rounded text-sm ${itemSpecs.subCategory && itemSpecs.category ? 'bg-green-50' : ''}`}
+                  title={itemSpecs.subCategory && itemSpecs.category ? 'Auto-populated from Category selection' : ''}
                 >
                   <option value="">Select Sub Category</option>
                   {pcdbRefData.subCategories?.map((subCat: any) => (
                     <option key={subCat.SubCategoryID} value={subCat.SubCategoryID}>{subCat.SubCategoryName}</option>
                   ))}
                 </select>
+                {itemSpecs.subCategory && itemSpecs.category && <p className="text-xs text-green-600 mt-1">✓ Auto-selected</p>}
               </div>
               
               <div>
                 <label className="block text-sm font-medium mb-1">Part Type</label>
                 <select 
                   value={itemSpecs.partType}
-                  onChange={(e) => setItemSpecs({...itemSpecs, partType: e.target.value})}
-                  className="w-full p-2 border rounded text-sm"
+                  onChange={(e) => handleItemSpecSelection('partType', e.target.value)}
+                  className={`w-full p-2 border rounded text-sm ${itemSpecs.partType && itemSpecs.subCategory ? 'bg-green-50' : ''}`}
+                  title={itemSpecs.partType && itemSpecs.subCategory ? 'Auto-populated from Sub Category selection' : ''}
                 >
                   <option value="">Select Part Type</option>
                   {pcdbRefData.partTypes?.map((pt: any) => (
                     <option key={pt.PartTerminologyID} value={pt.PartTerminologyID}>{pt.PartTerminologyName}</option>
                   ))}
                 </select>
+                {itemSpecs.partType && itemSpecs.subCategory && <p className="text-xs text-green-600 mt-1">✓ Auto-selected</p>}
               </div>
             </div>
             
@@ -1377,7 +1642,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                 <label className="block text-sm font-medium mb-1">Position</label>
                 <select 
                   value={itemSpecs.position}
-                  onChange={(e) => setItemSpecs({...itemSpecs, position: e.target.value})}
+                  onChange={(e) => handleItemSpecSelection('position', e.target.value)}
                   className="w-full p-2 border rounded text-sm"
                 >
                   <option value="">Select Position</option>
@@ -1392,10 +1657,12 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                 <input 
                   type="number"
                   value={itemSpecs.quantity}
-                  onChange={(e) => setItemSpecs({...itemSpecs, quantity: parseInt(e.target.value) || 1})}
-                  className="w-full p-2 border rounded text-sm"
+                  onChange={(e) => handleItemSpecSelection('quantity', e.target.value)}
+                  className={`w-full p-2 border rounded text-sm ${itemSpecs.quantity > 1 && itemSpecs.partType ? 'bg-green-50' : ''}`}
+                  title={itemSpecs.quantity > 1 && itemSpecs.partType ? 'Auto-suggested based on part type' : ''}
                   min="1"
                 />
+                {itemSpecs.quantity > 1 && itemSpecs.partType && <p className="text-xs text-green-600 mt-1">✓ Auto-suggested</p>}
               </div>
               
               <div>
@@ -1403,7 +1670,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                 <input 
                   type="text"
                   value={itemSpecs.mfrLabel}
-                  onChange={(e) => setItemSpecs({...itemSpecs, mfrLabel: e.target.value})}
+                  onChange={(e) => handleItemSpecSelection('mfrLabel', e.target.value)}
                   className="w-full p-2 border rounded text-sm"
                   placeholder="Manufacturer label"
                 />
@@ -1414,7 +1681,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
               <label className="block text-sm font-medium mb-1">Notes</label>
               <textarea 
                 value={itemSpecs.notes}
-                onChange={(e) => setItemSpecs({...itemSpecs, notes: e.target.value})}
+                onChange={(e) => handleItemSpecSelection('notes', e.target.value)}
                 className="w-full p-2 border rounded text-sm"
                 rows={3}
                 placeholder="Additional application notes"
