@@ -12,6 +12,7 @@ interface SearchableSelectProps {
   placeholder?: string;
   className?: string;
   disabled?: boolean;
+  tabIndex?: number;
 }
 
 export const SearchableSelect: React.FC<SearchableSelectProps> = ({
@@ -20,7 +21,8 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
   onChange,
   placeholder = "Select...",
   className = "",
-  disabled = false
+  disabled = false,
+  tabIndex = 0
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -41,6 +43,20 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
   return (
     <div className={`relative ${className}`}>
       <div
+        role="button"
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        tabIndex={disabled ? -1 : tabIndex}
+        onKeyDown={(e) => {
+          if (disabled) return;
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setIsOpen((v) => !v);
+          }
+          if (e.key === 'Escape') {
+            setIsOpen(false);
+          }
+        }}
         onClick={() => !disabled && setIsOpen(!isOpen)}
         className={`w-full p-2 border rounded text-sm cursor-pointer bg-white ${
           disabled ? 'bg-gray-100 cursor-not-allowed' : 'hover:border-gray-400'

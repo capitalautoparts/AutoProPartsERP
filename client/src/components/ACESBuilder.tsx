@@ -1038,6 +1038,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                   value={vehicleData.year}
                   onChange={(value) => setVehicleData({...vehicleData, year: value})}
                   placeholder="Select Year"
+                  tabIndex={1}
                 />
                 <p className="text-xs text-gray-500">{allYears.length} available</p>
               </div>
@@ -1050,6 +1051,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                   onChange={(value) => setVehicleData({...vehicleData, make: value})}
                   placeholder="Select Make"
                   disabled={!vehicleData.year}
+                  tabIndex={2}
                 />
                 <p className="text-xs text-gray-500">{availableMakes.length} available</p>
               </div>
@@ -1062,6 +1064,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                   onChange={(value) => setVehicleData({...vehicleData, model: value})}
                   placeholder="Select Model"
                   disabled={!vehicleData.make}
+                  tabIndex={3}
                 />
                 <p className="text-xs text-gray-500">{availableModels.length} available</p>
               </div>
@@ -1087,6 +1090,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                   }}
                   placeholder="Select Submodel"
                   disabled={!vehicleData.baseVehicleId && availableBaseVehicles.length <= 1}
+                  tabIndex={4}
                 />
               </div>
             </div>
@@ -1099,6 +1103,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                   onChange={(e) => setVehicleData({...vehicleData, group: e.target.value})}
                   className="w-full p-2 border rounded text-sm bg-green-50"
                   title="Auto-populated based on vehicle selection"
+                  tabIndex={5}
                 >
                   <option value="">Select Group</option>
                   {vehicleGroups.map(group => (
@@ -1115,6 +1120,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                   onChange={(e) => setVehicleData({...vehicleData, type: e.target.value})}
                   className="w-full p-2 border rounded text-sm bg-green-50"
                   title="Auto-populated based on vehicle selection"
+                  tabIndex={6}
                 >
                   <option value="">Select Type</option>
                   {vehicleTypes.map(type => (
@@ -1131,6 +1137,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                   onChange={(e) => setVehicleData({...vehicleData, region: e.target.value})}
                   className="w-full p-2 border rounded text-sm bg-green-50"
                   title="Auto-populated based on vehicle selection"
+                  tabIndex={7}
                 >
                   <option value="">Select Region</option>
                   {regions.map(region => (
@@ -1147,6 +1154,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                   onChange={(e) => setVehicleData({...vehicleData, class: e.target.value})}
                   className="w-full p-2 border rounded text-sm bg-green-50"
                   title="Auto-populated based on vehicle selection"
+                  tabIndex={8}
                 >
                   <option value="">Select Class</option>
                   {vehicleClasses.map(cls => (
