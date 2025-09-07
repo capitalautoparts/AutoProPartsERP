@@ -463,17 +463,23 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
 
   // Get filtered options for cascading dropdowns
   const getFilteredSubCategories = () => {
-    if (!itemSpecs.category || !pcdbRefData.subcategories) return [];
-    return pcdbRefData.subcategories.filter((sub: any) => sub.CategoryID === itemSpecs.category);
+    if (!pcdbRefData.subCategories) return [];
+    if (!itemSpecs.category) return pcdbRefData.subCategories;
+    return pcdbRefData.subCategories.filter((sub: any) => sub.CategoryID === itemSpecs.category);
   };
   
   const getFilteredPartTypes = () => {
-    if (!itemSpecs.subCategory || !pcdbRefData.partTypes) return [];
+    if (!pcdbRefData.partTypes) return [];
+    if (!itemSpecs.subCategory) return pcdbRefData.partTypes;
     return pcdbRefData.partTypes.filter((pt: any) => pt.SubCategoryID === itemSpecs.subCategory);
   };
   
   // Smart item specs relationship handler with real PCdb data
   const handleItemSpecSelection = (field: string, value: string) => {
+    console.log('handleItemSpecSelection called:', { field, value });
+    console.log('Current itemSpecs:', itemSpecs);
+    console.log('pcdbRefData.partTypes:', pcdbRefData.partTypes);
+    
     let updates: any = { [field]: value };
     
     // Clear dependent fields when parent changes
@@ -487,33 +493,37 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
     // Auto-populate parent fields when child is selected
     if (field === 'partType' && value && pcdbRefData.partTypes) {
       const selectedPartType = pcdbRefData.partTypes.find((pt: any) => pt.PartTerminologyID === value);
+      console.log('Found selectedPartType:', selectedPartType);
+      
       if (selectedPartType) {
-        // Auto-populate subcategory if not already selected
-        if (!itemSpecs.subCategory) {
+        // Use AutoCare CodeMaster relationships - always populate if available
+        if (selectedPartType.SubCategoryID) {
+          console.log('Setting subCategory to:', selectedPartType.SubCategoryID);
           updates.subCategory = selectedPartType.SubCategoryID;
         }
-        
-        // Auto-populate category if not already selected
-        if (!itemSpecs.category && pcdbRefData.subcategories) {
-          const subCategory = pcdbRefData.subcategories.find((sc: any) => sc.SubCategoryID === selectedPartType.SubCategoryID);
-          if (subCategory) {
-            updates.category = subCategory.CategoryID;
-          }
+        if (selectedPartType.CategoryID) {
+          console.log('Setting category to:', selectedPartType.CategoryID);
+          updates.category = selectedPartType.CategoryID;
+        }
+        if (selectedPartType.PositionID) {
+          console.log('Setting position to:', selectedPartType.PositionID);
+          updates.position = selectedPartType.PositionID;
         }
         
-        // Auto-suggest position and quantity based on part type
-        if (selectedPartType.DefaultPosition) {
-          updates.position = selectedPartType.DefaultPosition;
-        }
-        if (selectedPartType.DefaultQuantity) {
-          updates.quantity = selectedPartType.DefaultQuantity;
-        }
-        if (selectedPartType.DefaultMfrLabel) {
-          updates.mfrLabel = selectedPartType.DefaultMfrLabel;
+        // Auto-populate mfr label
+        updates.mfrLabel = selectedPartType.PartTerminologyName;
+        
+        // Auto-suggest quantity based on part type
+        const partName = selectedPartType.PartTerminologyName?.toLowerCase() || '';
+        if (partName.includes('brake pad')) {
+          updates.quantity = 4;
+        } else if (partName.includes('spark plug')) {
+          updates.quantity = 4;
         }
       }
     }
     
+    console.log('Final updates:', updates);
     setItemSpecs(prev => ({ ...prev, ...updates }));
   };
   
@@ -2016,7 +2026,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                   value={itemSpecs.subCategory}
                   onChange={(value) => handleItemSpecSelection('subCategory', value)}
                   placeholder="Select Sub Category"
-                  disabled={!itemSpecs.category}
+
                 />
                 <p className="text-xs text-gray-500 mt-1">{getFilteredSubCategories().length} subcategories available</p>
               </div>
@@ -2029,9 +2039,12 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                     label: pt.PartTerminologyName 
                   }))}
                   value={itemSpecs.partType}
-                  onChange={(value) => handleItemSpecSelection('partType', value)}
+                  onChange={(value) => {
+                    console.log('Part Type onChange called with value:', value);
+                    handleItemSpecSelection('partType', value);
+                  }}
                   placeholder="Select Part Type"
-                  disabled={!itemSpecs.subCategory}
+
                 />
                 <p className="text-xs text-gray-500 mt-1">{getFilteredPartTypes().length} part types available</p>
               </div>

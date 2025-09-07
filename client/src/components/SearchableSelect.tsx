@@ -58,7 +58,16 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Type to search..."
             className="w-full p-2 border-b text-sm"
-            onKeyDown={(e) => e.key === 'Escape' && setIsOpen(false)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                setIsOpen(false);
+              } else if (e.key === 'Enter' && filteredOptions.length > 0) {
+                e.preventDefault();
+                onChange(filteredOptions[0].value);
+                setIsOpen(false);
+                setSearch("");
+              }
+            }}
           />
           <div className="overflow-y-auto max-h-48">
             {filteredOptions.length > 0 ? (

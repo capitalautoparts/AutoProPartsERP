@@ -375,12 +375,25 @@ export class ACESServiceCorrected {
     const subCategories = extractedDatabaseService.getTableData('PCdb', 'Subcategories');
     const parts = extractedDatabaseService.getTableData('PCdb', 'Parts');
     const positions = extractedDatabaseService.getTableData('PCdb', 'Positions');
+    const codeMaster = extractedDatabaseService.getTableData('PCdb', 'CodeMaster');
+    
+    // Add relationships to parts from CodeMaster
+    const partsWithRelationships = parts.map((part: any) => {
+      const relationship = codeMaster.find((cm: any) => cm.PartTerminologyID === part.PartTerminologyID);
+      return {
+        ...part,
+        SubCategoryID: relationship?.SubCategoryID,
+        CategoryID: relationship?.CategoryID,
+        PositionID: relationship?.PositionID
+      };
+    });
     
     return {
       categories: categories,
       subCategories: subCategories,
-      partTypes: parts,
-      positions: positions
+      partTypes: partsWithRelationships,
+      positions: positions,
+      codeMaster: codeMaster
     };
   }
 
