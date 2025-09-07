@@ -12,6 +12,7 @@ const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('profile');
+  const [activePiesTab, setActivePiesTab] = useState('item');
 
   const { data: product, isLoading } = useQuery({
     queryKey: ['product', id],
@@ -23,17 +24,22 @@ const ProductDetailPage: React.FC = () => {
 
   const tabs = [
     { id: 'profile', name: 'Profile' },
-    { id: 'aces', name: 'ACES Applications (All Versions)' },
-    { id: 'pies-item', name: 'PIES Item (28 fields)' },
-    { id: 'pies-desc', name: 'PIES Description (6 fields)' },
-    { id: 'pies-price', name: 'PIES Price (13 fields)' },
-    { id: 'pies-expi', name: 'PIES EXPI (6 fields)' },
-    { id: 'pies-attributes', name: 'PIES Attributes (9 fields)' },
-    { id: 'pies-package', name: 'PIES Package (44 fields)' },
-    { id: 'pies-kits', name: 'PIES Kits (14 fields)' },
-    { id: 'pies-interchange', name: 'PIES Interchange (18 fields)' },
-    { id: 'pies-assets', name: 'PIES Assets (40 fields)' },
-    { id: 'pies-market-copy', name: 'PIES Market Copy (46 fields)' },
+    { id: 'aces', name: 'ACES' },
+    { id: 'pies', name: 'PIES' },
+  ];
+
+  const piesTabs = [
+    { id: 'item', name: 'Item' },
+    { id: 'description', name: 'Description' },
+    { id: 'price', name: 'Price' },
+    { id: 'expi', name: 'EXPI' },
+    { id: 'attributes', name: 'Attributes' },
+    { id: 'package', name: 'Package' },
+    { id: 'kits', name: 'Kits' },
+    { id: 'interchange', name: 'Interchange' },
+    { id: 'assets', name: 'Assets' },
+    { id: 'assortments', name: 'Assortments' },
+    { id: 'market-copy', name: 'Market Copy' },
   ];
 
   if (isLoading) {
@@ -97,18 +103,41 @@ const ProductDetailPage: React.FC = () => {
       <div className="bg-white shadow rounded-lg p-6">
         {activeTab === 'profile' && <ProfileTab product={product} />}
         {activeTab === 'aces' && <ACESTab product={product} />}
-
-        {activeTab === 'pies-item' && <PIESItemTab product={product} />}
-        {activeTab === 'pies-desc' && <PIESDescriptionTab product={product} />}
-        {activeTab === 'pies-price' && <PIESPriceTab />}
-        {activeTab === 'pies-expi' && <PIESEXPITab />}
-        {activeTab === 'pies-attributes' && <PIESAttributesTab product={product} />}
-        {activeTab === 'pies-package' && <PIESPackageTab product={product} />}
-        {activeTab === 'pies-kits' && <PIESKitTab />}
-        {activeTab === 'pies-interchange' && <PIESInterchangeTab />}
-        {activeTab === 'pies-assets' && <PIESAssetsTab />}
-        {activeTab === 'pies-assets' && <PIESAssetsTab />}
-        {activeTab === 'pies-market-copy' && <PIESMarketCopyTab />}
+        {activeTab === 'pies' && (
+          <div>
+            {/* PIES Sub-tabs */}
+            <div className="border-b border-gray-200 mb-6">
+              <nav className="flex space-x-8 overflow-x-auto">
+                {piesTabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActivePiesTab(tab.id)}
+                    className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
+                      activePiesTab === tab.id
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    {tab.name}
+                  </button>
+                ))}
+              </nav>
+            </div>
+            
+            {/* PIES Tab Content */}
+            {activePiesTab === 'item' && <PIESItemTab product={product} />}
+            {activePiesTab === 'description' && <PIESDescriptionTab product={product} />}
+            {activePiesTab === 'price' && <PIESPriceTab />}
+            {activePiesTab === 'expi' && <PIESEXPITab />}
+            {activePiesTab === 'attributes' && <PIESAttributesTab product={product} />}
+            {activePiesTab === 'package' && <PIESPackageTab product={product} />}
+            {activePiesTab === 'kits' && <PIESKitTab />}
+            {activePiesTab === 'interchange' && <PIESInterchangeTab />}
+            {activePiesTab === 'assets' && <PIESAssetsTab />}
+            {activePiesTab === 'assortments' && <PIESAssortmentsTab />}
+            {activePiesTab === 'market-copy' && <PIESMarketCopyTab />}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
+import { SearchableSelect } from './SearchableSelect';
+import { ApplicationMappingTable } from './ApplicationMappingTable';
+import { ValidationPanel } from './ValidationPanel';
 
 interface ACESBuilderProps {
   applications?: any[];
   onUpdate?: (applications: any[]) => void;
 }
 
-type TabType = 'Vehicle' | 'Engine' | 'Transmission' | 'Drive' | 'Brake' | 'Spring' | 'Steering' | 'Wheel' | 'Bed' | 'Body' | 'MfrBody' | 'Item' | 'Validation';
+type TabType = 'Vehicle' | 'Engine' | 'Transmission' | 'Drive' | 'Brake' | 'Spring' | 'Steering' | 'Wheel' | 'Bed' | 'Body' | 'MfrBody' | 'Item' | 'Qualifiers' | 'Validation';
 
 export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onUpdate }) => {
   const [activeTab, setActiveTab] = useState<TabType>('Vehicle');
   
-  const tabs: TabType[] = ['Vehicle', 'Engine', 'Transmission', 'Drive', 'Brake', 'Spring', 'Steering', 'Wheel', 'Bed', 'Body', 'MfrBody', 'Item', 'Validation'];
+  const tabs: TabType[] = ['Vehicle', 'Engine', 'Transmission', 'Drive', 'Brake', 'Spring', 'Steering', 'Wheel', 'Bed', 'Body', 'MfrBody', 'Item', 'Qualifiers', 'Validation'];
   // Reference data
   const [allYears, setAllYears] = useState<any[]>([]);
   const [allMakes, setAllMakes] = useState<any[]>([]);
@@ -55,6 +58,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
   const [vehicleSystemsRefData, setVehicleSystemsRefData] = useState<any>({});
   const [physicalSpecsRefData, setPhysicalSpecsRefData] = useState<any>({});
   const [pcdbRefData, setPcdbRefData] = useState<any>({});
+  const [qdbRefData, setQdbRefData] = useState<any>({});
   
   // Engine filter selections with smart relationships
   const [engineFilters, setEngineFilters] = useState({
@@ -451,65 +455,55 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
     mfrLabel: '',
     notes: ''
   });
+  
+  // Qualifier specifications
+  const [qualifierSpecs, setQualifierSpecs] = useState({
+    qualifiers: [] as Array<{ qualifierId: string, qualifierValue: string }>
+  });
 
   // Smart item specs relationship handler with real PCdb data
-  const handleItemSpecSelection = async (field: string, value: string) => {
+  const handleItemSpecSelection = (field: string, value: string) => {
     let updates: any = { [field]: value };
     
-    // Auto-populate category and subcategory when part type is selected
-    if (field === 'partType' && value) {
-      console.log('Part Type selected:', value);
-      console.log('PCdb data:', { partTypes: pcdbRefData.partTypes?.length, subCategories: pcdbRefData.subCategories?.length, categories: pcdbRefData.categories?.length });
-      
-      const selectedPart = pcdbRefData.partTypes?.find((pt: any) => pt.PartTerminologyID === value);
-      console.log('Selected part:', selectedPart);
-      
+    // Clear dependent fields when parent changes
+    if (field === 'category') {
+      updates.subCategory = '';
+      updates.partType = '';
+    }
+    if (field === 'subCategory') {
+      updates.partType = '';
+    }
+    
+    // Auto-populate when part type is selected
+    if (field === 'partType' && value && pcdbRefData.partTypes) {
+      const selectedPart = pcdbRefData.partTypes.find((pt: any) => pt.PartTerminologyID === value);
       if (selectedPart) {
         if (selectedPart.SubCategoryID) {
           updates.subCategory = selectedPart.SubCategoryID;
-          console.log('Setting subCategory to:', selectedPart.SubCategoryID);
-          
           const subCategory = pcdbRefData.subCategories?.find((sc: any) => sc.SubCategoryID === selectedPart.SubCategoryID);
-          console.log('Found subCategory:', subCategory);
-          
-          if (subCategory && subCategory.CategoryID) {
+          if (subCategory?.CategoryID) {
             updates.category = subCategory.CategoryID;
-            console.log('Setting category to:', subCategory.CategoryID);
           }
         }
-        
         updates.mfrLabel = selectedPart.PartTerminologyName;
-        updates.quantity = 1;
-      }
-    }
-    
-    // Auto-populate subcategory based on category (PCdb relationships)
-    if (field === 'category' && value && pcdbRefData.subCategories) {
-      const relatedSubCats = pcdbRefData.subCategories.filter((sc: any) => 
-        sc.CategoryID === value
-      );
-      if (relatedSubCats.length === 1) {
-        updates.subCategory = relatedSubCats[0].SubCategoryID;
-      }
-    }
-    
-    // Auto-populate part type based on subcategory (PCdb relationships)
-    if (field === 'subCategory' && value && pcdbRefData.partTypes) {
-      const relatedPartTypes = pcdbRefData.partTypes.filter((pt: any) => 
-        pt.SubCategoryID === value
-      );
-      if (relatedPartTypes.length === 1) {
-        updates.partType = relatedPartTypes[0].PartTerminologyID;
       }
     }
     
     setItemSpecs(prev => ({ ...prev, ...updates }));
   };
   
-  // Validation state
-  const [validationFilter, setValidationFilter] = useState('All');
-  const [selectedApplications, setSelectedApplications] = useState<string[]>([]);
-  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  // Get filtered options for cascading dropdowns
+  const getFilteredSubCategories = () => {
+    if (!itemSpecs.category || !pcdbRefData.subCategories) return pcdbRefData.subCategories || [];
+    return pcdbRefData.subCategories.filter((sc: any) => sc.CategoryID === itemSpecs.category);
+  };
+  
+  const getFilteredPartTypes = () => {
+    if (!itemSpecs.subCategory || !pcdbRefData.partTypes) return pcdbRefData.partTypes || [];
+    return pcdbRefData.partTypes.filter((pt: any) => pt.SubCategoryID === itemSpecs.subCategory);
+  };
+  
+
   
   const [selectedComponents, setSelectedComponents] = useState({
     engineConfig: '',
@@ -541,8 +535,9 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
       fetch('/api/aces-corrected/vehicle-types').then(r => r.json()),
       fetch('/api/aces-corrected/regions').then(r => r.json()),
       fetch('/api/aces-corrected/vehicle-classes').then(r => r.json()),
-      fetch('/api/aces-corrected/pcdb-reference').then(r => r.json())
-    ]).then(([years, makes, models, baseVehicles, groups, types, regions, classes, pcdb]) => {
+      fetch('/api/aces-corrected/pcdb-reference').then(r => r.json()),
+      fetch('/api/databases/qdb').then(r => r.json())
+    ]).then(([years, makes, models, baseVehicles, groups, types, regions, classes, pcdb, qdb]) => {
       setAllYears(years);
       setAllMakes(makes);
       setAllModels(models);
@@ -552,6 +547,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
       setRegions(regions);
       setVehicleClasses(classes);
       setPcdbRefData(pcdb);
+      setQdbRefData(qdb);
     });
   }, []);
 
@@ -669,16 +665,65 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
       id: Date.now().toString(),
       baseVehicleId: vehicleData.baseVehicleId,
       year: yearName,
-      make: makeName,
-      model: modelName,
+      make: vehicleData.make,
+      model: vehicleData.model,
+      submodel: vehicleData.submodel,
+      
+      // Engine specifications
+      liter: engineFilters.liter,
+      cc: engineFilters.cc,
+      cid: engineFilters.cid,
+      cylinders: engineFilters.cylinders,
+      blockType: engineFilters.blockType,
+      aspiration: engineFilters.aspiration,
+      horsePower: engineFilters.horsePower,
+      engineManufacturer: engineFilters.engineManufacturer,
+      engineVIN: engineFilters.engineVIN,
+      
+      // Transmission specifications
+      transmissionControl: transmissionFilters.control,
+      transmissionSpeeds: transmissionFilters.speeds,
+      transmissionType: transmissionFilters.type,
+      transmissionMfr: transmissionFilters.mfrName,
+      
+      // Vehicle systems
+      driveType: vehicleSystemsFilters.driveType,
+      frontBrake: vehicleSystemsFilters.frontBrake,
+      rearBrake: vehicleSystemsFilters.rearBrake,
+      brakeSystem: vehicleSystemsFilters.brakeSystem,
+      brakeABS: vehicleSystemsFilters.brakeABS,
+      frontSpring: vehicleSystemsFilters.frontSpring,
+      rearSpring: vehicleSystemsFilters.rearSpring,
+      steeringType: vehicleSystemsFilters.steeringType,
+      steeringSystem: vehicleSystemsFilters.steeringSystem,
+      
+      // Physical specifications
+      wheelbaseInches: physicalSpecsFilters.wheelbaseInches,
+      wheelbaseMetric: physicalSpecsFilters.wheelbaseMetric,
+      bedType: physicalSpecsFilters.bedType,
+      bedLengthInches: physicalSpecsFilters.bedLengthInches,
+      bedLengthMetric: physicalSpecsFilters.bedLengthMetric,
+      bodyType: physicalSpecsFilters.bodyType,
+      numDoors: physicalSpecsFilters.numDoors,
+      mfrBodyCode: physicalSpecsFilters.mfrBodyCode,
+      
+      // Item specifications
+      category: itemSpecs.category,
+      subCategory: itemSpecs.subCategory,
+      partType: itemSpecs.partType,
+      position: itemSpecs.position,
+      quantity: itemSpecs.quantity,
+      mfrLabel: itemSpecs.mfrLabel,
+      notes: itemSpecs.notes,
+      
+      // Qualifiers
+      qualifiers: qualifierSpecs.qualifiers,
+      
+      // Component selections
       engineConfig: selectedComponents.engineConfig,
       transmission: selectedComponents.transmission,
       brakeConfig: selectedComponents.brakeConfig,
-      driveType: selectedComponents.driveType,
-      subModel: selectedComponents.subModel,
-      ...application,
-      ...vehicleData,
-      ...itemSpecs
+      subModel: selectedComponents.subModel
     };
     
     const updatedApps = [...currentApplications, newApp];
@@ -763,12 +808,115 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
       mfrLabel: '',
       notes: ''
     });
+    setQualifierSpecs({
+      qualifiers: []
+    });
   };
   
   const removeApplication = (id: string) => {
     const updatedApps = currentApplications.filter(app => app.id !== id);
     setCurrentApplications(updatedApps);
     onUpdate?.(updatedApps);
+  };
+  
+  const editApplication = (id: string) => {
+    const app = currentApplications.find(a => a.id === id);
+    if (!app) return;
+    
+    // Populate all form fields with application data
+    setVehicleData({
+      group: app.group || '',
+      type: app.type || '',
+      make: app.make || '',
+      model: app.model || '',
+      year: app.year || '',
+      submodel: app.submodel || '',
+      region: app.region || '',
+      class: app.class || '',
+      baseVehicleId: app.baseVehicleId || ''
+    });
+    
+    setEngineFilters({
+      liter: app.liter || '',
+      cc: app.cc || '',
+      cid: app.cid || '',
+      cylinders: app.cylinders || '',
+      blockType: app.blockType || '',
+      boreInches: app.boreInches || '',
+      boreMetric: app.boreMetric || '',
+      strokeInches: app.strokeInches || '',
+      strokeMetric: app.strokeMetric || '',
+      cylinderHeadType: app.cylinderHeadType || '',
+      valvesPerEngine: app.valvesPerEngine || '',
+      aspiration: app.aspiration || '',
+      ignitionSystemType: app.ignitionSystemType || '',
+      horsePower: app.horsePower || '',
+      kilowattPower: app.kilowattPower || '',
+      fuelType: app.fuelType || '',
+      engineManufacturer: app.engineManufacturer || '',
+      engineVIN: app.engineVIN || '',
+      engineVersion: app.engineVersion || ''
+    });
+    
+    setTransmissionFilters({
+      speeds: app.transmissionSpeeds || '',
+      control: app.transmissionControl || '',
+      type: app.transmissionType || '',
+      mfrName: app.transmissionMfr || '',
+      mfrCode: app.mfrCode || '',
+      elecControlled: app.elecControlled || ''
+    });
+    
+    setVehicleSystemsFilters({
+      driveType: app.driveType || '',
+      frontBrake: app.frontBrake || '',
+      rearBrake: app.rearBrake || '',
+      brakeSystem: app.brakeSystem || '',
+      brakeABS: app.brakeABS || '',
+      frontSpring: app.frontSpring || '',
+      rearSpring: app.rearSpring || '',
+      steeringType: app.steeringType || '',
+      steeringSystem: app.steeringSystem || ''
+    });
+    
+    setPhysicalSpecsFilters({
+      wheelbaseInches: app.wheelbaseInches || '',
+      wheelbaseMetric: app.wheelbaseMetric || '',
+      bedType: app.bedType || '',
+      bedLengthInches: app.bedLengthInches || '',
+      bedLengthMetric: app.bedLengthMetric || '',
+      bodyType: app.bodyType || '',
+      numDoors: app.numDoors || '',
+      mfrBodyCode: app.mfrBodyCode || ''
+    });
+    
+    setItemSpecs({
+      category: app.category || '',
+      subCategory: app.subCategory || '',
+      partType: app.partType || '',
+      position: app.position || '',
+      quantity: app.quantity || 1,
+      mfrLabel: app.mfrLabel || '',
+      notes: app.notes || ''
+    });
+    
+    setQualifierSpecs({
+      qualifiers: app.qualifiers || []
+    });
+    
+    setSelectedComponents({
+      engineConfig: app.engineConfig || '',
+      transmission: app.transmission || '',
+      brakeConfig: app.brakeConfig || '',
+      driveType: app.driveType || '',
+      subModel: app.subModel || ''
+    });
+    
+    // Remove the application being edited
+    removeApplication(id);
+    
+    // Switch to Vehicle tab for editing
+    setActiveTab('Vehicle');
   };
   
   const exportToXML = async () => {
@@ -793,31 +941,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
     }
   };
   
-  const validateApplications = async () => {
-    const errors = [];
-    for (const app of currentApplications) {
-      try {
-        const response = await fetch('/api/aces-corrected/validate-application', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(app)
-        });
-        const validation = await response.json();
-        if (!validation.isValid) {
-          errors.push(`Application ${app.id}: ${validation.errors.join(', ')}`);
-        }
-      } catch (error) {
-        errors.push(`Application ${app.id}: Validation failed`);
-      }
-    }
-    setValidationErrors(errors);
-  };
-  
-  const filteredApplications = currentApplications.filter(app => {
-    if (validationFilter === 'All') return true;
-    // Add validation logic based on filter
-    return true;
-  });
+
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -859,33 +983,25 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
               
               <div>
                 <label className="block text-sm font-medium mb-1">Make</label>
-                <select 
-                  value={vehicleData.make} 
-                  onChange={(e) => setVehicleData({...vehicleData, make: e.target.value})}
-                  className="w-full p-2 border rounded text-sm"
+                <SearchableSelect
+                  options={availableMakes.map(make => ({ value: make.MakeID, label: make.MakeName }))}
+                  value={vehicleData.make}
+                  onChange={(value) => setVehicleData({...vehicleData, make: value})}
+                  placeholder="Select Make"
                   disabled={!vehicleData.year}
-                >
-                  <option value="">Select Make</option>
-                  {availableMakes.map(make => (
-                    <option key={make.MakeID} value={make.MakeID}>{make.MakeName}</option>
-                  ))}
-                </select>
+                />
                 <p className="text-xs text-gray-500">{availableMakes.length} available</p>
               </div>
               
               <div>
                 <label className="block text-sm font-medium mb-1">Model</label>
-                <select 
-                  value={vehicleData.model} 
-                  onChange={(e) => setVehicleData({...vehicleData, model: e.target.value})}
-                  className="w-full p-2 border rounded text-sm"
+                <SearchableSelect
+                  options={availableModels.map(model => ({ value: model.ModelID, label: model.ModelName }))}
+                  value={vehicleData.model}
+                  onChange={(value) => setVehicleData({...vehicleData, model: value})}
+                  placeholder="Select Model"
                   disabled={!vehicleData.make}
-                >
-                  <option value="">Select Model</option>
-                  {availableModels.map(model => (
-                    <option key={model.ModelID} value={model.ModelID}>{model.ModelName}</option>
-                  ))}
-                </select>
+                />
                 <p className="text-xs text-gray-500">{availableModels.length} available</p>
               </div>
             </div>
@@ -907,17 +1023,16 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
               
               <div>
                 <label className="block text-sm font-medium mb-1">Submodel</label>
-                <select 
-                  value={vehicleData.submodel} 
-                  onChange={(e) => {
-                    const newSubmodel = e.target.value;
-                    setVehicleData({...vehicleData, submodel: newSubmodel});
+                <SearchableSelect
+                  options={components.subModels.map(sub => ({ value: sub.SubModelID, label: sub.displayName }))}
+                  value={vehicleData.submodel}
+                  onChange={(value) => {
+                    setVehicleData({...vehicleData, submodel: value});
                     
                     // Auto-select BaseVehicle if submodel helps narrow it down
-                    if (newSubmodel && availableBaseVehicles.length > 1) {
-                      // Find BaseVehicle that matches this submodel
+                    if (value && availableBaseVehicles.length > 1) {
                       const matchingBV = availableBaseVehicles.find(bv => {
-                        const vehicles = components.subModels.filter(sm => sm.SubModelID === newSubmodel);
+                        const vehicles = components.subModels.filter(sm => sm.SubModelID === value);
                         return vehicles.some(v => v.BaseVehicleID === bv.BaseVehicleID);
                       });
                       if (matchingBV) {
@@ -925,14 +1040,9 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                       }
                     }
                   }}
-                  className="w-full p-2 border rounded text-sm"
+                  placeholder="Select Submodel"
                   disabled={!vehicleData.baseVehicleId && availableBaseVehicles.length <= 1}
-                >
-                  <option value="">Select Submodel</option>
-                  {components.subModels.map(sub => (
-                    <option key={sub.SubModelID} value={sub.SubModelID}>{sub.displayName}</option>
-                  ))}
-                </select>
+                />
               </div>
               
               <div>
@@ -1005,16 +1115,12 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                 <div className="grid grid-cols-4 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-1">Liter</label>
-                    <select 
+                    <SearchableSelect
+                      options={engineRefData.liters?.map((liter: string) => ({ value: liter, label: `${liter}L` })) || []}
                       value={engineFilters.liter}
-                      onChange={(e) => handleEngineSelection('liter', e.target.value)}
-                      className="w-full p-2 border rounded text-sm"
-                    >
-                      <option value="">Any Liter</option>
-                      {engineRefData.liters?.map((liter: string) => (
-                        <option key={liter} value={liter}>{liter}L</option>
-                      ))}
-                    </select>
+                      onChange={(value) => handleEngineSelection('liter', value)}
+                      placeholder="Any Liter"
+                    />
                   </div>
                   
                   <div>
@@ -1149,17 +1255,13 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                   
                   <div>
                     <label className="block text-sm font-medium mb-1">Aspiration</label>
-                    <select 
+                    <SearchableSelect
+                      options={engineRefData.aspirations?.map((asp: any) => ({ value: asp.AspirationID, label: asp.AspirationName })) || []}
                       value={engineFilters.aspiration}
-                      onChange={(e) => handleEngineSelection('aspiration', e.target.value)}
-                      className={`w-full p-2 border rounded text-sm ${engineFilters.aspiration && engineFilters.liter ? 'bg-green-50' : ''}`}
-                      title={engineFilters.aspiration && engineFilters.liter ? 'Auto-populated from VCdb EngineConfig' : ''}
-                    >
-                      <option value="">Any Aspiration</option>
-                      {engineRefData.aspirations?.map((asp: any) => (
-                        <option key={asp.AspirationID} value={asp.AspirationID}>{asp.AspirationName}</option>
-                      ))}
-                    </select>
+                      onChange={(value) => handleEngineSelection('aspiration', value)}
+                      placeholder="Any Aspiration"
+                      className={engineFilters.aspiration && engineFilters.liter ? 'bg-green-50' : ''}
+                    />
                     {engineFilters.aspiration && engineFilters.liter && <p className="text-xs text-green-600 mt-1">✓ Auto-populated</p>}
                   </div>
                   
@@ -1873,69 +1975,50 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-1">Category</label>
-                <select 
+                <SearchableSelect
+                  options={pcdbRefData.categories?.map((cat: any) => ({ value: cat.CategoryID, label: cat.CategoryName })) || []}
                   value={itemSpecs.category}
-                  onChange={(e) => handleItemSpecSelection('category', e.target.value)}
-                  className={`w-full p-2 border rounded text-sm ${itemSpecs.category && itemSpecs.partType ? 'bg-green-50' : ''}`}
-                  title={itemSpecs.category && itemSpecs.partType ? 'Auto-populated from Part Type selection' : ''}
-                >
-                  <option value="">Select Category</option>
-                  {pcdbRefData.categories?.map((cat: any) => (
-                    <option key={cat.CategoryID} value={cat.CategoryID}>{cat.CategoryName}</option>
-                  ))}
-                </select>
+                  onChange={(value) => handleItemSpecSelection('category', value)}
+                  placeholder="Select Category"
+                  className={itemSpecs.category && itemSpecs.partType ? 'bg-green-50' : ''}
+                />
                 {itemSpecs.category && itemSpecs.partType && <p className="text-xs text-green-600 mt-1">✓ Auto-selected</p>}
               </div>
               
               <div>
                 <label className="block text-sm font-medium mb-1">Sub Category</label>
-                <select 
+                <SearchableSelect
+                  options={getFilteredSubCategories().map((subCat: any) => ({ value: subCat.SubCategoryID, label: subCat.SubCategoryName }))}
                   value={itemSpecs.subCategory}
-                  onChange={(e) => handleItemSpecSelection('subCategory', e.target.value)}
-                  className={`w-full p-2 border rounded text-sm ${itemSpecs.subCategory && itemSpecs.partType ? 'bg-green-50' : ''}`}
-                  title={itemSpecs.subCategory && itemSpecs.partType ? 'Auto-populated from Part Type selection' : ''}
-                >
-                  <option value="">Select Sub Category</option>
-                  {pcdbRefData.subCategories?.map((subCat: any) => (
-                    <option key={subCat.SubCategoryID} value={subCat.SubCategoryID}>{subCat.SubCategoryName}</option>
-                  ))}
-                </select>
+                  onChange={(value) => handleItemSpecSelection('subCategory', value)}
+                  placeholder="Select Sub Category"
+                  className={itemSpecs.subCategory && itemSpecs.partType ? 'bg-green-50' : ''}
+                />
                 {itemSpecs.subCategory && itemSpecs.partType && <p className="text-xs text-green-600 mt-1">✓ Auto-selected</p>}
               </div>
               
               <div>
                 <label className="block text-sm font-medium mb-1">Part Type</label>
-                <select 
+                <SearchableSelect
+                  options={getFilteredPartTypes().map((pt: any) => ({ value: pt.PartTerminologyID, label: pt.PartTerminologyName }))}
                   value={itemSpecs.partType}
-                  onChange={(e) => {
-                    console.log('Part Type onChange triggered:', e.target.value);
-                    handleItemSpecSelection('partType', e.target.value);
-                  }}
-                  className="w-full p-2 border rounded text-sm"
-                >
-                  <option value="">Select Part Type</option>
-                  {pcdbRefData.partTypes?.map((pt: any) => (
-                    <option key={pt.PartTerminologyID} value={pt.PartTerminologyID}>{pt.PartTerminologyName}</option>
-                  ))}
-                </select>
-                <p className="text-xs text-gray-500 mt-1">{pcdbRefData.partTypes?.length || 0} part types available</p>
+                  onChange={(value) => handleItemSpecSelection('partType', value)}
+                  placeholder="Select Part Type"
+                />
+                <p className="text-xs text-gray-500 mt-1">{getFilteredPartTypes().length} part types available</p>
               </div>
             </div>
             
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-1">Position</label>
-                <select 
+                <SearchableSelect
+                  options={pcdbRefData.positions?.map((pos: any) => ({ value: pos.PositionID, label: pos.Position })) || []}
                   value={itemSpecs.position}
-                  onChange={(e) => handleItemSpecSelection('position', e.target.value)}
-                  className={`w-full p-2 border rounded text-sm ${itemSpecs.position && itemSpecs.partType ? 'bg-green-50' : ''}`}
-                  title={itemSpecs.position && itemSpecs.partType ? 'Auto-suggested based on part type' : ''}
-                >
-                  <option value="">Select Position</option>
-                  {pcdbRefData.positions?.map((pos: any) => (
-                    <option key={pos.PositionID} value={pos.PositionID}>{pos.Position}</option>
-                  ))}
-                </select>
+                  onChange={(value) => handleItemSpecSelection('position', value)}
+                  placeholder="Select Position"
+                  className={itemSpecs.position && itemSpecs.partType ? 'bg-green-50' : ''}
+                />
                 {itemSpecs.position && itemSpecs.partType && <p className="text-xs text-green-600 mt-1">✓ Auto-suggested</p>}
               </div>
               
@@ -1983,145 +2066,111 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
           </div>
         );
       
+      case 'Qualifiers':
+        return (
+          <div className="space-y-4">
+            {vehicleData.baseVehicleId ? (
+              <>
+                <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-4">
+                  <h4 className="text-sm font-medium text-blue-800 mb-2">Application Qualifiers (Qdb)</h4>
+                  <p className="text-xs text-blue-700">Add qualifiers to further specify application conditions and exceptions</p>
+                </div>
+                
+                <div className="border border-gray-200 rounded p-4">
+                  <h5 className="text-sm font-medium mb-3">Add Qualifier</h5>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Qualifier Type</label>
+                      <SearchableSelect
+                        options={qdbRefData.tables?.find((t: any) => t.name.includes('Qualifier'))?.data?.map((q: any) => ({ 
+                          value: q.QualifierID || q.id, 
+                          label: q.QualifierName || q.name || q.Description 
+                        })) || []}
+                        value=""
+                        onChange={(value) => {
+                          const newQualifier = { qualifierId: value, qualifierValue: '' };
+                          setQualifierSpecs(prev => ({
+                            qualifiers: [...prev.qualifiers, newQualifier]
+                          }));
+                        }}
+                        placeholder="Select Qualifier Type"
+                      />
+                    </div>
+                    <div className="flex items-end">
+                      <p className="text-xs text-gray-500">{qdbRefData.tables?.length || 0} Qdb tables loaded</p>
+                    </div>
+                  </div>
+                </div>
+                
+                {qualifierSpecs.qualifiers.length > 0 && (
+                  <div className="border border-gray-200 rounded p-4">
+                    <h5 className="text-sm font-medium mb-3">Current Qualifiers ({qualifierSpecs.qualifiers.length})</h5>
+                    <div className="space-y-3">
+                      {qualifierSpecs.qualifiers.map((qualifier, index) => {
+                        const qualifierType = qdbRefData.tables?.find((t: any) => t.name.includes('Qualifier'))?.data?.find((q: any) => 
+                          (q.QualifierID || q.id) === qualifier.qualifierId
+                        );
+                        
+                        return (
+                          <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded">
+                            <div className="flex-1">
+                              <span className="text-sm font-medium">
+                                {qualifierType?.QualifierName || qualifierType?.name || 'Unknown Qualifier'}
+                              </span>
+                            </div>
+                            <div className="flex-1">
+                              <input
+                                type="text"
+                                value={qualifier.qualifierValue}
+                                onChange={(e) => {
+                                  const updatedQualifiers = [...qualifierSpecs.qualifiers];
+                                  updatedQualifiers[index].qualifierValue = e.target.value;
+                                  setQualifierSpecs({ qualifiers: updatedQualifiers });
+                                }}
+                                placeholder="Qualifier value"
+                                className="w-full p-2 border rounded text-sm"
+                              />
+                            </div>
+                            <button
+                              onClick={() => {
+                                const updatedQualifiers = qualifierSpecs.qualifiers.filter((_, i) => i !== index);
+                                setQualifierSpecs({ qualifiers: updatedQualifiers });
+                              }}
+                              className="text-red-600 hover:text-red-800 text-sm px-2 py-1 border border-red-300 rounded hover:bg-red-50"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                
+                <div className="text-sm text-gray-600">
+                  <p>Qualifiers provide additional application specificity beyond basic vehicle fitment</p>
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <p>Select a BaseVehicle in the Vehicle tab to add qualifiers.</p>
+              </div>
+            )}
+          </div>
+        );
+      
       case 'Validation':
         return (
-          <div className="space-y-6">
-            {/* Mapping Validation Section */}
-            <div className="border rounded-lg p-4">
-              <h4 className="text-md font-medium mb-3">Mapping Validation</h4>
-              
-              {/* Filter Controls */}
-              <div className="flex items-center space-x-4 mb-4">
-                <span className="text-sm font-medium">Filter:</span>
-                {['All', 'Valid', 'Invalid', 'Conflict'].map(filter => (
-                  <label key={filter} className="flex items-center">
-                    <input 
-                      type="radio"
-                      name="validationFilter"
-                      value={filter}
-                      checked={validationFilter === filter}
-                      onChange={(e) => setValidationFilter(e.target.value)}
-                      className="mr-1"
-                    />
-                    <span className="text-sm">{filter}</span>
-                  </label>
-                ))}
-              </div>
-              
-              {/* Action Buttons */}
-              <div className="flex space-x-2 mb-4">
-                <button 
-                  onClick={exportToXML}
-                  className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
-                >
-                  Export
-                </button>
-                <button 
-                  onClick={() => selectedApplications.forEach(removeApplication)}
-                  disabled={selectedApplications.length === 0}
-                  className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 disabled:bg-gray-400"
-                >
-                  Delete
-                </button>
-                <button 
-                  onClick={validateApplications}
-                  className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
-                >
-                  Validate
-                </button>
-              </div>
-              
-              {/* Mapping Errors */}
-              {validationErrors.length > 0 && (
-                <div>
-                  <label className="block text-sm font-medium mb-1">Mapping Errors</label>
-                  <textarea 
-                    value={validationErrors.join('\n')}
-                    readOnly
-                    className="w-full p-2 border rounded text-sm bg-red-50"
-                    rows={4}
-                  />
-                </div>
-              )}
-            </div>
-            
-            {/* Enhanced Application Mapping Table */}
-            <div className="border rounded-lg p-4">
-              <h4 className="text-md font-medium mb-3">Application Mapping ({filteredApplications.length})</h4>
-              
-              {filteredApplications.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left p-2">
-                          <input 
-                            type="checkbox"
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedApplications(filteredApplications.map(app => app.id));
-                              } else {
-                                setSelectedApplications([]);
-                              }
-                            }}
-                          />
-                        </th>
-                        <th className="text-left p-2">Vehicle</th>
-                        <th className="text-left p-2">Item</th>
-                        <th className="text-left p-2">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredApplications.map((app: any) => (
-                        <tr key={app.id} className="border-b hover:bg-gray-50">
-                          <td className="p-2">
-                            <input 
-                              type="checkbox"
-                              checked={selectedApplications.includes(app.id)}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setSelectedApplications([...selectedApplications, app.id]);
-                                } else {
-                                  setSelectedApplications(selectedApplications.filter(id => id !== app.id));
-                                }
-                              }}
-                            />
-                          </td>
-                          <td className="p-2">
-                            <div className="font-medium">{app.year} {app.make} {app.model}</div>
-                            <div className="text-xs text-gray-500">BaseVehicle: {app.baseVehicleId}</div>
-                          </td>
-                          <td className="p-2">
-                            <div className="font-medium">{app.partType || 'No Part Type'}</div>
-                            <div className="text-xs text-gray-500">
-                              {app.position && `Position: ${app.position}`}
-                              {app.quantity && ` | Qty: ${app.quantity}`}
-                              {app.mfrLabel && ` | Label: ${app.mfrLabel}`}
-                            </div>
-                          </td>
-                          <td className="p-2">
-                            <div className="flex space-x-1">
-                              <button className="text-blue-600 hover:text-blue-800 text-xs">Edit</button>
-                              <button 
-                                onClick={() => removeApplication(app.id)}
-                                className="text-red-600 hover:text-red-800 text-xs"
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="text-center py-4 text-gray-500">
-                  <p>No applications match the current filter.</p>
-                </div>
-              )}
-            </div>
-          </div>
+          <ValidationPanel
+            applications={currentApplications}
+            allMakes={allMakes}
+            allModels={allModels}
+            allBaseVehicles={allBaseVehicles}
+            pcdbRefData={pcdbRefData}
+            onEdit={editApplication}
+            onRemove={removeApplication}
+            onExport={exportToXML}
+          />
         );
       
       default:
@@ -2173,29 +2222,22 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
           </button>
         </div>
         
-        {currentApplications.length > 0 ? (
-          <div className="space-y-2">
-            {currentApplications.map((app: any) => (
-              <div key={app.id} className="bg-gray-50 p-3 rounded border flex justify-between items-center">
-                <div className="text-sm">
-                  <span className="font-medium">{app.year} {app.make} {app.model}</span>
-                  {app.group && <span className="ml-2 text-gray-600">Group: {app.group}</span>}
-                  {app.region && <span className="ml-2 text-gray-600">Region: {app.region}</span>}
-                </div>
-                <button 
-                  onClick={() => removeApplication(app.id)}
-                  className="text-red-600 hover:text-red-800 text-sm"
-                >
-                  Remove
-                </button>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-4 text-gray-500">
-            <p>No applications added yet. Configure vehicle details above and click "Add Application".</p>
-          </div>
-        )}
+        <ApplicationMappingTable
+          applications={currentApplications}
+          allMakes={allMakes}
+          allModels={allModels}
+          components={components}
+          vehicleSystemsRefData={vehicleSystemsRefData}
+          transmissionRefData={transmissionRefData}
+          physicalSpecsRefData={physicalSpecsRefData}
+          pcdbRefData={pcdbRefData}
+          engineFilters={engineFilters}
+          transmissionFilters={transmissionFilters}
+          vehicleSystemsFilters={vehicleSystemsFilters}
+          physicalSpecsFilters={physicalSpecsFilters}
+          onEdit={editApplication}
+          onRemove={removeApplication}
+        />
       </div>
     </div>
   );
