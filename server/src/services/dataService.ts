@@ -1,10 +1,14 @@
 import { v4 as uuidv4 } from 'uuid';
 import { Product, Customer, Order } from '../types/index.js';
 import { piesSeedService } from './piesSeedService.js';
+import { internalIdService, InternalIdProduct } from './internalIdService.js';
 
 // In-memory data store (replace with DynamoDB/Aurora in production)
+// WARNING: This implementation will not scale beyond ~10K products
+// For 1M+ products, use ScalableDataService with database backend
 class DataService {
-  public products: Product[] = [];
+  public products: InternalIdProduct[] = [];
+  private productLookupMap: Map<string, InternalIdProduct> = new Map();
   private customers: Customer[] = [];
   private orders: Order[] = [];
   private initialized = false;
@@ -42,13 +46,13 @@ class DataService {
 
   private initializeSampleData() {
     // Sample products with comprehensive ACES + PIES data
-    this.products = [
+    const sampleProducts: Product[] = [
       {
-        id: uuidv4(),
-        uniqueId: 'PROBRAND_PB-12345',
+        id: '', // Will be set by internal ID
+        uniqueId: '', // Will be set by internal ID
         manufacturer: 'AutoParts Inc',
         brand: 'ProBrand',
-        partNumber: 'PB-12345',
+        partNumber: 'PB12345',
         sku: 'SKU-PB-12345',
         productName: 'Premium Brake Pad Set',
         shortDescription: 'High-performance ceramic brake pads',
@@ -62,7 +66,8 @@ class DataService {
         piesItem: {
           id: uuidv4(),
           productId: '',
-          partNo: 'PB-12345',
+          partNo: 'PB12345',
+          brandId: 'PROB',
           brandLabel: 'ProBrand',
           gtin: '123456789012',
           unspsc: '25171501',
@@ -115,11 +120,11 @@ class DataService {
         ]
       },
       {
-        id: uuidv4(),
-        uniqueId: 'CLEANAIR_CA-67890',
+        id: '', // Will be set by internal ID
+        uniqueId: '', // Will be set by internal ID
         manufacturer: 'FilterTech',
         brand: 'CleanAir',
-        partNumber: 'CA-67890',
+        partNumber: 'CA67890',
         sku: 'SKU-CA-67890',
         productName: 'Engine Air Filter',
         shortDescription: 'High-flow engine air filter',
@@ -133,7 +138,8 @@ class DataService {
         piesItem: {
           id: uuidv4(),
           productId: '',
-          partNo: 'CA-67890',
+          partNo: 'CA67890',
+          brandId: 'CLEA',
           brandLabel: 'CleanAir',
           gtin: '987654321098',
           unspsc: '25171502',
@@ -160,19 +166,35 @@ class DataService {
       }
     ];
     
+    // Convert to internal ID format
+    this.products = internalIdService.batchConvertToInternalId(sampleProducts);
+    
     // Update productId references in nested objects
     this.products.forEach(product => {
-      if (product.piesItem) product.piesItem.productId = product.id;
+      if (product.piesItem) product.piesItem.productId = product.internalProductId;
       if (product.piesDescriptions) {
-        product.piesDescriptions.forEach(desc => desc.productId = product.id);
+        product.piesDescriptions.forEach(desc => desc.productId = product.internalProductId);
       }
       if (product.piesAttributes) {
-        product.piesAttributes.forEach(attr => attr.productId = product.id);
+        product.piesAttributes.forEach(attr => attr.productId = product.internalProductId);
       }
       if (product.piesPackages) {
-        product.piesPackages.forEach(pkg => pkg.productId = product.id);
+        product.piesPackages.forEach(pkg => pkg.productId = product.internalProductId);
       }
     });
+    
+    // Create lookup map
+    this.productLookupMap = internalIdService.createLookupMap(this.products);
+    
+    // Debug: Log the first product to verify ID structure
+    if (this.products.length > 0) {
+      console.log('Sample product after conversion:', {
+        id: this.products[0].id,
+        internalProductId: this.products[0].internalProductId,
+        partNumber: this.products[0].partNumber,
+        brand: this.products[0].brand
+      });
+    }
   }
 
   private initializeCustomersAndOrders() {
@@ -203,66 +225,140 @@ class DataService {
 
     if (this.orders.length > 0) return;
     
-    // Sample orders
-    this.orders = [
-      {
-        id: uuidv4(),
-        customerId: this.customers[0].id,
-        orderNumber: 'ORD-001',
-        status: 'processing',
-        items: [
-          {
-            id: uuidv4(),
-            productId: this.products[0].id,
-            quantity: 2,
-            unitPrice: 89.99,
-            total: 179.98
-          }
-        ],
-        total: 179.98,
-        orderDate: new Date().toISOString()
-      }
-    ];
+    // Sample orders (only create if products exist)
+    if (this.products.length > 0) {
+      this.orders = [
+        {
+          id: uuidv4(),
+          customerId: this.customers[0].id,
+          orderNumber: 'ORD-001',
+          status: 'processing',
+          items: [
+            {
+              id: uuidv4(),
+              productId: this.products[0].id, // This should now be the internal ID
+              quantity: 2,
+              unitPrice: 89.99,
+              total: 179.98
+            }
+          ],
+          total: 179.98,
+          orderDate: new Date().toISOString()
+        }
+      ];
+    }
   }
 
   // Products
-  getAllProducts(): Product[] {
+  getAllProducts(): InternalIdProduct[] {
     return this.products;
   }
 
-  getProductById(id: string): Product | undefined {
-    return this.products.find(p => p.id === id);
+  // Enhanced product lookup with dual ID support
+  // NOTE: For production with 1M+ products, this should be async with database lookup
+  getProductById(id: string): InternalIdProduct | undefined {
+    // First try internal ID lookup (primary method)
+    let product = this.productLookupMap.get(id);
+    
+    // If not found, try UUID lookup for backward compatibility
+    if (!product) {
+      product = this.products.find(p => p.id === id);
+    }
+    
+    return product;
   }
 
-  createProduct(product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>): Product {
-    const newProduct: Product = {
+  // Dedicated internal ID lookup method
+  getProductByInternalId(internalId: string): InternalIdProduct | undefined {
+    return this.productLookupMap.get(internalId);
+  }
+
+  // Brand + part number lookup
+  getProductByBrandAndPartNumber(brand: string, partNumber: string): InternalIdProduct | undefined {
+    const internalId = `${brand.toUpperCase().replace(/[^A-Z0-9]/g, '')}${partNumber.replace(/[^A-Za-z0-9]/g, '')}`;
+    return this.getProductByInternalId(internalId);
+  }
+
+  // ID validation methods
+  isValidUUID(id: string): boolean {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(id);
+  }
+
+  isValidInternalId(id: string): boolean {
+    return /^[A-Z0-9]{3,60}$/i.test(id);
+  }
+
+  getProductsByInternalIds(internalIds: string[]): InternalIdProduct[] {
+    const result = internalIdService.batchLookup(internalIds, this.productLookupMap);
+    return result.products;
+  }
+
+  createProduct(product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>): InternalIdProduct {
+    // Validate product for internal ID generation
+    const validation = internalIdService.validateProductForInternalId(product);
+    if (!validation.valid) {
+      throw new Error(`Cannot create product: ${validation.errors.join(', ')}`);
+    }
+
+    const baseProduct: Product = {
       ...product,
-      id: uuidv4(),
+      id: '', // Will be set by internal ID
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
+
+    const newProduct = internalIdService.convertToInternalId(baseProduct, validation.brandId);
+    
+    // Check for duplicates
+    if (this.productLookupMap.has(newProduct.internalProductId)) {
+      throw new Error(`Product already exists: ${newProduct.internalProductId}`);
+    }
+    
     this.products.push(newProduct);
+    this.productLookupMap.set(newProduct.internalProductId, newProduct);
     return newProduct;
   }
 
-  updateProduct(id: string, updates: Partial<Product>): Product | null {
-    const index = this.products.findIndex(p => p.id === id);
-    if (index === -1) return null;
+  updateProduct(internalId: string, updates: Partial<Product>): InternalIdProduct | null {
+    const existingProduct = this.productLookupMap.get(internalId);
+    if (!existingProduct) return null;
     
-    this.products[index] = {
-      ...this.products[index],
+    const updatedProduct: InternalIdProduct = {
+      ...existingProduct,
       ...updates,
+      internalProductId: existingProduct.internalProductId, // Preserve internal ID
+      brandId: existingProduct.brandId, // Preserve brand ID
       updatedAt: new Date().toISOString()
     };
-    return this.products[index];
+    
+    // Update in array
+    const index = this.products.findIndex(p => p.internalProductId === internalId);
+    if (index !== -1) {
+      this.products[index] = updatedProduct;
+    }
+    
+    // Update in lookup map
+    this.productLookupMap.set(internalId, updatedProduct);
+    return updatedProduct;
   }
 
-  deleteProduct(id: string): boolean {
-    const index = this.products.findIndex(p => p.id === id);
+  deleteProduct(internalId: string): boolean {
+    const index = this.products.findIndex(p => p.internalProductId === internalId);
     if (index === -1) return false;
     
     this.products.splice(index, 1);
+    this.productLookupMap.delete(internalId);
     return true;
+  }
+
+  // Internal ID specific methods
+  generateInternalId(brandId: string, partNumber: string): string {
+    return internalIdService.generateProductId(brandId, partNumber);
+  }
+
+  validateInternalId(internalId: string): boolean {
+    return internalIdService.validateProductId(internalId);
   }
 
   // Customers

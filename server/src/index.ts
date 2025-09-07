@@ -7,6 +7,7 @@ import jobsRouter from './routes/jobs.js';
 import acesRouter from './routes/aces.js';
 import acesCorrectedRouter from './routes/aces-corrected.js';
 import aces42Router from './routes/aces42.js';
+import internalIdRouter from './routes/internalIdRoutes.js';
 
 import databaseRouter from './routes/database.js';
 import debugRouter from './routes/debug.js';
@@ -36,6 +37,7 @@ app.use('/api/jobs', jobsRouter);
 app.use('/api/aces', acesRouter);
 app.use('/api/aces-corrected', acesCorrectedRouter);
 app.use('/api/aces42', aces42Router);
+app.use('/api', internalIdRouter);
 
 app.use('/api/database', databaseRouter);
 app.use('/api/debug', debugRouter);

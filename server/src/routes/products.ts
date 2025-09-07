@@ -12,19 +12,115 @@ import { Product } from '../types/index.js';
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
-// Get all products
+// Get all products with pagination
 router.get('/', (req, res) => {
-  const products = dataService.getAllProducts();
-  res.json(products);
+  const limit = parseInt(req.query.limit as string) || 50;
+  const offset = parseInt(req.query.offset as string) || 0;
+  
+  // For current in-memory implementation
+  const allProducts = dataService.getAllProducts();
+  const products = allProducts.slice(offset, offset + limit);
+  const total = allProducts.length;
+  const hasMore = offset + limit < total;
+  
+  res.json({
+    products,
+    pagination: {
+      limit,
+      offset,
+      total,
+      hasMore
+    }
+  });
 });
 
-// Get product by ID
+// Enhanced product lookup route with dual ID support
 router.get('/:id', (req, res) => {
-  const product = dataService.getProductById(req.params.id);
-  if (!product) {
-    return res.status(404).json({ error: 'Product not found' });
+  const { id } = req.params;
+  
+  try {
+    // Support both UUID and internal ID formats
+    const product = dataService.getProductById(id);
+    
+    if (!product) {
+      return res.status(404).json({ 
+        error: 'Product not found',
+        searchedId: id,
+        supportedFormats: [
+          'UUID (e.g., 410d4b6a-1aae-407e-8d34-a27211892c58)',
+          'Internal ID (e.g., JVYDAFF12090511432SMF)'
+        ],
+        hint: dataService.isValidUUID(id) 
+          ? 'Valid UUID format but product not found'
+          : dataService.isValidInternalId(id)
+          ? 'Valid internal ID format but product not found'
+          : 'Invalid ID format'
+      });
+    }
+    
+    res.json(product);
+  } catch (error) {
+    console.error('Product lookup error:', error);
+    res.status(500).json({ error: 'Internal server error during product lookup' });
   }
-  res.json(product);
+});
+
+// Add dedicated internal ID route for explicit internal ID lookups
+router.get('/internal/:internalId', (req, res) => {
+  try {
+    const { internalId } = req.params;
+    
+    if (!dataService.isValidInternalId(internalId)) {
+      return res.status(400).json({ 
+        error: 'Invalid internal ID format',
+        expected: 'BrandID+PartNumber (e.g., JVYDAFF12090511432SMF)'
+      });
+    }
+    
+    const product = dataService.getProductByInternalId(internalId);
+    
+    if (!product) {
+      return res.status(404).json({ 
+        error: 'Product not found by internal ID',
+        internalId: internalId
+      });
+    }
+    
+    res.json(product);
+  } catch (error) {
+    console.error('Internal ID lookup error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Add brand/part number route for structured lookups
+router.get('/brand/:brand/part/:partNumber', (req, res) => {
+  try {
+    const { brand, partNumber } = req.params;
+    
+    if (!brand || !partNumber) {
+      return res.status(400).json({ 
+        error: 'Brand and part number are required',
+        example: '/api/products/brand/PROBRAND/part/PB-12345'
+      });
+    }
+    
+    const product = dataService.getProductByBrandAndPartNumber(brand, partNumber);
+    
+    if (!product) {
+      return res.status(404).json({ 
+        error: 'Product not found by brand and part number',
+        brand: brand,
+        partNumber: partNumber,
+        constructedInternalId: `${brand.toUpperCase().replace(/[^A-Z0-9]/g, '')}${partNumber.replace(/[^A-Za-z0-9]/g, '')}`
+      });
+    }
+    
+    res.json(product);
+  } catch (error) {
+    console.error('Brand/part lookup error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 // Create product
@@ -33,22 +129,79 @@ router.post('/', (req, res) => {
     const product = dataService.createProduct(req.body);
     res.status(201).json(product);
   } catch (error) {
-    res.status(400).json({ error: 'Invalid product data' });
+    res.status(400).json({ error: error instanceof Error ? error.message : 'Invalid product data' });
   }
 });
 
-// Update product
+// Batch lookup products by internal IDs
+router.post('/batch-lookup', (req, res) => {
+  try {
+    const { internalIds } = req.body;
+    
+    if (!Array.isArray(internalIds)) {
+      return res.status(400).json({ error: 'internalIds must be an array' });
+    }
+    
+    // Validate all IDs
+    const invalidIds = internalIds.filter(id => !dataService.validateInternalId(id));
+    if (invalidIds.length > 0) {
+      return res.status(400).json({ 
+        error: 'Invalid internal ID format', 
+        invalidIds 
+      });
+    }
+    
+    const products = dataService.getProductsByInternalIds(internalIds);
+    res.json(products);
+  } catch (error) {
+    res.status(500).json({ error: 'Batch lookup failed' });
+  }
+});
+
+// Generate internal ID from brand and part number
+router.post('/generate-internal-id', (req, res) => {
+  try {
+    const { brandId, partNumber } = req.body;
+    
+    if (!brandId || !partNumber) {
+      return res.status(400).json({ error: 'brandId and partNumber are required' });
+    }
+    
+    const internalId = dataService.generateInternalId(brandId, partNumber);
+    res.json({ internalId, brandId, partNumber });
+  } catch (error) {
+    res.status(400).json({ error: error instanceof Error ? error.message : 'ID generation failed' });
+  }
+});
+
+// Update product (supports both UUID and internal ID)
 router.put('/:id', (req, res) => {
-  const product = dataService.updateProduct(req.params.id, req.body);
+  const { id } = req.params;
+  
+  // Find product first to get internal ID
+  const existingProduct = dataService.getProductById(id);
+  if (!existingProduct) {
+    return res.status(404).json({ error: 'Product not found' });
+  }
+  
+  const product = dataService.updateProduct(existingProduct.internalProductId, req.body);
   if (!product) {
     return res.status(404).json({ error: 'Product not found' });
   }
   res.json(product);
 });
 
-// Delete product
+// Delete product (supports both UUID and internal ID)
 router.delete('/:id', (req, res) => {
-  const deleted = dataService.deleteProduct(req.params.id);
+  const { id } = req.params;
+  
+  // Find product first to get internal ID
+  const existingProduct = dataService.getProductById(id);
+  if (!existingProduct) {
+    return res.status(404).json({ error: 'Product not found' });
+  }
+  
+  const deleted = dataService.deleteProduct(existingProduct.internalProductId);
   if (!deleted) {
     return res.status(404).json({ error: 'Product not found' });
   }

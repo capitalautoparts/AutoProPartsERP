@@ -1,10 +1,12 @@
 // Product Profile Types
 export interface Product {
-  id: string; // Internal UUID
-  uniqueId: string; // BrandID + PartNo for deduplication
+  id: string; // Primary ID (could be UUID or Internal ID)
+  internalProductId?: string; // Internal ID (BrandID_PartNo)
+  uniqueId: string; // Unique identifier
+  brandId?: string; // Brand identifier component
   manufacturer: string;
   brand: string;
-  partNumber: string;
+  partNumber: string; // Clean part number (no special chars)
   sku: string;
   productName: string;
   shortDescription: string;

@@ -6,6 +6,7 @@ import { productsApi } from '../services/api';
 import { Product } from '../types';
 import ImportExportButtons from '../components/ImportExportButtons';
 import JobStatusModal from '../components/JobStatusModal';
+import { getBusinessFriendlyUrl } from '../utils/urlUtils';
 
 const ProductsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -13,12 +14,14 @@ const ProductsPage: React.FC = () => {
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
   const [activeJobType, setActiveJobType] = useState<'import' | 'export'>('import');
 
-  const { data: products = [], isLoading } = useQuery({
+  const { data: productsResponse, isLoading } = useQuery({
     queryKey: ['products'],
     queryFn: () => productsApi.getAll().then(res => res.data),
     staleTime: Infinity,
     cacheTime: Infinity,
   });
+  
+  const products = productsResponse?.products || [];
 
   const importExcelMutation = useMutation({
     mutationFn: productsApi.importExcel,
@@ -153,8 +156,9 @@ const ProductsPage: React.FC = () => {
                     </td>
                     <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0">
                       <button
-                        onClick={() => navigate(`/products/${product.id}`)}
+                        onClick={() => navigate(`/products/${product.internalProductId || product.id}`)}
                         className="text-blue-600 hover:text-blue-900 mr-4"
+                        title={`View ${product.internalProductId ? 'Internal ID: ' + product.internalProductId : 'ID: ' + product.id}`}
                       >
                         <Eye className="h-4 w-4" />
                       </button>

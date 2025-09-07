@@ -14,10 +14,23 @@ const ProductDetailPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('profile');
   const [activePiesTab, setActivePiesTab] = useState('item');
 
-  const { data: product, isLoading } = useQuery({
+  const { data: product, isLoading, error } = useQuery({
     queryKey: ['product', id],
-    queryFn: () => productsApi.getById(id!).then(res => res.data),
+    queryFn: async () => {
+      try {
+        const response = await productsApi.getById(id!);
+        return response.data;
+      } catch (error: any) {
+        // Enhanced error handling with format detection
+        if (error.response?.status === 404) {
+          const errorData = error.response.data;
+          throw new Error(errorData.hint || `Product not found: ${id}`);
+        }
+        throw error;
+      }
+    },
     enabled: !!id,
+    retry: false, // Don't retry on 404 errors
     staleTime: Infinity,
     cacheTime: Infinity,
   });
@@ -44,6 +57,30 @@ const ProductDetailPage: React.FC = () => {
 
   if (isLoading) {
     return <div className="flex justify-center items-center h-64">Loading...</div>;
+  }
+
+  // Enhanced error display
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <h2 className="text-lg font-semibold text-red-600 mb-2">Product Not Found</h2>
+        <p className="text-gray-600 mb-2">Could not find product with ID:</p>
+        <code className="bg-gray-100 px-2 py-1 rounded text-sm">{id}</code>
+        <div className="mt-4 text-sm text-gray-500">
+          <p className="mb-2">Supported ID formats:</p>
+          <ul className="list-disc list-inside space-y-1">
+            <li>UUID: <code>410d4b6a-1aae-407e-8d34-a27211892c58</code></li>
+            <li>Internal ID: <code>JVYDAFF12090511432SMF</code></li>
+          </ul>
+        </div>
+        <button 
+          onClick={() => navigate('/products')}
+          className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          Back to Products
+        </button>
+      </div>
+    );
   }
 
   if (!product) {
@@ -145,6 +182,10 @@ const ProductDetailPage: React.FC = () => {
 
 const ProfileTab: React.FC<{ product: any }> = ({ product }) => (
   <div className="grid grid-cols-2 gap-6">
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">Internal ID</label>
+      <input type="text" value={product.internalProductId || product.id} readOnly className="w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-50" />
+    </div>
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-2">Manufacturer</label>
       <input type="text" defaultValue={product.manufacturer} className="w-full border border-gray-300 rounded-md px-3 py-2" />

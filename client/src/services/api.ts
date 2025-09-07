@@ -11,12 +11,23 @@ const api = axios.create({
 // Products API
 export const productsApi = {
   getAll: () => api.get<Product[]>('/products'),
-  getById: (id: string) => api.get<Product>(`/products/${id}`),
+  getById: (id: string) => api.get<Product>(`/products/${id}`), // Supports both UUID and internal ID
+  getByInternalId: (internalId: string) => api.get<Product>(`/products/internal/${internalId}`),
+  getByBrandAndPart: (brand: string, partNumber: string) => 
+    api.get<Product>(`/products/brand/${brand}/part/${partNumber}`),
   create: (product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => 
     api.post<Product>('/products', product),
   update: (id: string, product: Partial<Product>) => 
-    api.put<Product>(`/products/${id}`, product),
-  delete: (id: string) => api.delete(`/products/${id}`),
+    api.put<Product>(`/products/${id}`, product), // Supports both UUID and internal ID
+  delete: (id: string) => api.delete(`/products/${id}`), // Supports both UUID and internal ID
+  batchLookup: (internalIds: string[]) => 
+    api.post<Product[]>('/products/batch-lookup', { internalIds }),
+  generateInternalId: (brandId: string, partNumber: string) => 
+    api.post('/products/generate-internal-id', { brandId, partNumber }),
+  // Utility to detect ID type and use appropriate endpoint
+  getByAnyId: async (id: string) => {
+    return await api.get<Product>(`/products/${id}`);
+  },
   importExcel: (file: File) => {
     const formData = new FormData();
     formData.append('file', file);
