@@ -279,6 +279,18 @@ router.get('/engine-reference/:baseVehicleId', async (req, res) => {
   }
 });
 
+// Get specific engine specs by BaseVehicle and Liter
+router.get('/engine-specs/:baseVehicleId/:liter', async (req, res) => {
+  try {
+    const baseVehicleId = parseInt(req.params.baseVehicleId);
+    const liter = req.params.liter;
+    const engineSpecs = await acesServiceCorrected.getEngineSpecsByLiter(baseVehicleId, liter);
+    res.json(engineSpecs);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to load engine specs' });
+  }
+});
+
 router.get('/transmission-reference/:baseVehicleId', async (req, res) => {
   try {
     const baseVehicleId = parseInt(req.params.baseVehicleId);
@@ -286,6 +298,18 @@ router.get('/transmission-reference/:baseVehicleId', async (req, res) => {
     res.json(transData);
   } catch (error) {
     res.status(500).json({ error: 'Failed to load transmission reference data' });
+  }
+});
+
+// Get specific transmission specs by BaseVehicle and Type
+router.get('/transmission-specs/:baseVehicleId/:type', async (req, res) => {
+  try {
+    const baseVehicleId = parseInt(req.params.baseVehicleId);
+    const type = req.params.type;
+    const transSpecs = await acesServiceCorrected.getTransmissionSpecsByType(baseVehicleId, type);
+    res.json(transSpecs);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to load transmission specs' });
   }
 });
 
@@ -299,6 +323,18 @@ router.get('/vehicle-systems-reference/:baseVehicleId', async (req, res) => {
   }
 });
 
+// Get specific brake specs by BaseVehicle and Type
+router.get('/brake-specs/:baseVehicleId/:type', async (req, res) => {
+  try {
+    const baseVehicleId = parseInt(req.params.baseVehicleId);
+    const type = req.params.type;
+    const brakeSpecs = await acesServiceCorrected.getBrakeSpecsByType(baseVehicleId, type);
+    res.json(brakeSpecs);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to load brake specs' });
+  }
+});
+
 router.get('/physical-specs-reference/:baseVehicleId', async (req, res) => {
   try {
     const baseVehicleId = parseInt(req.params.baseVehicleId);
@@ -309,12 +345,108 @@ router.get('/physical-specs-reference/:baseVehicleId', async (req, res) => {
   }
 });
 
+// Get specific body specs by BaseVehicle and Type
+router.get('/body-specs/:baseVehicleId/:type', async (req, res) => {
+  try {
+    const baseVehicleId = parseInt(req.params.baseVehicleId);
+    const type = req.params.type;
+    const bodySpecs = await acesServiceCorrected.getBodySpecsByType(baseVehicleId, type);
+    res.json(bodySpecs);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to load body specs' });
+  }
+});
+
 router.get('/pcdb-reference', async (req, res) => {
   try {
     const pcdbData = await acesServiceCorrected.getPCdbReferenceData();
     res.json(pcdbData);
   } catch (error) {
     res.status(500).json({ error: 'Failed to load PCdb reference data' });
+  }
+});
+
+// Get specific part specs by Category and Type
+router.get('/part-specs/:category/:partType', async (req, res) => {
+  try {
+    const category = req.params.category;
+    const partType = req.params.partType;
+    const partSpecs = await acesServiceCorrected.getPartSpecsByType(category, partType);
+    res.json(partSpecs);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to load part specs' });
+  }
+});
+
+// Get specific drive specs by BaseVehicle and Type
+router.get('/drive-specs/:baseVehicleId/:type', async (req, res) => {
+  try {
+    const baseVehicleId = parseInt(req.params.baseVehicleId);
+    const type = req.params.type;
+    const driveSpecs = await acesServiceCorrected.getDriveSpecsByType(baseVehicleId, type);
+    res.json(driveSpecs);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to load drive specs' });
+  }
+});
+
+// Get specific spring specs by BaseVehicle and Type
+router.get('/spring-specs/:baseVehicleId/:type', async (req, res) => {
+  try {
+    const baseVehicleId = parseInt(req.params.baseVehicleId);
+    const type = req.params.type;
+    const springSpecs = await acesServiceCorrected.getSpringSpecsByType(baseVehicleId, type);
+    res.json(springSpecs);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to load spring specs' });
+  }
+});
+
+// Get specific steering specs by BaseVehicle and Type
+router.get('/steering-specs/:baseVehicleId/:type', async (req, res) => {
+  try {
+    const baseVehicleId = parseInt(req.params.baseVehicleId);
+    const type = req.params.type;
+    const steeringSpecs = await acesServiceCorrected.getSteeringSpecsByType(baseVehicleId, type);
+    res.json(steeringSpecs);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to load steering specs' });
+  }
+});
+
+// Get specific wheelbase specs by BaseVehicle and Value
+router.get('/wheelbase-specs/:baseVehicleId/:value', async (req, res) => {
+  try {
+    const baseVehicleId = parseInt(req.params.baseVehicleId);
+    const value = req.params.value;
+    const wheelbaseSpecs = await acesServiceCorrected.getWheelbaseSpecsByValue(baseVehicleId, value);
+    res.json(wheelbaseSpecs);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to load wheelbase specs' });
+  }
+});
+
+// Get specific bed specs by BaseVehicle and Type
+router.get('/bed-specs/:baseVehicleId/:type', async (req, res) => {
+  try {
+    const baseVehicleId = parseInt(req.params.baseVehicleId);
+    const type = req.params.type;
+    const bedSpecs = await acesServiceCorrected.getBedSpecsByType(baseVehicleId, type);
+    res.json(bedSpecs);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to load bed specs' });
+  }
+});
+
+// Get specific manufacturer body code specs by BaseVehicle and Code
+router.get('/mfrbody-specs/:baseVehicleId/:code', async (req, res) => {
+  try {
+    const baseVehicleId = parseInt(req.params.baseVehicleId);
+    const code = req.params.code;
+    const mfrBodySpecs = await acesServiceCorrected.getMfrBodySpecsByCode(baseVehicleId, code);
+    res.json(mfrBodySpecs);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to load manufacturer body specs' });
   }
 });
 

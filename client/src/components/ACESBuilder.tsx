@@ -79,31 +79,51 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
     engineVersion: ''
   });
 
-  // Smart engine relationship handler
-  const handleEngineSelection = (field: string, value: string) => {
+  // Smart engine relationship handler with real VCdb data
+  const handleEngineSelection = async (field: string, value: string) => {
     let updates: any = { [field]: value };
     
-    // Auto-populate related engine fields based on liter selection
-    if (field === 'liter' && value) {
-      const literValue = parseFloat(value);
-      if (literValue) {
-        updates.cc = Math.round(literValue * 1000).toString(); // Convert L to CC
-        updates.cid = Math.round(literValue * 61.024).toString(); // Convert L to CID
-        
-        // Estimate cylinders based on displacement
-        if (literValue <= 1.5) updates.cylinders = '4';
-        else if (literValue <= 3.0) updates.cylinders = '4';
-        else if (literValue <= 4.5) updates.cylinders = '6';
-        else updates.cylinders = '8';
-        
-        // Estimate block type based on cylinders
-        if (updates.cylinders === '4') updates.blockType = 'I';
-        else if (updates.cylinders === '6') updates.blockType = 'V';
-        else updates.blockType = 'V';
+    // Auto-populate from real engine data when liter is selected
+    if (field === 'liter' && value && vehicleData.baseVehicleId) {
+      try {
+        const response = await fetch(`/api/aces-corrected/engine-specs/${vehicleData.baseVehicleId}/${value}`);
+        if (response.ok) {
+          const engineSpecs = await response.json();
+          if (engineSpecs) {
+            updates = {
+              ...updates,
+              cc: engineSpecs.cc || Math.round(parseFloat(value) * 1000).toString(),
+              cid: engineSpecs.cid || Math.round(parseFloat(value) * 61.024).toString(),
+              cylinders: engineSpecs.cylinders,
+              blockType: engineSpecs.blockType,
+              boreInches: engineSpecs.boreInches,
+              boreMetric: engineSpecs.boreMetric,
+              strokeInches: engineSpecs.strokeInches,
+              strokeMetric: engineSpecs.strokeMetric,
+              cylinderHeadType: engineSpecs.cylinderHeadType,
+              aspiration: engineSpecs.aspiration,
+              valvesPerEngine: engineSpecs.valvesPerEngine,
+              ignitionSystemType: engineSpecs.ignitionSystemType,
+              horsePower: engineSpecs.horsePower,
+              kilowattPower: engineSpecs.kilowattPower,
+              fuelType: engineSpecs.fuelType,
+              engineManufacturer: engineSpecs.engineManufacturer,
+              engineVIN: engineSpecs.engineVIN
+            };
+          }
+        }
+      } catch (error) {
+        console.log('Using fallback engine calculations');
+        // Fallback to calculations if API fails
+        const literValue = parseFloat(value);
+        if (literValue) {
+          updates.cc = Math.round(literValue * 1000).toString();
+          updates.cid = Math.round(literValue * 61.024).toString();
+        }
       }
     }
     
-    // Auto-populate CC when liter changes
+    // Auto-populate CC when liter changes (fallback)
     if (field === 'cc' && value) {
       const ccValue = parseInt(value);
       if (ccValue) {
@@ -125,27 +145,44 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
     elecControlled: ''
   });
 
-  // Smart transmission relationship handler
-  const handleTransmissionSelection = (field: string, value: string) => {
+  // Smart transmission relationship handler with real VCdb data
+  const handleTransmissionSelection = async (field: string, value: string) => {
     let updates: any = { [field]: value };
     
-    // Auto-populate related transmission fields
-    if (field === 'type' && value) {
-      // Auto-determine control type based on transmission type
-      if (value.toLowerCase().includes('automatic') || value.toLowerCase().includes('cvt')) {
-        updates.control = 'Automatic';
-        updates.elecControlled = 'Yes';
-      } else if (value.toLowerCase().includes('manual')) {
-        updates.control = 'Manual';
-        updates.elecControlled = 'No';
+    // Auto-populate from actual transmission selection
+    if (field === 'transmission' && value && vehicleData.baseVehicleId) {
+      const selectedTransmission = components.transmissions.find(t => t.TransmissionID === value);
+      if (selectedTransmission) {
+        updates = {
+          ...updates,
+          speeds: selectedTransmission.NumSpeeds,
+          control: selectedTransmission.transmissionTypeName,
+          type: selectedTransmission.TransmissionTypeID,
+          mfrName: selectedTransmission.TransmissionMfrID,
+          elecControlled: selectedTransmission.TransmissionElecControlledID
+        };
       }
     }
     
-    // Auto-populate speeds based on type
-    if (field === 'speeds' && value) {
-      const speedNum = parseInt(value);
-      if (speedNum >= 6) {
-        updates.elecControlled = 'Yes';
+    // Auto-populate from type selection
+    if (field === 'type' && value && vehicleData.baseVehicleId) {
+      try {
+        const response = await fetch(`/api/aces-corrected/transmission-specs/${vehicleData.baseVehicleId}/${value}`);
+        if (response.ok) {
+          const transSpecs = await response.json();
+          if (transSpecs) {
+            updates = {
+              ...updates,
+              speeds: transSpecs.speeds,
+              control: transSpecs.control,
+              mfrName: transSpecs.mfrName,
+              mfrCode: transSpecs.mfrCode,
+              elecControlled: transSpecs.elecControlled
+            };
+          }
+        }
+      } catch (error) {
+        console.log('Using fallback transmission logic');
       }
     }
     
@@ -165,24 +202,92 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
     steeringSystem: ''
   });
 
-  // Smart vehicle systems relationship handler
-  const handleVehicleSystemSelection = (field: string, value: string) => {
+  // Smart vehicle systems relationship handler with real VCdb data
+  const handleVehicleSystemSelection = async (field: string, value: string) => {
     let updates: any = { [field]: value };
     
-    // Auto-populate brake system relationships
-    if (field === 'frontBrake' && value) {
-      if (value.toLowerCase().includes('disc')) {
-        updates.brakeSystem = 'Hydraulic';
-        updates.brakeABS = 'Available';
+    // Auto-populate from actual brake config selection
+    if (field === 'brakeConfig' && value && vehicleData.baseVehicleId) {
+      const selectedBrakeConfig = components.brakeConfigs.find(bc => bc.BrakeConfigID === value);
+      if (selectedBrakeConfig) {
+        updates = {
+          ...updates,
+          frontBrake: selectedBrakeConfig.FrontBrakeTypeID,
+          rearBrake: selectedBrakeConfig.RearBrakeTypeID,
+          brakeSystem: selectedBrakeConfig.BrakeSystemID,
+          brakeABS: selectedBrakeConfig.BrakeABSID
+        };
       }
     }
     
-    // Auto-populate steering relationships
-    if (field === 'steeringType' && value) {
-      if (value.toLowerCase().includes('power')) {
-        updates.steeringSystem = 'Power Assisted';
-      } else {
-        updates.steeringSystem = 'Manual';
+    // Auto-populate brake system from front brake selection
+    if (field === 'frontBrake' && value && vehicleData.baseVehicleId) {
+      try {
+        const response = await fetch(`/api/aces-corrected/brake-specs/${vehicleData.baseVehicleId}/${value}`);
+        if (response.ok) {
+          const brakeSpecs = await response.json();
+          if (brakeSpecs) {
+            updates = {
+              ...updates,
+              rearBrake: brakeSpecs.rearBrake,
+              brakeSystem: brakeSpecs.brakeSystem,
+              brakeABS: brakeSpecs.brakeABS
+            };
+          }
+        }
+      } catch (error) {
+        console.log('Using fallback brake logic');
+      }
+    }
+    
+    // Auto-populate spring relationships
+    if (field === 'frontSpring' && value && vehicleData.baseVehicleId) {
+      try {
+        const response = await fetch(`/api/aces-corrected/spring-specs/${vehicleData.baseVehicleId}/${value}`);
+        if (response.ok) {
+          const springSpecs = await response.json();
+          if (springSpecs) {
+            updates = {
+              ...updates,
+              rearSpring: springSpecs.rearSpring
+            };
+          }
+        }
+      } catch (error) {
+        console.log('Using fallback spring logic');
+      }
+    }
+    
+    // Auto-populate steering relationships from real data
+    if (field === 'steeringType' && value && vehicleData.baseVehicleId) {
+      try {
+        const response = await fetch(`/api/aces-corrected/steering-specs/${vehicleData.baseVehicleId}/${value}`);
+        if (response.ok) {
+          const steeringSpecs = await response.json();
+          if (steeringSpecs) {
+            updates = {
+              ...updates,
+              steeringSystem: steeringSpecs.steeringSystem
+            };
+          }
+        }
+      } catch (error) {
+        console.log('Using fallback steering logic');
+      }
+    }
+    
+    // Auto-populate drive type relationships
+    if (field === 'driveType' && value && vehicleData.baseVehicleId) {
+      try {
+        const response = await fetch(`/api/aces-corrected/drive-specs/${vehicleData.baseVehicleId}/${value}`);
+        if (response.ok) {
+          const driveSpecs = await response.json();
+          if (driveSpecs) {
+            // Drive type is standalone, no additional fields to populate
+          }
+        }
+      } catch (error) {
+        console.log('Using fallback drive logic');
       }
     }
     
@@ -201,48 +306,136 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
     mfrBodyCode: ''
   });
 
-  // Smart physical specs relationship handler
-  const handlePhysicalSpecSelection = (field: string, value: string) => {
+  // Smart physical specs relationship handler with real VCdb data
+  const handlePhysicalSpecSelection = async (field: string, value: string) => {
     let updates: any = { [field]: value };
     
-    // Auto-convert wheelbase measurements
-    if (field === 'wheelbaseInches' && value) {
+    // Auto-populate from actual body config selection
+    if (field === 'bodyConfig' && value && vehicleData.baseVehicleId) {
+      const selectedBodyConfig = components.bodyConfigs.find(bc => bc.BodyTypeID === value);
+      if (selectedBodyConfig) {
+        updates = {
+          ...updates,
+          bodyType: selectedBodyConfig.BodyTypeID,
+          numDoors: selectedBodyConfig.BodyNumDoorsID
+        };
+      }
+    }
+    
+    // Auto-populate body specs from body type selection
+    if (field === 'bodyType' && value && vehicleData.baseVehicleId) {
+      try {
+        const response = await fetch(`/api/aces-corrected/body-specs/${vehicleData.baseVehicleId}/${value}`);
+        if (response.ok) {
+          const bodySpecs = await response.json();
+          if (bodySpecs) {
+            updates = {
+              ...updates,
+              numDoors: bodySpecs.numDoors
+            };
+          }
+        }
+      } catch (error) {
+        console.log('Using fallback body logic');
+      }
+    }
+    
+    // Auto-populate wheelbase from BaseVehicle selection
+    if (field === 'loadWheelbase' && vehicleData.baseVehicleId) {
+      if (physicalSpecsRefData.wheelbases && physicalSpecsRefData.wheelbases.length > 0) {
+        const wheelbase = physicalSpecsRefData.wheelbases[0]; // Use first available wheelbase
+        updates = {
+          ...updates,
+          wheelbaseInches: wheelbase.WheelBase,
+          wheelbaseMetric: wheelbase.WheelBaseMetric
+        };
+      }
+    }
+    
+    // Auto-populate wheelbase conversions from real data
+    if ((field === 'wheelbaseInches' || field === 'wheelbaseMetric') && value && vehicleData.baseVehicleId) {
+      try {
+        const response = await fetch(`/api/aces-corrected/wheelbase-specs/${vehicleData.baseVehicleId}/${value}`);
+        if (response.ok) {
+          const wheelbaseSpecs = await response.json();
+          if (wheelbaseSpecs) {
+            updates = {
+              ...updates,
+              wheelbaseInches: wheelbaseSpecs.wheelbaseInches,
+              wheelbaseMetric: wheelbaseSpecs.wheelbaseMetric
+            };
+          }
+        }
+      } catch (error) {
+        console.log('Using fallback wheelbase conversion');
+        if (field === 'wheelbaseInches' && value) {
+          const inches = parseFloat(value);
+          if (inches) updates.wheelbaseMetric = Math.round(inches * 25.4).toString();
+        }
+        if (field === 'wheelbaseMetric' && value) {
+          const mm = parseFloat(value);
+          if (mm) updates.wheelbaseInches = (mm / 25.4).toFixed(1);
+        }
+      }
+    }
+    
+    // Auto-populate bed specs from BaseVehicle (truck only)
+    if (field === 'loadBedSpecs' && vehicleData.baseVehicleId && physicalSpecsRefData.isTruck) {
+      if (physicalSpecsRefData.bedTypes && physicalSpecsRefData.bedTypes.length > 0) {
+        const bedType = physicalSpecsRefData.bedTypes[0];
+        const bedLength = physicalSpecsRefData.bedLengths && physicalSpecsRefData.bedLengths[0];
+        updates = {
+          ...updates,
+          bedType: bedType.BedTypeID,
+          bedLengthInches: bedLength?.BedLength,
+          bedLengthMetric: bedLength?.BedLengthMetric
+        };
+      }
+    }
+    
+    // Auto-populate bed specs from bed type selection
+    if (field === 'bedType' && value && vehicleData.baseVehicleId) {
+      try {
+        const response = await fetch(`/api/aces-corrected/bed-specs/${vehicleData.baseVehicleId}/${value}`);
+        if (response.ok) {
+          const bedSpecs = await response.json();
+          if (bedSpecs) {
+            updates = {
+              ...updates,
+              bedLengthInches: bedSpecs.bedLengthInches,
+              bedLengthMetric: bedSpecs.bedLengthMetric
+            };
+          }
+        }
+      } catch (error) {
+        console.log('Using fallback bed logic');
+      }
+    }
+    
+    // Auto-populate manufacturer body code specs
+    if (field === 'mfrBodyCode' && value && vehicleData.baseVehicleId) {
+      try {
+        const response = await fetch(`/api/aces-corrected/mfrbody-specs/${vehicleData.baseVehicleId}/${value}`);
+        if (response.ok) {
+          const mfrBodySpecs = await response.json();
+          if (mfrBodySpecs) {
+            // Manufacturer body code is standalone, name is already in dropdown
+          }
+        }
+      } catch (error) {
+        console.log('Using fallback manufacturer body logic');
+      }
+    }
+    
+    // Fallback bed length conversions
+    if (field === 'bedLengthInches' && value && !updates.bedLengthMetric) {
       const inches = parseFloat(value);
-      if (inches) {
-        updates.wheelbaseMetric = Math.round(inches * 25.4).toString();
-      }
+      if (inches) updates.bedLengthMetric = Math.round(inches * 25.4).toString();
     }
     
-    if (field === 'wheelbaseMetric' && value) {
+    if (field === 'bedLengthMetric' && value && !updates.bedLengthInches) {
       const mm = parseFloat(value);
-      if (mm) {
-        updates.wheelbaseInches = (mm / 25.4).toFixed(1);
-      }
-    }
-    
-    // Auto-convert bed length measurements
-    if (field === 'bedLengthInches' && value) {
-      const inches = parseFloat(value);
-      if (inches) {
-        updates.bedLengthMetric = Math.round(inches * 25.4).toString();
-      }
-    }
-    
-    if (field === 'bedLengthMetric' && value) {
-      const mm = parseFloat(value);
-      if (mm) {
-        updates.bedLengthInches = (mm / 25.4).toFixed(1);
-      }
-    }
-    
-    // Auto-populate door count based on body type
-    if (field === 'bodyType' && value) {
-      const bodyTypeLower = value.toLowerCase();
-      if (bodyTypeLower.includes('coupe')) updates.numDoors = '2';
-      else if (bodyTypeLower.includes('sedan')) updates.numDoors = '4';
-      else if (bodyTypeLower.includes('wagon')) updates.numDoors = '4';
-      else if (bodyTypeLower.includes('suv')) updates.numDoors = '4';
-      else if (bodyTypeLower.includes('pickup')) updates.numDoors = '2';
+      if (mm) updates.bedLengthInches = (mm / 25.4).toFixed(1);
     }
     
     setPhysicalSpecsFilters(prev => ({ ...prev, ...updates }));
@@ -259,11 +452,38 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
     notes: ''
   });
 
-  // Smart item specs relationship handler
-  const handleItemSpecSelection = (field: string, value: string) => {
+  // Smart item specs relationship handler with real PCdb data
+  const handleItemSpecSelection = async (field: string, value: string) => {
     let updates: any = { [field]: value };
     
-    // Auto-populate subcategory based on category
+    // Auto-populate category and subcategory when part type is selected
+    if (field === 'partType' && value) {
+      console.log('Part Type selected:', value);
+      console.log('PCdb data:', { partTypes: pcdbRefData.partTypes?.length, subCategories: pcdbRefData.subCategories?.length, categories: pcdbRefData.categories?.length });
+      
+      const selectedPart = pcdbRefData.partTypes?.find((pt: any) => pt.PartTerminologyID === value);
+      console.log('Selected part:', selectedPart);
+      
+      if (selectedPart) {
+        if (selectedPart.SubCategoryID) {
+          updates.subCategory = selectedPart.SubCategoryID;
+          console.log('Setting subCategory to:', selectedPart.SubCategoryID);
+          
+          const subCategory = pcdbRefData.subCategories?.find((sc: any) => sc.SubCategoryID === selectedPart.SubCategoryID);
+          console.log('Found subCategory:', subCategory);
+          
+          if (subCategory && subCategory.CategoryID) {
+            updates.category = subCategory.CategoryID;
+            console.log('Setting category to:', subCategory.CategoryID);
+          }
+        }
+        
+        updates.mfrLabel = selectedPart.PartTerminologyName;
+        updates.quantity = 1;
+      }
+    }
+    
+    // Auto-populate subcategory based on category (PCdb relationships)
     if (field === 'category' && value && pcdbRefData.subCategories) {
       const relatedSubCats = pcdbRefData.subCategories.filter((sc: any) => 
         sc.CategoryID === value
@@ -273,32 +493,13 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
       }
     }
     
-    // Auto-populate part type based on subcategory
+    // Auto-populate part type based on subcategory (PCdb relationships)
     if (field === 'subCategory' && value && pcdbRefData.partTypes) {
       const relatedPartTypes = pcdbRefData.partTypes.filter((pt: any) => 
         pt.SubCategoryID === value
       );
       if (relatedPartTypes.length === 1) {
         updates.partType = relatedPartTypes[0].PartTerminologyID;
-      }
-    }
-    
-    // Auto-suggest quantity based on part type
-    if (field === 'partType' && value) {
-      const partTypeName = pcdbRefData.partTypes?.find((pt: any) => 
-        pt.PartTerminologyID === value
-      )?.PartTerminologyName?.toLowerCase();
-      
-      if (partTypeName) {
-        if (partTypeName.includes('brake pad') || partTypeName.includes('brake shoe')) {
-          updates.quantity = 4; // Typically 4 brake pads per axle
-        } else if (partTypeName.includes('spark plug')) {
-          updates.quantity = parseInt(engineFilters.cylinders) || 4;
-        } else if (partTypeName.includes('tire')) {
-          updates.quantity = 4;
-        } else if (partTypeName.includes('wiper blade')) {
-          updates.quantity = 2;
-        }
       }
     }
     
@@ -916,13 +1117,15 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                     <select 
                       value={engineFilters.strokeInches}
                       onChange={(e) => handleEngineSelection('strokeInches', e.target.value)}
-                      className="w-full p-2 border rounded text-sm"
+                      className={`w-full p-2 border rounded text-sm ${engineFilters.strokeInches && engineFilters.liter ? 'bg-green-50' : ''}`}
+                      title={engineFilters.strokeInches && engineFilters.liter ? 'Auto-populated from VCdb EngineBase' : ''}
                     >
                       <option value="">Any Stroke (in)</option>
                       {engineRefData.strokeInches?.map((stroke: string) => (
                         <option key={stroke} value={stroke}>{stroke}"</option>
                       ))}
                     </select>
+                    {engineFilters.strokeInches && engineFilters.liter && <p className="text-xs text-green-600 mt-1">✓ Auto-populated</p>}
                   </div>
                 </div>
                 
@@ -933,13 +1136,15 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                     <select 
                       value={engineFilters.cylinderHeadType}
                       onChange={(e) => handleEngineSelection('cylinderHeadType', e.target.value)}
-                      className="w-full p-2 border rounded text-sm"
+                      className={`w-full p-2 border rounded text-sm ${engineFilters.cylinderHeadType && engineFilters.liter ? 'bg-green-50' : ''}`}
+                      title={engineFilters.cylinderHeadType && engineFilters.liter ? 'Auto-populated from VCdb EngineConfig' : ''}
                     >
                       <option value="">Any Head Type</option>
                       {engineRefData.cylinderHeadTypes?.map((cht: any) => (
                         <option key={cht.CylinderHeadTypeID} value={cht.CylinderHeadTypeID}>{cht.CylinderHeadTypeName}</option>
                       ))}
                     </select>
+                    {engineFilters.cylinderHeadType && engineFilters.liter && <p className="text-xs text-green-600 mt-1">✓ Auto-populated</p>}
                   </div>
                   
                   <div>
@@ -947,13 +1152,15 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                     <select 
                       value={engineFilters.aspiration}
                       onChange={(e) => handleEngineSelection('aspiration', e.target.value)}
-                      className="w-full p-2 border rounded text-sm"
+                      className={`w-full p-2 border rounded text-sm ${engineFilters.aspiration && engineFilters.liter ? 'bg-green-50' : ''}`}
+                      title={engineFilters.aspiration && engineFilters.liter ? 'Auto-populated from VCdb EngineConfig' : ''}
                     >
                       <option value="">Any Aspiration</option>
                       {engineRefData.aspirations?.map((asp: any) => (
                         <option key={asp.AspirationID} value={asp.AspirationID}>{asp.AspirationName}</option>
                       ))}
                     </select>
+                    {engineFilters.aspiration && engineFilters.liter && <p className="text-xs text-green-600 mt-1">✓ Auto-populated</p>}
                   </div>
                   
                   <div>
@@ -961,13 +1168,15 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                     <select 
                       value={engineFilters.valvesPerEngine}
                       onChange={(e) => handleEngineSelection('valvesPerEngine', e.target.value)}
-                      className="w-full p-2 border rounded text-sm"
+                      className={`w-full p-2 border rounded text-sm ${engineFilters.valvesPerEngine && engineFilters.liter ? 'bg-green-50' : ''}`}
+                      title={engineFilters.valvesPerEngine && engineFilters.liter ? 'Auto-populated from VCdb EngineConfig' : ''}
                     >
                       <option value="">Any Valves</option>
                       {engineRefData.valves?.map((valve: any) => (
                         <option key={valve.ValvesID} value={valve.ValvesID}>{valve.ValvesPerEngine} Valves</option>
                       ))}
                     </select>
+                    {engineFilters.valvesPerEngine && engineFilters.liter && <p className="text-xs text-green-600 mt-1">✓ Auto-populated</p>}
                   </div>
                 </div>
                 
@@ -978,13 +1187,15 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                     <select 
                       value={engineFilters.horsePower}
                       onChange={(e) => handleEngineSelection('horsePower', e.target.value)}
-                      className="w-full p-2 border rounded text-sm"
+                      className={`w-full p-2 border rounded text-sm ${engineFilters.horsePower && engineFilters.liter ? 'bg-green-50' : ''}`}
+                      title={engineFilters.horsePower && engineFilters.liter ? 'Auto-populated from VCdb PowerOutput' : ''}
                     >
                       <option value="">Any HP</option>
                       {engineRefData.powerOutputs?.map((po: any) => (
                         <option key={po.PowerOutputID} value={po.PowerOutputID}>{po.HorsePower} HP</option>
                       ))}
                     </select>
+                    {engineFilters.horsePower && engineFilters.liter && <p className="text-xs text-green-600 mt-1">✓ Auto-populated</p>}
                   </div>
                   
                   <div>
@@ -992,13 +1203,15 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                     <select 
                       value={engineFilters.engineManufacturer}
                       onChange={(e) => handleEngineSelection('engineManufacturer', e.target.value)}
-                      className="w-full p-2 border rounded text-sm"
+                      className={`w-full p-2 border rounded text-sm ${engineFilters.engineManufacturer && engineFilters.liter ? 'bg-green-50' : ''}`}
+                      title={engineFilters.engineManufacturer && engineFilters.liter ? 'Auto-populated from VCdb Mfr' : ''}
                     >
                       <option value="">Any Manufacturer</option>
                       {engineRefData.manufacturers?.map((mfr: any) => (
                         <option key={mfr.MfrID} value={mfr.MfrID}>{mfr.MfrName}</option>
                       ))}
                     </select>
+                    {engineFilters.engineManufacturer && engineFilters.liter && <p className="text-xs text-green-600 mt-1">✓ Auto-populated</p>}
                   </div>
                   
                   <div>
@@ -1006,13 +1219,15 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                     <select 
                       value={engineFilters.engineVIN}
                       onChange={(e) => handleEngineSelection('engineVIN', e.target.value)}
-                      className="w-full p-2 border rounded text-sm"
+                      className={`w-full p-2 border rounded text-sm ${engineFilters.engineVIN && engineFilters.liter ? 'bg-green-50' : ''}`}
+                      title={engineFilters.engineVIN && engineFilters.liter ? 'Auto-populated from VCdb EngineVIN' : ''}
                     >
                       <option value="">Any VIN</option>
                       {engineRefData.engineVINs?.map((evin: any) => (
                         <option key={evin.EngineVINID} value={evin.EngineVINID}>{evin.EngineVINName}</option>
                       ))}
                     </select>
+                    {engineFilters.engineVIN && engineFilters.liter && <p className="text-xs text-green-600 mt-1">✓ Auto-populated</p>}
                   </div>
                 </div>
                 
@@ -1033,6 +1248,27 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
           <div className="space-y-4">
             {vehicleData.baseVehicleId ? (
               <>
+                {/* Transmission Selection */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium mb-1">Transmission</label>
+                  <select 
+                    value={selectedComponents.transmission}
+                    onChange={(e) => {
+                      setSelectedComponents({...selectedComponents, transmission: e.target.value});
+                      handleTransmissionSelection('transmission', e.target.value);
+                    }}
+                    className="w-full p-2 border rounded text-sm"
+                  >
+                    <option value="">Select Transmission</option>
+                    {components.transmissions.map(trans => (
+                      <option key={trans.TransmissionID} value={trans.TransmissionID}>
+                        {trans.displayName}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">{components.transmissions.length} available</p>
+                </div>
+                
                 {/* Primary Transmission Fields */}
                 <div className="grid grid-cols-3 gap-4">
                   <div>
@@ -1154,6 +1390,27 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
           <div className="space-y-4">
             {vehicleData.baseVehicleId ? (
               <>
+                {/* Brake Configuration Selection */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium mb-1">Brake Configuration</label>
+                  <select 
+                    value={selectedComponents.brakeConfig}
+                    onChange={(e) => {
+                      setSelectedComponents({...selectedComponents, brakeConfig: e.target.value});
+                      handleVehicleSystemSelection('brakeConfig', e.target.value);
+                    }}
+                    className="w-full p-2 border rounded text-sm"
+                  >
+                    <option value="">Select Brake Configuration</option>
+                    {components.brakeConfigs.map(brake => (
+                      <option key={brake.BrakeConfigID} value={brake.BrakeConfigID}>
+                        {brake.displayName}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">{components.brakeConfigs.length} available</p>
+                </div>
+                
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-1">Front Brake</label>
@@ -1375,6 +1632,18 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
           <div className="space-y-4">
             {vehicleData.baseVehicleId ? (
               <>
+                {/* Auto-load Wheelbase Button */}
+                <div className="mb-4">
+                  <button
+                    onClick={() => handlePhysicalSpecSelection('loadWheelbase', 'true')}
+                    className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700"
+                    disabled={!vehicleData.baseVehicleId}
+                  >
+                    Load Wheelbase Data
+                  </button>
+                  <p className="text-xs text-gray-500 mt-1">Auto-populate wheelbase from BaseVehicle</p>
+                </div>
+                
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-1">Base Inches</label>
@@ -1429,6 +1698,18 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
             {vehicleData.baseVehicleId ? (
               physicalSpecsRefData.isTruck ? (
                 <>
+                  {/* Auto-load Bed Specs Button */}
+                  <div className="mb-4">
+                    <button
+                      onClick={() => handlePhysicalSpecSelection('loadBedSpecs', 'true')}
+                      className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700"
+                      disabled={!vehicleData.baseVehicleId}
+                    >
+                      Load Bed Specifications
+                    </button>
+                    <p className="text-xs text-gray-500 mt-1">Auto-populate bed specs from BaseVehicle</p>
+                  </div>
+                  
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium mb-1">Bed Type</label>
@@ -1595,13 +1876,15 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                 <select 
                   value={itemSpecs.category}
                   onChange={(e) => handleItemSpecSelection('category', e.target.value)}
-                  className="w-full p-2 border rounded text-sm"
+                  className={`w-full p-2 border rounded text-sm ${itemSpecs.category && itemSpecs.partType ? 'bg-green-50' : ''}`}
+                  title={itemSpecs.category && itemSpecs.partType ? 'Auto-populated from Part Type selection' : ''}
                 >
                   <option value="">Select Category</option>
                   {pcdbRefData.categories?.map((cat: any) => (
                     <option key={cat.CategoryID} value={cat.CategoryID}>{cat.CategoryName}</option>
                   ))}
                 </select>
+                {itemSpecs.category && itemSpecs.partType && <p className="text-xs text-green-600 mt-1">✓ Auto-selected</p>}
               </div>
               
               <div>
@@ -1609,31 +1892,33 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                 <select 
                   value={itemSpecs.subCategory}
                   onChange={(e) => handleItemSpecSelection('subCategory', e.target.value)}
-                  className={`w-full p-2 border rounded text-sm ${itemSpecs.subCategory && itemSpecs.category ? 'bg-green-50' : ''}`}
-                  title={itemSpecs.subCategory && itemSpecs.category ? 'Auto-populated from Category selection' : ''}
+                  className={`w-full p-2 border rounded text-sm ${itemSpecs.subCategory && itemSpecs.partType ? 'bg-green-50' : ''}`}
+                  title={itemSpecs.subCategory && itemSpecs.partType ? 'Auto-populated from Part Type selection' : ''}
                 >
                   <option value="">Select Sub Category</option>
                   {pcdbRefData.subCategories?.map((subCat: any) => (
                     <option key={subCat.SubCategoryID} value={subCat.SubCategoryID}>{subCat.SubCategoryName}</option>
                   ))}
                 </select>
-                {itemSpecs.subCategory && itemSpecs.category && <p className="text-xs text-green-600 mt-1">✓ Auto-selected</p>}
+                {itemSpecs.subCategory && itemSpecs.partType && <p className="text-xs text-green-600 mt-1">✓ Auto-selected</p>}
               </div>
               
               <div>
                 <label className="block text-sm font-medium mb-1">Part Type</label>
                 <select 
                   value={itemSpecs.partType}
-                  onChange={(e) => handleItemSpecSelection('partType', e.target.value)}
-                  className={`w-full p-2 border rounded text-sm ${itemSpecs.partType && itemSpecs.subCategory ? 'bg-green-50' : ''}`}
-                  title={itemSpecs.partType && itemSpecs.subCategory ? 'Auto-populated from Sub Category selection' : ''}
+                  onChange={(e) => {
+                    console.log('Part Type onChange triggered:', e.target.value);
+                    handleItemSpecSelection('partType', e.target.value);
+                  }}
+                  className="w-full p-2 border rounded text-sm"
                 >
                   <option value="">Select Part Type</option>
                   {pcdbRefData.partTypes?.map((pt: any) => (
                     <option key={pt.PartTerminologyID} value={pt.PartTerminologyID}>{pt.PartTerminologyName}</option>
                   ))}
                 </select>
-                {itemSpecs.partType && itemSpecs.subCategory && <p className="text-xs text-green-600 mt-1">✓ Auto-selected</p>}
+                <p className="text-xs text-gray-500 mt-1">{pcdbRefData.partTypes?.length || 0} part types available</p>
               </div>
             </div>
             
@@ -1643,13 +1928,15 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                 <select 
                   value={itemSpecs.position}
                   onChange={(e) => handleItemSpecSelection('position', e.target.value)}
-                  className="w-full p-2 border rounded text-sm"
+                  className={`w-full p-2 border rounded text-sm ${itemSpecs.position && itemSpecs.partType ? 'bg-green-50' : ''}`}
+                  title={itemSpecs.position && itemSpecs.partType ? 'Auto-suggested based on part type' : ''}
                 >
                   <option value="">Select Position</option>
                   {pcdbRefData.positions?.map((pos: any) => (
                     <option key={pos.PositionID} value={pos.PositionID}>{pos.Position}</option>
                   ))}
                 </select>
+                {itemSpecs.position && itemSpecs.partType && <p className="text-xs text-green-600 mt-1">✓ Auto-suggested</p>}
               </div>
               
               <div>
@@ -1671,9 +1958,11 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                   type="text"
                   value={itemSpecs.mfrLabel}
                   onChange={(e) => handleItemSpecSelection('mfrLabel', e.target.value)}
-                  className="w-full p-2 border rounded text-sm"
+                  className={`w-full p-2 border rounded text-sm ${itemSpecs.mfrLabel && itemSpecs.partType ? 'bg-green-50' : ''}`}
+                  title={itemSpecs.mfrLabel && itemSpecs.partType ? 'Auto-populated from part type' : ''}
                   placeholder="Manufacturer label"
                 />
+                {itemSpecs.mfrLabel && itemSpecs.partType && <p className="text-xs text-green-600 mt-1">✓ Auto-populated</p>}
               </div>
             </div>
             

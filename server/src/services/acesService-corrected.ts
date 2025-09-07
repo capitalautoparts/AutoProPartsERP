@@ -543,6 +543,320 @@ export class ACESServiceCorrected {
   }
 
   /**
+   * Get specific engine specs by BaseVehicle and Liter
+   */
+  async getEngineSpecsByLiter(baseVehicleId: number, liter: string): Promise<any> {
+    const engineConfigs = await this.getEngineConfigsByBaseVehicle(baseVehicleId);
+    const engineBases = extractedDatabaseService.getTableData('VCdb', '20231026_EngineBase');
+    const aspirations = extractedDatabaseService.getTableData('VCdb', '20231026_Aspiration');
+    const fuelTypes = extractedDatabaseService.getTableData('VCdb', '20231026_FuelType');
+    const powerOutputs = extractedDatabaseService.getTableData('VCdb', '20231026_PowerOutput');
+    const manufacturers = extractedDatabaseService.getTableData('VCdb', '20231026_Mfr');
+    const cylinderHeadTypes = extractedDatabaseService.getTableData('VCdb', '20231026_CylinderHeadType');
+    const valves = extractedDatabaseService.getTableData('VCdb', '20231026_Valves');
+    const engineVINs = extractedDatabaseService.getTableData('VCdb', '20231026_EngineVIN');
+    const ignitionTypes = extractedDatabaseService.getTableData('VCdb', '20231026_IgnitionSystemType');
+    
+    // Find engine base with matching liter
+    const matchingEngineBase = engineBases.find(eb => eb.Liter === liter);
+    if (!matchingEngineBase) return null;
+    
+    // Find engine config that uses this engine base
+    const matchingEngineConfig = engineConfigs.find(ec => ec.EngineBaseID === matchingEngineBase.EngineBaseID);
+    if (!matchingEngineConfig) return null;
+    
+    const aspiration = aspirations.find(a => a.AspirationID === matchingEngineConfig.AspirationID);
+    const fuelType = fuelTypes.find(ft => ft.FuelTypeID === matchingEngineConfig.FuelTypeID);
+    const powerOutput = powerOutputs.find(po => po.PowerOutputID === matchingEngineConfig.PowerOutputID);
+    const manufacturer = manufacturers.find(m => m.MfrID === matchingEngineConfig.EngineMfrID);
+    const cylinderHeadType = cylinderHeadTypes.find(cht => cht.CylinderHeadTypeID === matchingEngineConfig.CylinderHeadTypeID);
+    const valve = valves.find(v => v.ValvesID === matchingEngineConfig.ValvesID);
+    const engineVIN = engineVINs.find(evin => evin.EngineVINID === matchingEngineConfig.EngineVINID);
+    const ignitionType = ignitionTypes.find(it => it.IgnitionSystemTypeID === matchingEngineConfig.IgnitionSystemTypeID);
+    
+    return {
+      cc: matchingEngineBase.CC,
+      cid: matchingEngineBase.CID,
+      cylinders: matchingEngineBase.Cylinders,
+      blockType: matchingEngineBase.BlockType,
+      boreInches: matchingEngineBase.EngBoreIn,
+      boreMetric: matchingEngineBase.EngBoreMetric,
+      strokeInches: matchingEngineBase.EngStrokeIn,
+      strokeMetric: matchingEngineBase.EngStrokeMetric,
+      cylinderHeadType: cylinderHeadType?.CylinderHeadTypeID,
+      aspiration: aspiration?.AspirationID,
+      valvesPerEngine: valve?.ValvesID,
+      ignitionSystemType: ignitionType?.IgnitionSystemTypeID,
+      horsePower: powerOutput?.PowerOutputID,
+      kilowattPower: powerOutput?.KilowattPower,
+      fuelType: fuelType?.FuelTypeID,
+      engineManufacturer: manufacturer?.MfrID,
+      engineVIN: engineVIN?.EngineVINID
+    };
+  }
+
+  /**
+   * Get specific transmission specs by BaseVehicle and Type
+   */
+  async getTransmissionSpecsByType(baseVehicleId: number, type: string): Promise<any> {
+    const transmissions = await this.getTransmissionsByBaseVehicle(baseVehicleId);
+    const transBases = extractedDatabaseService.getTableData('VCdb', '20231026_TransmissionBase');
+    const transTypes = extractedDatabaseService.getTableData('VCdb', '20231026_TransmissionType');
+    const transControlTypes = extractedDatabaseService.getTableData('VCdb', '20231026_TransmissionControlType');
+    const transNumSpeeds = extractedDatabaseService.getTableData('VCdb', '20231026_TransmissionNumSpeeds');
+    const elecControlled = extractedDatabaseService.getTableData('VCdb', '20231026_ElecControlled');
+    const transMfrCodes = extractedDatabaseService.getTableData('VCdb', '20231026_TransmissionMfrCode');
+    const manufacturers = extractedDatabaseService.getTableData('VCdb', '20231026_Mfr');
+    
+    const matchingTransmission = transmissions.find(t => t.TransmissionTypeID === type);
+    if (!matchingTransmission) return null;
+    
+    const transBase = transBases.find(tb => tb.TransmissionBaseID === matchingTransmission.TransmissionBaseID);
+    const controlType = transControlTypes.find(tct => tct.TransmissionControlTypeID === transBase?.TransmissionControlTypeID);
+    const numSpeeds = transNumSpeeds.find(tns => tns.TransmissionNumSpeedsID === transBase?.TransmissionNumSpeedsID);
+    const elecControl = elecControlled.find(ec => ec.ElecControlledID === matchingTransmission.TransmissionElecControlledID);
+    const mfrCode = transMfrCodes.find(tmc => tmc.TransmissionMfrCodeID === matchingTransmission.TransmissionMfrCodeID);
+    const manufacturer = manufacturers.find(m => m.MfrID === matchingTransmission.TransmissionMfrID);
+    
+    return {
+      speeds: numSpeeds?.TransmissionNumSpeedsID,
+      control: controlType?.TransmissionControlTypeID,
+      type: type,
+      mfrName: manufacturer?.MfrID,
+      mfrCode: mfrCode?.TransmissionMfrCodeID,
+      elecControlled: elecControl?.ElecControlledID
+    };
+  }
+
+  /**
+   * Get specific brake specs by BaseVehicle and Type
+   */
+  async getBrakeSpecsByType(baseVehicleId: number, type: string): Promise<any> {
+    const brakeConfigs = await this.getBrakeConfigsByBaseVehicle(baseVehicleId);
+    const brakeSystems = extractedDatabaseService.getTableData('VCdb', '20231026_BrakeSystem');
+    const brakeABS = extractedDatabaseService.getTableData('VCdb', '20231026_BrakeABS');
+    
+    const matchingBrakeConfig = brakeConfigs.find(bc => bc.FrontBrakeTypeID === type || bc.RearBrakeTypeID === type);
+    if (!matchingBrakeConfig) return null;
+    
+    const brakeSystem = brakeSystems.find(bs => bs.BrakeSystemID === matchingBrakeConfig.BrakeSystemID);
+    const abs = brakeABS.find(ba => ba.BrakeABSID === matchingBrakeConfig.BrakeABSID);
+    
+    return {
+      frontBrake: type,
+      rearBrake: matchingBrakeConfig.RearBrakeTypeID,
+      brakeSystem: brakeSystem?.BrakeSystemID,
+      brakeABS: abs?.BrakeABSID
+    };
+  }
+
+  /**
+   * Get specific body specs by BaseVehicle and Type
+   */
+  async getBodySpecsByType(baseVehicleId: number, type: string): Promise<any> {
+    const vehicles = await this.getVehiclesByBaseVehicle(baseVehicleId);
+    const vehicleIds = vehicles.map(v => v.VehicleID);
+    
+    const vehicleToBodyStyle = extractedDatabaseService.getTableData('VCdb', '20231026_VehicleToBodyStyleConfig');
+    const bodyStyleConfigs = extractedDatabaseService.getTableData('VCdb', '20231026_BodyStyleConfig');
+    const bodyNumDoors = extractedDatabaseService.getTableData('VCdb', '20231026_BodyNumDoors');
+    
+    const bodyStyleLinks = vehicleToBodyStyle.filter(vbs => vehicleIds.includes(vbs.VehicleID));
+    const bodyStyleConfigIds = [...new Set(bodyStyleLinks.map(bsl => bsl.BodyStyleConfigID))];
+    const filteredBodyStyleConfigs = bodyStyleConfigs.filter(bsc => bodyStyleConfigIds.includes(bsc.BodyStyleConfigID));
+    
+    const matchingBodyStyleConfig = filteredBodyStyleConfigs.find(bsc => bsc.BodyTypeID === type);
+    if (!matchingBodyStyleConfig) return null;
+    
+    const numDoors = bodyNumDoors.find(bnd => bnd.BodyNumDoorsID === matchingBodyStyleConfig.BodyNumDoorsID);
+    
+    return {
+      bodyType: type,
+      numDoors: numDoors?.BodyNumDoorsID
+    };
+  }
+
+  /**
+   * Get specific part specs by Category and Type
+   */
+  async getPartSpecsByType(category: string, partType: string): Promise<any> {
+    const parts = extractedDatabaseService.getTableData('PCdb', 'Parts');
+    const categories = extractedDatabaseService.getTableData('PCdb', 'Categories');
+    const subCategories = extractedDatabaseService.getTableData('PCdb', 'Subcategories');
+    const positions = extractedDatabaseService.getTableData('PCdb', 'Positions');
+    
+    const part = parts.find(p => p.PartTerminologyID === partType);
+    if (!part) return null;
+    
+    const categoryData = categories.find(c => c.CategoryID === category);
+    const subCategoryData = subCategories.find(sc => sc.SubCategoryID === part.SubCategoryID);
+    
+    // Auto-suggest quantity and position based on part type
+    let suggestedQuantity = 1;
+    let suggestedPosition = '';
+    const partName = part.PartTerminologyName?.toLowerCase() || '';
+    
+    if (partName.includes('brake pad') || partName.includes('brake shoe')) {
+      suggestedQuantity = 4;
+      suggestedPosition = positions.find(p => p.Position?.toLowerCase().includes('front'))?.PositionID || '';
+    } else if (partName.includes('spark plug')) {
+      suggestedQuantity = 4;
+    } else if (partName.includes('tire')) {
+      suggestedQuantity = 4;
+    } else if (partName.includes('wiper blade')) {
+      suggestedQuantity = 2;
+      suggestedPosition = positions.find(p => p.Position?.toLowerCase().includes('front'))?.PositionID || '';
+    } else if (partName.includes('filter')) {
+      suggestedQuantity = 1;
+      suggestedPosition = positions.find(p => p.Position?.toLowerCase().includes('engine'))?.PositionID || '';
+    }
+    
+    return {
+      category: category,
+      subCategory: part.SubCategoryID,
+      partType: partType,
+      position: suggestedPosition,
+      quantity: suggestedQuantity,
+      mfrLabel: part.PartTerminologyName
+    };
+  }
+
+  /**
+   * Get specific drive specs by BaseVehicle and Type
+   */
+  async getDriveSpecsByType(baseVehicleId: number, type: string): Promise<any> {
+    const driveTypes = extractedDatabaseService.getTableData('VCdb', '20231026_DriveType');
+    const driveType = driveTypes.find(dt => dt.DriveTypeID === type);
+    
+    return {
+      driveType: type,
+      driveName: driveType?.DriveTypeName
+    };
+  }
+
+  /**
+   * Get specific spring specs by BaseVehicle and Type
+   */
+  async getSpringSpecsByType(baseVehicleId: number, type: string): Promise<any> {
+    const vehicles = await this.getVehiclesByBaseVehicle(baseVehicleId);
+    const vehicleIds = vehicles.map(v => v.VehicleID);
+    
+    const vehicleToSpring = extractedDatabaseService.getTableData('VCdb', '20231026_VehicleToSpringTypeConfig');
+    const springConfigs = extractedDatabaseService.getTableData('VCdb', '20231026_SpringTypeConfig');
+    
+    const springLinks = vehicleToSpring.filter(vs => vehicleIds.includes(vs.VehicleID));
+    const springConfigIds = [...new Set(springLinks.map(sl => sl.SpringTypeConfigID))];
+    const filteredSpringConfigs = springConfigs.filter(sc => springConfigIds.includes(sc.SpringTypeConfigID));
+    
+    const matchingSpringConfig = filteredSpringConfigs.find(sc => sc.FrontSpringTypeID === type || sc.RearSpringTypeID === type);
+    if (!matchingSpringConfig) return null;
+    
+    return {
+      frontSpring: matchingSpringConfig.FrontSpringTypeID,
+      rearSpring: matchingSpringConfig.RearSpringTypeID
+    };
+  }
+
+  /**
+   * Get specific steering specs by BaseVehicle and Type
+   */
+  async getSteeringSpecsByType(baseVehicleId: number, type: string): Promise<any> {
+    const vehicles = await this.getVehiclesByBaseVehicle(baseVehicleId);
+    const vehicleIds = vehicles.map(v => v.VehicleID);
+    
+    const vehicleToSteering = extractedDatabaseService.getTableData('VCdb', '20231026_VehicleToSteeringConfig');
+    const steeringConfigs = extractedDatabaseService.getTableData('VCdb', '20231026_SteeringConfig');
+    const steeringSystems = extractedDatabaseService.getTableData('VCdb', '20231026_SteeringSystem');
+    
+    const steeringLinks = vehicleToSteering.filter(vst => vehicleIds.includes(vst.VehicleID));
+    const steeringConfigIds = [...new Set(steeringLinks.map(stl => stl.SteeringConfigID))];
+    const filteredSteeringConfigs = steeringConfigs.filter(stc => steeringConfigIds.includes(stc.SteeringConfigID));
+    
+    const matchingSteeringConfig = filteredSteeringConfigs.find(stc => stc.SteeringTypeID === type);
+    if (!matchingSteeringConfig) return null;
+    
+    const steeringSystem = steeringSystems.find(ss => ss.SteeringSystemID === matchingSteeringConfig.SteeringSystemID);
+    
+    return {
+      steeringType: type,
+      steeringSystem: steeringSystem?.SteeringSystemID
+    };
+  }
+
+  /**
+   * Get specific wheelbase specs by BaseVehicle and Wheelbase
+   */
+  async getWheelbaseSpecsByValue(baseVehicleId: number, wheelbaseValue: string): Promise<any> {
+    const vehicles = await this.getVehiclesByBaseVehicle(baseVehicleId);
+    const vehicleIds = vehicles.map(v => v.VehicleID);
+    
+    const vehicleToWheelbase = extractedDatabaseService.getTableData('VCdb', '20231026_VehicleToWheelbase');
+    const wheelbases = extractedDatabaseService.getTableData('VCdb', '20231026_Wheelbase');
+    
+    const wheelbaseLinks = vehicleToWheelbase.filter(vw => vehicleIds.includes(vw.VehicleID));
+    const wheelbaseIds = [...new Set(wheelbaseLinks.map(wl => wl.WheelbaseID))];
+    const filteredWheelbases = wheelbases.filter(wb => wheelbaseIds.includes(wb.WheelBaseID));
+    
+    const matchingWheelbase = filteredWheelbases.find(wb => wb.WheelBase === wheelbaseValue || wb.WheelBaseMetric === wheelbaseValue);
+    if (!matchingWheelbase) return null;
+    
+    return {
+      wheelbaseInches: matchingWheelbase.WheelBase,
+      wheelbaseMetric: matchingWheelbase.WheelBaseMetric
+    };
+  }
+
+  /**
+   * Get specific bed specs by BaseVehicle and Type
+   */
+  async getBedSpecsByType(baseVehicleId: number, type: string): Promise<any> {
+    const vehicles = await this.getVehiclesByBaseVehicle(baseVehicleId);
+    const vehicleIds = vehicles.map(v => v.VehicleID);
+    
+    const vehicleToBed = extractedDatabaseService.getTableData('VCdb', '20231026_VehicleToBedConfig');
+    const bedConfigs = extractedDatabaseService.getTableData('VCdb', '20231026_BedConfig');
+    const bedLengths = extractedDatabaseService.getTableData('VCdb', '20231026_BedLength');
+    
+    const bedLinks = vehicleToBed.filter(vb => vehicleIds.includes(vb.VehicleID));
+    const bedConfigIds = [...new Set(bedLinks.map(bl => bl.BedConfigID))];
+    const filteredBedConfigs = bedConfigs.filter(bc => bedConfigIds.includes(bc.BedConfigID));
+    
+    const matchingBedConfig = filteredBedConfigs.find(bc => bc.BedTypeID === type);
+    if (!matchingBedConfig) return null;
+    
+    const bedLength = bedLengths.find(bl => bl.BedLengthID === matchingBedConfig.BedLengthID);
+    
+    return {
+      bedType: type,
+      bedLengthInches: bedLength?.BedLength,
+      bedLengthMetric: bedLength?.BedLengthMetric
+    };
+  }
+
+  /**
+   * Get specific manufacturer body code specs by BaseVehicle and Code
+   */
+  async getMfrBodySpecsByCode(baseVehicleId: number, code: string): Promise<any> {
+    const vehicles = await this.getVehiclesByBaseVehicle(baseVehicleId);
+    const vehicleIds = vehicles.map(v => v.VehicleID);
+    
+    const vehicleToMfrBody = extractedDatabaseService.getTableData('VCdb', '20231026_VehicleToMfrBodyCode');
+    const mfrBodyCodes = extractedDatabaseService.getTableData('VCdb', '20231026_MfrBodyCode');
+    
+    const mfrBodyLinks = vehicleToMfrBody.filter(vmb => vehicleIds.includes(vmb.VehicleID));
+    const mfrBodyCodeIds = [...new Set(mfrBodyLinks.map(mbl => mbl.MfrBodyCodeID))];
+    const filteredMfrBodyCodes = mfrBodyCodes.filter(mbc => mfrBodyCodeIds.includes(mbc.MfrBodyCodeID));
+    
+    const matchingMfrBodyCode = filteredMfrBodyCodes.find(mbc => mbc.MfrBodyCodeID === code);
+    if (!matchingMfrBodyCode) return null;
+    
+    return {
+      mfrBodyCode: code,
+      mfrBodyCodeName: matchingMfrBodyCode.MfrBodyCodeName
+    };
+  }
+
+  /**
    * Get Vehicle Systems Reference Data for BaseVehicle
    */
   async getVehicleSystemsReferenceData(baseVehicleId: number): Promise<any> {
