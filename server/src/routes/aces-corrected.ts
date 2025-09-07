@@ -416,6 +416,29 @@ router.get('/pcdb/subcategory-for-part/:partTerminologyId', async (req, res) => 
   }
 });
 
+router.get('/pcdb/positions', async (req, res) => {
+  try {
+    const { partTerminologyId, categoryId, subCategoryId } = req.query as { partTerminologyId?: string; categoryId?: string; subCategoryId?: string };
+    if (!partTerminologyId) {
+      return res.status(400).json({ error: 'partTerminologyId is required' });
+    }
+    const positions = await acesServiceCorrected.getPCdbPositionsForPart(partTerminologyId, { categoryId, subCategoryId });
+    res.json(positions);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to load positions' });
+  }
+});
+
+router.get('/pcdb/resolve-from-part/:partTerminologyId', async (req, res) => {
+  try {
+    const { partTerminologyId } = req.params;
+    const resolution = await acesServiceCorrected.resolveFromPart(partTerminologyId);
+    res.json(resolution);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to resolve from part type' });
+  }
+});
+
 // Get specific part specs by Category and Type
 router.get('/part-specs/:category/:partType', async (req, res) => {
   try {

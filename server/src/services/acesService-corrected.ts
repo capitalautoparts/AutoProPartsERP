@@ -418,11 +418,20 @@ export class ACESServiceCorrected {
     const subCategories = extractedDatabaseService.getTableData('PCdb', 'Subcategories');
     if (!categoryId) return subCategories;
 
+    // Accept either CategoryID or CategoryName
+    let effectiveCategoryId = categoryId;
+    const categories = extractedDatabaseService.getTableData('PCdb', 'Categories');
+    const hasId = categories.some((c: any) => c.CategoryID === categoryId);
+    if (!hasId) {
+      const byName = categories.find((c: any) => (c.CategoryName || '').toLowerCase() === categoryId.toLowerCase());
+      if (byName) effectiveCategoryId = byName.CategoryID;
+    }
+
     // Derive SubCategory -> Category relationship using CodeMaster
     const codeMaster = extractedDatabaseService.getTableData('PCdb', 'CodeMaster');
     const subCategoryIds = new Set(
       codeMaster
-        .filter((cm: any) => cm.CategoryID === categoryId)
+        .filter((cm: any) => cm.CategoryID === effectiveCategoryId)
         .map((cm: any) => cm.SubCategoryID)
         .filter((id: any) => !!id)
     );
@@ -432,6 +441,20 @@ export class ACESServiceCorrected {
   async getPCdbPartTypes(filters: { categoryId?: string; subCategoryId?: string } = {}): Promise<any[]> {
     const parts = extractedDatabaseService.getTableData('PCdb', 'Parts');
     const codeMaster = extractedDatabaseService.getTableData('PCdb', 'CodeMaster');
+    const categories = extractedDatabaseService.getTableData('PCdb', 'Categories');
+    const subCategories = extractedDatabaseService.getTableData('PCdb', 'Subcategories');
+
+    // Normalize filters to IDs if names are provided
+    let categoryId = filters.categoryId;
+    let subCategoryId = filters.subCategoryId;
+    if (categoryId && !categories.some((c: any) => c.CategoryID === categoryId)) {
+      const byName = categories.find((c: any) => (c.CategoryName || '').toLowerCase() === categoryId!.toLowerCase());
+      if (byName) categoryId = byName.CategoryID;
+    }
+    if (subCategoryId && !subCategories.some((sc: any) => sc.SubCategoryID === subCategoryId)) {
+      const byName = subCategories.find((sc: any) => (sc.SubCategoryName || '').toLowerCase() === subCategoryId!.toLowerCase());
+      if (byName) subCategoryId = byName.SubCategoryID;
+    }
 
     // Join parts with CodeMaster to enrich with Category/SubCategory
     const joined = parts.map((p: any) => {
@@ -444,8 +467,8 @@ export class ACESServiceCorrected {
     });
 
     return joined.filter((p: any) => {
-      if (filters.subCategoryId && p.SubCategoryID !== filters.subCategoryId) return false;
-      if (filters.categoryId && p.CategoryID !== filters.categoryId) return false;
+      if (subCategoryId && p.SubCategoryID !== subCategoryId) return false;
+      if (categoryId && p.CategoryID !== categoryId) return false;
       return true;
     });
   }
@@ -464,6 +487,42 @@ export class ACESServiceCorrected {
     const match = codeMaster.find((cm: any) => cm.PartTerminologyID === partTerminologyId);
     if (!match) return null;
     return subCategories.find((sc: any) => sc.SubCategoryID === match.SubCategoryID) || null;
+  }
+
+  async getPCdbPositionsForPart(partTerminologyId: string, filters: { categoryId?: string; subCategoryId?: string } = {}): Promise<any[]> {
+    const codeMaster = extractedDatabaseService.getTableData('PCdb', 'CodeMaster');
+    const positions = extractedDatabaseService.getTableData('PCdb', 'Positions');
+
+    const rows = codeMaster.filter((cm: any) => {
+      if (cm.PartTerminologyID !== partTerminologyId) return false;
+      if (filters.categoryId && cm.CategoryID !== filters.categoryId) return false;
+      if (filters.subCategoryId && cm.SubCategoryID !== filters.subCategoryId) return false;
+      return true;
+    });
+
+    const positionIds = [...new Set(rows.map((r: any) => r.PositionID).filter((id: any) => !!id))];
+    return positions.filter((p: any) => positionIds.includes(p.PositionID));
+  }
+
+  async resolveFromPart(partTerminologyId: string): Promise<{ category: any | null; subCategory: any | null; positions: any[] }>{
+    const codeMaster = extractedDatabaseService.getTableData('PCdb', 'CodeMaster');
+    const categories = extractedDatabaseService.getTableData('PCdb', 'Categories');
+    const subCategories = extractedDatabaseService.getTableData('PCdb', 'Subcategories');
+    const positions = extractedDatabaseService.getTableData('PCdb', 'Positions');
+
+    const rows = codeMaster.filter((cm: any) => cm.PartTerminologyID === partTerminologyId);
+    if (rows.length === 0) {
+      return { category: null, subCategory: null, positions: [] };
+    }
+
+    // Use the first mapping as canonical
+    const cm = rows[0];
+    const category = categories.find((c: any) => c.CategoryID === cm.CategoryID) || null;
+    const subCategory = subCategories.find((sc: any) => sc.SubCategoryID === cm.SubCategoryID) || null;
+    const positionIds = [...new Set(rows.map((r: any) => r.PositionID).filter((id: any) => !!id))];
+    const pos = positions.filter((p: any) => positionIds.includes(p.PositionID));
+
+    return { category, subCategory, positions: pos };
   }
 
   /**
@@ -774,7 +833,14 @@ export class ACESServiceCorrected {
     // Resolve SubCategory and Category from CodeMaster
     const cmForPart = codeMaster.filter((cm: any) => cm.PartTerminologyID === partType);
     if (cmForPart.length === 0) return null;
-    const cm = category ? cmForPart.find((r: any) => r.CategoryID === category) || cmForPart[0] : cmForPart[0];
+    // Allow category as ID or name
+    let effectiveCategoryId = category;
+    const hasId = categories.some((c: any) => c.CategoryID === category);
+    if (!hasId) {
+      const byName = categories.find((c: any) => (c.CategoryName || '').toLowerCase() === category.toLowerCase());
+      if (byName) effectiveCategoryId = byName.CategoryID;
+    }
+    const cm = effectiveCategoryId ? cmForPart.find((r: any) => r.CategoryID === effectiveCategoryId) || cmForPart[0] : cmForPart[0];
 
     const resolvedCategoryId = cm.CategoryID;
     const resolvedSubCategoryId = cm.SubCategoryID;

@@ -31,12 +31,12 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
   
   // Vehicle tab selections
   const [vehicleData, setVehicleData] = useState({
-    group: '',
-    type: '',
+    year: '',
     make: '',
     model: '',
-    year: '',
     submodel: '',
+    group: '',
+    type: '',
     region: '',
     class: '',
     baseVehicleId: ''
@@ -455,6 +455,10 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
     mfrLabel: '',
     notes: ''
   });
+
+  // Cascading options for Item tab (derived from server, not local inference)
+  const [availableSubCategories, setAvailableSubCategories] = useState<any[]>([]);
+  const [availablePositions, setAvailablePositions] = useState<any[]>([]);
   
   // Qualifier specifications
   const [qualifierSpecs, setQualifierSpecs] = useState({
@@ -463,9 +467,9 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
 
   // Get filtered options for cascading dropdowns
   const getFilteredSubCategories = () => {
-    if (!pcdbRefData.subCategories) return [];
-    if (!itemSpecs.category) return pcdbRefData.subCategories;
-    return pcdbRefData.subCategories.filter((sub: any) => sub.CategoryID === itemSpecs.category);
+    // Use server-provided mapping via CodeMaster
+    if (availableSubCategories.length > 0) return availableSubCategories;
+    return [];
   };
   
   const getFilteredPartTypes = () => {
@@ -475,7 +479,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
   };
   
   // Smart item specs relationship handler with real PCdb data
-  const handleItemSpecSelection = (field: string, value: string) => {
+  const handleItemSpecSelection = async (field: string, value: string) => {
     console.log('handleItemSpecSelection called:', { field, value });
     console.log('Current itemSpecs:', itemSpecs);
     console.log('pcdbRefData.partTypes:', pcdbRefData.partTypes);
@@ -486,8 +490,24 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
     if (field === 'category') {
       updates.subCategory = '';
       updates.partType = '';
+      updates.position = '';
+      setAvailablePositions([]);
+      // Load subcategories for selected category from server
+      try {
+        if (value) {
+          const res = await fetch(`/api/aces-corrected/pcdb/subcategories?categoryId=${encodeURIComponent(value)}`);
+          const subs = res.ok ? await res.json() : [];
+          setAvailableSubCategories(subs);
+        } else {
+          setAvailableSubCategories([]);
+        }
+      } catch (e) {
+        setAvailableSubCategories([]);
+      }
     } else if (field === 'subCategory') {
       updates.partType = '';
+      updates.position = '';
+      setAvailablePositions([]);
     }
     
     // Auto-populate parent fields when child is selected
@@ -496,20 +516,50 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
       console.log('Found selectedPartType:', selectedPartType);
       
       if (selectedPartType) {
-        // Use AutoCare CodeMaster relationships - always populate if available
-        if (selectedPartType.SubCategoryID) {
-          console.log('Setting subCategory to:', selectedPartType.SubCategoryID);
-          updates.subCategory = selectedPartType.SubCategoryID;
+        // Resolve using server to ensure accuracy and positions
+        try {
+          const res = await fetch(`/api/aces-corrected/pcdb/resolve-from-part/${encodeURIComponent(value)}`);
+          if (res.ok) {
+            const resolved = await res.json();
+            if (resolved?.category?.CategoryID) {
+              updates.category = resolved.category.CategoryID;
+              // Load subcategories for that category to populate dropdown
+              try {
+                const subRes = await fetch(`/api/aces-corrected/pcdb/subcategories?categoryId=${encodeURIComponent(resolved.category.CategoryID)}`);
+                const subs = subRes.ok ? await subRes.json() : [];
+                setAvailableSubCategories(subs);
+              } catch {}
+            }
+            if (resolved?.subCategory?.SubCategoryID) updates.subCategory = resolved.subCategory.SubCategoryID;
+            // Load precise positions filtered by part/category/subcategory
+            try {
+              const qs = new URLSearchParams({
+                partTerminologyId: value,
+                ...(resolved?.category?.CategoryID ? { categoryId: resolved.category.CategoryID } : {}),
+                ...(resolved?.subCategory?.SubCategoryID ? { subCategoryId: resolved.subCategory.SubCategoryID } : {})
+              });
+              const posRes = await fetch(`/api/aces-corrected/pcdb/positions?${qs.toString()}`);
+              const pos = posRes.ok ? await posRes.json() : [];
+              setAvailablePositions(pos);
+              if (pos.length === 1) {
+                updates.position = pos[0].PositionID;
+              }
+            } catch {
+              if (Array.isArray(resolved?.positions)) {
+                setAvailablePositions(resolved.positions);
+                if (resolved.positions.length === 1) {
+                  updates.position = resolved.positions[0].PositionID;
+                }
+              }
+            }
+          }
+        } catch (e) {
+          // Fallback to embedded relationships if resolve call fails
+          if (selectedPartType.SubCategoryID) updates.subCategory = selectedPartType.SubCategoryID;
+          if (selectedPartType.CategoryID) updates.category = selectedPartType.CategoryID;
+          if (selectedPartType.PositionID) updates.position = selectedPartType.PositionID;
         }
-        if (selectedPartType.CategoryID) {
-          console.log('Setting category to:', selectedPartType.CategoryID);
-          updates.category = selectedPartType.CategoryID;
-        }
-        if (selectedPartType.PositionID) {
-          console.log('Setting position to:', selectedPartType.PositionID);
-          updates.position = selectedPartType.PositionID;
-        }
-        
+
         // Auto-populate mfr label
         updates.mfrLabel = selectedPartType.PartTerminologyName;
         
@@ -982,6 +1032,67 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
           <div className="space-y-4">
             <div className="grid grid-cols-4 gap-4">
               <div>
+                <label className="block text-sm font-medium mb-1">Year</label>
+                <SearchableSelect
+                  options={allYears.map(year => ({ value: year.YearID, label: year.YearID }))}
+                  value={vehicleData.year}
+                  onChange={(value) => setVehicleData({...vehicleData, year: value})}
+                  placeholder="Select Year"
+                />
+                <p className="text-xs text-gray-500">{allYears.length} available</p>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">Make</label>
+                <SearchableSelect
+                  options={availableMakes.map(make => ({ value: make.MakeID, label: make.MakeName }))}
+                  value={vehicleData.make}
+                  onChange={(value) => setVehicleData({...vehicleData, make: value})}
+                  placeholder="Select Make"
+                  disabled={!vehicleData.year}
+                />
+                <p className="text-xs text-gray-500">{availableMakes.length} available</p>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">Model</label>
+                <SearchableSelect
+                  options={availableModels.map(model => ({ value: model.ModelID, label: model.ModelName }))}
+                  value={vehicleData.model}
+                  onChange={(value) => setVehicleData({...vehicleData, model: value})}
+                  placeholder="Select Model"
+                  disabled={!vehicleData.make}
+                />
+                <p className="text-xs text-gray-500">{availableModels.length} available</p>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">Submodel</label>
+                <SearchableSelect
+                  options={components.subModels.map(sub => ({ value: sub.SubModelID, label: sub.displayName }))}
+                  value={vehicleData.submodel}
+                  onChange={(value) => {
+                    setVehicleData({...vehicleData, submodel: value});
+                    
+                    // Auto-select BaseVehicle if submodel helps narrow it down
+                    if (value && availableBaseVehicles.length > 1) {
+                      const matchingBV = availableBaseVehicles.find(bv => {
+                        const vehicles = components.subModels.filter(sm => sm.SubModelID === value);
+                        return vehicles.some(v => v.BaseVehicleID === bv.BaseVehicleID);
+                      });
+                      if (matchingBV) {
+                        setVehicleData(prev => ({...prev, baseVehicleId: matchingBV.BaseVehicleID}));
+                      }
+                    }
+                  }}
+                  placeholder="Select Submodel"
+                  disabled={!vehicleData.baseVehicleId && availableBaseVehicles.length <= 1}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-4 gap-4">
+              <div>
                 <label className="block text-sm font-medium mb-1">Group</label>
                 <select 
                   value={vehicleData.group} 
@@ -1011,67 +1122,6 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                   ))}
                 </select>
                 {vehicleData.type && <p className="text-xs text-green-600 mt-1">✓ Auto-selected</p>}
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-1">Make</label>
-                <SearchableSelect
-                  options={availableMakes.map(make => ({ value: make.MakeID, label: make.MakeName }))}
-                  value={vehicleData.make}
-                  onChange={(value) => setVehicleData({...vehicleData, make: value})}
-                  placeholder="Select Make"
-                  disabled={!vehicleData.year}
-                />
-                <p className="text-xs text-gray-500">{availableMakes.length} available</p>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-1">Model</label>
-                <SearchableSelect
-                  options={availableModels.map(model => ({ value: model.ModelID, label: model.ModelName }))}
-                  value={vehicleData.model}
-                  onChange={(value) => setVehicleData({...vehicleData, model: value})}
-                  placeholder="Select Model"
-                  disabled={!vehicleData.make}
-                />
-                <p className="text-xs text-gray-500">{availableModels.length} available</p>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-4 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Year</label>
-                <SearchableSelect
-                  options={allYears.map(year => ({ value: year.YearID, label: year.YearID }))}
-                  value={vehicleData.year}
-                  onChange={(value) => setVehicleData({...vehicleData, year: value})}
-                  placeholder="Select Year"
-                />
-                <p className="text-xs text-gray-500">{allYears.length} available</p>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-1">Submodel</label>
-                <SearchableSelect
-                  options={components.subModels.map(sub => ({ value: sub.SubModelID, label: sub.displayName }))}
-                  value={vehicleData.submodel}
-                  onChange={(value) => {
-                    setVehicleData({...vehicleData, submodel: value});
-                    
-                    // Auto-select BaseVehicle if submodel helps narrow it down
-                    if (value && availableBaseVehicles.length > 1) {
-                      const matchingBV = availableBaseVehicles.find(bv => {
-                        const vehicles = components.subModels.filter(sm => sm.SubModelID === value);
-                        return vehicles.some(v => v.BaseVehicleID === bv.BaseVehicleID);
-                      });
-                      if (matchingBV) {
-                        setVehicleData(prev => ({...prev, baseVehicleId: matchingBV.BaseVehicleID}));
-                      }
-                    }
-                  }}
-                  placeholder="Select Submodel"
-                  disabled={!vehicleData.baseVehicleId && availableBaseVehicles.length <= 1}
-                />
               </div>
               
               <div>
@@ -2054,7 +2104,7 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
               <div>
                 <label className="block text-sm font-medium mb-1">Position</label>
                 <SearchableSelect
-                  options={pcdbRefData.positions?.map((pos: any) => ({ value: pos.PositionID, label: pos.Position })) || []}
+                  options={availablePositions.map((pos: any) => ({ value: pos.PositionID, label: pos.Position }))}
                   value={itemSpecs.position}
                   onChange={(value) => handleItemSpecSelection('position', value)}
                   placeholder="Select Position"
