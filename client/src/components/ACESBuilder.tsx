@@ -461,6 +461,17 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
     qualifiers: [] as Array<{ qualifierId: string, qualifierValue: string }>
   });
 
+  // Get filtered options for cascading dropdowns
+  const getFilteredSubCategories = () => {
+    if (!itemSpecs.category || !pcdbRefData.subcategories) return [];
+    return pcdbRefData.subcategories.filter((sub: any) => sub.CategoryID === itemSpecs.category);
+  };
+  
+  const getFilteredPartTypes = () => {
+    if (!itemSpecs.subCategory || !pcdbRefData.partTypes) return [];
+    return pcdbRefData.partTypes.filter((pt: any) => pt.SubCategoryID === itemSpecs.subCategory);
+  };
+  
   // Smart item specs relationship handler with real PCdb data
   const handleItemSpecSelection = (field: string, value: string) => {
     let updates: any = { [field]: value };
@@ -469,38 +480,41 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
     if (field === 'category') {
       updates.subCategory = '';
       updates.partType = '';
-    }
-    if (field === 'subCategory') {
+    } else if (field === 'subCategory') {
       updates.partType = '';
     }
     
-    // Auto-populate when part type is selected
+    // Auto-populate parent fields when child is selected
     if (field === 'partType' && value && pcdbRefData.partTypes) {
-      const selectedPart = pcdbRefData.partTypes.find((pt: any) => pt.PartTerminologyID === value);
-      if (selectedPart) {
-        if (selectedPart.SubCategoryID) {
-          updates.subCategory = selectedPart.SubCategoryID;
-          const subCategory = pcdbRefData.subCategories?.find((sc: any) => sc.SubCategoryID === selectedPart.SubCategoryID);
-          if (subCategory?.CategoryID) {
+      const selectedPartType = pcdbRefData.partTypes.find((pt: any) => pt.PartTerminologyID === value);
+      if (selectedPartType) {
+        // Auto-populate subcategory if not already selected
+        if (!itemSpecs.subCategory) {
+          updates.subCategory = selectedPartType.SubCategoryID;
+        }
+        
+        // Auto-populate category if not already selected
+        if (!itemSpecs.category && pcdbRefData.subcategories) {
+          const subCategory = pcdbRefData.subcategories.find((sc: any) => sc.SubCategoryID === selectedPartType.SubCategoryID);
+          if (subCategory) {
             updates.category = subCategory.CategoryID;
           }
         }
-        updates.mfrLabel = selectedPart.PartTerminologyName;
+        
+        // Auto-suggest position and quantity based on part type
+        if (selectedPartType.DefaultPosition) {
+          updates.position = selectedPartType.DefaultPosition;
+        }
+        if (selectedPartType.DefaultQuantity) {
+          updates.quantity = selectedPartType.DefaultQuantity;
+        }
+        if (selectedPartType.DefaultMfrLabel) {
+          updates.mfrLabel = selectedPartType.DefaultMfrLabel;
+        }
       }
     }
     
     setItemSpecs(prev => ({ ...prev, ...updates }));
-  };
-  
-  // Get filtered options for cascading dropdowns
-  const getFilteredSubCategories = () => {
-    if (!itemSpecs.category || !pcdbRefData.subCategories) return pcdbRefData.subCategories || [];
-    return pcdbRefData.subCategories.filter((sc: any) => sc.CategoryID === itemSpecs.category);
-  };
-  
-  const getFilteredPartTypes = () => {
-    if (!itemSpecs.subCategory || !pcdbRefData.partTypes) return pcdbRefData.partTypes || [];
-    return pcdbRefData.partTypes.filter((pt: any) => pt.SubCategoryID === itemSpecs.subCategory);
   };
   
 
@@ -536,8 +550,10 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
       fetch('/api/aces-corrected/regions').then(r => r.json()),
       fetch('/api/aces-corrected/vehicle-classes').then(r => r.json()),
       fetch('/api/aces-corrected/pcdb-reference').then(r => r.json()),
+      fetch('/api/aces-corrected/part-types').then(r => r.json()),
+      fetch('/api/aces-corrected/positions').then(r => r.json()),
       fetch('/api/databases/qdb').then(r => r.json())
-    ]).then(([years, makes, models, baseVehicles, groups, types, regions, classes, pcdb, qdb]) => {
+    ]).then(([years, makes, models, baseVehicles, groups, types, regions, classes, pcdb, partTypes, positions, qdb]) => {
       setAllYears(years);
       setAllMakes(makes);
       setAllModels(models);
@@ -546,8 +562,14 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
       setVehicleTypes(types);
       setRegions(regions);
       setVehicleClasses(classes);
-      setPcdbRefData(pcdb);
+      setPcdbRefData({
+        ...pcdb,
+        partTypes,
+        positions
+      });
       setQdbRefData(qdb);
+    }).catch(error => {
+      console.error('Failed to load reference data:', error);
     });
   }, []);
 
@@ -1009,16 +1031,13 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
             <div className="grid grid-cols-4 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-1">Year</label>
-                <select 
-                  value={vehicleData.year} 
-                  onChange={(e) => setVehicleData({...vehicleData, year: e.target.value})}
-                  className="w-full p-2 border rounded text-sm"
-                >
-                  <option value="">Select Year</option>
-                  {allYears.map(year => (
-                    <option key={year.YearID} value={year.YearID}>{year.YearID}</option>
-                  ))}
-                </select>
+                <SearchableSelect
+                  options={allYears.map(year => ({ value: year.YearID, label: year.YearID }))}
+                  value={vehicleData.year}
+                  onChange={(value) => setVehicleData({...vehicleData, year: value})}
+                  placeholder="Select Year"
+                />
+                <p className="text-xs text-gray-500">{allYears.length} available</p>
               </div>
               
               <div>
@@ -1976,34 +1995,43 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
               <div>
                 <label className="block text-sm font-medium mb-1">Category</label>
                 <SearchableSelect
-                  options={pcdbRefData.categories?.map((cat: any) => ({ value: cat.CategoryID, label: cat.CategoryName })) || []}
+                  options={pcdbRefData.categories?.map((cat: any) => ({ 
+                    value: cat.CategoryID, 
+                    label: cat.CategoryName 
+                  })) || []}
                   value={itemSpecs.category}
                   onChange={(value) => handleItemSpecSelection('category', value)}
                   placeholder="Select Category"
-                  className={itemSpecs.category && itemSpecs.partType ? 'bg-green-50' : ''}
                 />
-                {itemSpecs.category && itemSpecs.partType && <p className="text-xs text-green-600 mt-1">✓ Auto-selected</p>}
+                <p className="text-xs text-gray-500 mt-1">{pcdbRefData.categories?.length || 0} categories available</p>
               </div>
               
               <div>
                 <label className="block text-sm font-medium mb-1">Sub Category</label>
                 <SearchableSelect
-                  options={getFilteredSubCategories().map((subCat: any) => ({ value: subCat.SubCategoryID, label: subCat.SubCategoryName }))}
+                  options={getFilteredSubCategories().map((sub: any) => ({ 
+                    value: sub.SubCategoryID, 
+                    label: sub.SubCategoryName 
+                  }))}
                   value={itemSpecs.subCategory}
                   onChange={(value) => handleItemSpecSelection('subCategory', value)}
                   placeholder="Select Sub Category"
-                  className={itemSpecs.subCategory && itemSpecs.partType ? 'bg-green-50' : ''}
+                  disabled={!itemSpecs.category}
                 />
-                {itemSpecs.subCategory && itemSpecs.partType && <p className="text-xs text-green-600 mt-1">✓ Auto-selected</p>}
+                <p className="text-xs text-gray-500 mt-1">{getFilteredSubCategories().length} subcategories available</p>
               </div>
               
               <div>
                 <label className="block text-sm font-medium mb-1">Part Type</label>
                 <SearchableSelect
-                  options={getFilteredPartTypes().map((pt: any) => ({ value: pt.PartTerminologyID, label: pt.PartTerminologyName }))}
+                  options={getFilteredPartTypes().map((pt: any) => ({ 
+                    value: pt.PartTerminologyID, 
+                    label: pt.PartTerminologyName 
+                  }))}
                   value={itemSpecs.partType}
                   onChange={(value) => handleItemSpecSelection('partType', value)}
                   placeholder="Select Part Type"
+                  disabled={!itemSpecs.subCategory}
                 />
                 <p className="text-xs text-gray-500 mt-1">{getFilteredPartTypes().length} part types available</p>
               </div>
