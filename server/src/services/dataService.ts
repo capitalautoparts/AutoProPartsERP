@@ -31,170 +31,33 @@ class DataService {
       
       if (seedResult.success && seedResult.itemsProcessed > 0) {
         console.log('PIES seed data loaded successfully');
-        this.initialized = true;
       } else {
-        console.log('PIES seed data not available, using sample data');
-        this.initializeSampleData();
+        console.warn('PIES seed data not available or empty. No products loaded.');
       }
     } catch (error) {
-      console.warn('Failed to load data, using sample data:', error);
-      this.initializeSampleData();
+      console.warn('Failed to load PIES/reference data:', error);
     }
     
     this.initializeCustomersAndOrders();
+    this.initialized = true;
   }
 
-  private initializeSampleData() {
-    // Sample products with comprehensive ACES + PIES data
-    const sampleProducts: Product[] = [
-      {
-        id: '', // Will be set by internal ID
-        uniqueId: '', // Will be set by internal ID
-        manufacturer: 'AutoParts Inc',
-        brand: 'ProBrand',
-        partNumber: 'PB12345',
-        sku: 'SKU-PB-12345',
-        productName: 'Premium Brake Pad Set',
-        shortDescription: 'High-performance ceramic brake pads',
-        longDescription: 'Premium ceramic brake pads designed for superior stopping power and reduced brake dust. Compatible with multiple vehicle applications.',
-        stock: 150,
-        unitType: 'Set',
-        qtyOnHand: 150,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        // Sample PIES data
-        piesItem: {
-          id: uuidv4(),
-          productId: '',
-          partNo: 'PB12345',
-          brandId: 'PROB',
-          brandLabel: 'ProBrand',
-          gtin: '123456789012',
-          unspsc: '25171501',
-          partType: 'Brake Pad',
-          categoryCode: '7644'
-        },
-        piesDescriptions: [
-          {
-            id: uuidv4(),
-            productId: '',
-            descriptionCode: 'DES',
-            description: 'Premium Brake Pad Set',
-            sequence: 1
-          },
-          {
-            id: uuidv4(),
-            productId: '',
-            descriptionCode: 'MKT',
-            description: 'High-performance ceramic brake pads designed for superior stopping power and reduced brake dust.',
-            sequence: 2
-          }
-        ],
-        piesAttributes: [
-          {
-            id: uuidv4(),
-            productId: '',
-            attributeId: 'MATERIAL',
-            attributeValue: 'Ceramic'
-          },
-          {
-            id: uuidv4(),
-            productId: '',
-            attributeId: 'POSITION',
-            attributeValue: 'Front'
-          }
-        ],
-        piesPackages: [
-          {
-            id: uuidv4(),
-            productId: '',
-            packageUom: 'SET',
-            packageQuantity: 1,
-            packageLength: 12.0,
-            packageWidth: 8.0,
-            packageHeight: 4.0,
-            packageWeight: 5.5,
-            dimensionUom: 'IN',
-            weightUom: 'LB'
-          }
-        ]
-      },
-      {
-        id: '', // Will be set by internal ID
-        uniqueId: '', // Will be set by internal ID
-        manufacturer: 'FilterTech',
-        brand: 'CleanAir',
-        partNumber: 'CA67890',
-        sku: 'SKU-CA-67890',
-        productName: 'Engine Air Filter',
-        shortDescription: 'High-flow engine air filter',
-        longDescription: 'Advanced filtration technology for improved engine performance and protection.',
-        stock: 200,
-        unitType: 'Each',
-        qtyOnHand: 200,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        // Sample PIES data
-        piesItem: {
-          id: uuidv4(),
-          productId: '',
-          partNo: 'CA67890',
-          brandId: 'CLEA',
-          brandLabel: 'CleanAir',
-          gtin: '987654321098',
-          unspsc: '25171502',
-          partType: 'Air Filter',
-          categoryCode: '7644'
-        },
-        piesDescriptions: [
-          {
-            id: uuidv4(),
-            productId: '',
-            descriptionCode: 'DES',
-            description: 'Engine Air Filter',
-            sequence: 1
-          }
-        ],
-        piesAttributes: [
-          {
-            id: uuidv4(),
-            productId: '',
-            attributeId: 'FILTRATION_EFFICIENCY',
-            attributeValue: '99.5%'
-          }
-        ]
+  // Set products strictly from PIES-converted Product[] and build lookup map
+  setProductsFromPIES(products: Product[]) {
+    const converted: InternalIdProduct[] = products.map(p => {
+      const brandId = p.piesItem?.brandId;
+      if (!brandId) {
+        throw new Error(`Missing BrandID for PartNo ${p.partNumber}`);
       }
-    ];
-    
-    // Convert to internal ID format
-    this.products = internalIdService.batchConvertToInternalId(sampleProducts);
-    
-    // Update productId references in nested objects
-    this.products.forEach(product => {
-      if (product.piesItem) product.piesItem.productId = product.internalProductId;
-      if (product.piesDescriptions) {
-        product.piesDescriptions.forEach(desc => desc.productId = product.internalProductId);
-      }
-      if (product.piesAttributes) {
-        product.piesAttributes.forEach(attr => attr.productId = product.internalProductId);
-      }
-      if (product.piesPackages) {
-        product.piesPackages.forEach(pkg => pkg.productId = product.internalProductId);
-      }
+      const internal = internalIdService.convertToInternalId(p, brandId);
+      return internal;
     });
-    
-    // Create lookup map
-    this.productLookupMap = internalIdService.createLookupMap(this.products);
-    
-    // Debug: Log the first product to verify ID structure
-    if (this.products.length > 0) {
-      console.log('Sample product after conversion:', {
-        id: this.products[0].id,
-        internalProductId: this.products[0].internalProductId,
-        partNumber: this.products[0].partNumber,
-        brand: this.products[0].brand
-      });
-    }
+
+    this.products = converted;
+    this.productLookupMap = new Map();
+    converted.forEach(prod => {
+      this.productLookupMap.set(prod.internalProductId, prod);
+    });
   }
 
   private initializeCustomersAndOrders() {

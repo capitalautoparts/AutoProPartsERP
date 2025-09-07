@@ -17,6 +17,7 @@ import {
   PIESAsset,
   PIESAssortment
 } from '../types/index.js';
+import { generateInternalProductId } from '../utils/internalIdUtils.js';
 
 export class PIESSeedService {
   private rootPath: string;
@@ -168,20 +169,25 @@ export class PIESSeedService {
 
     for (const item of items) {
       if (!item.PartNo) continue;
-      
-      const uniqueId = `${item.BrandID || 'UNKNOWN'}_${item.PartNo}`;
+      if (!item.BrandID) {
+        // Strict: skip items without BrandID
+        console.warn(`Skipping item with missing BrandID for PartNo ${item.PartNo}`);
+        continue;
+      }
+
+      const internalId = generateInternalProductId(item.BrandID, item.PartNo);
+      const uniqueId = internalId;
       if (processedUniqueIds.has(uniqueId)) {
         continue;
       }
 
       processedUniqueIds.add(uniqueId);
 
-      const productId = uuidv4();
       const product: Product = {
-        id: productId,
-        uniqueId,
-        manufacturer: item.MfgCode || 'Unknown',
-        brand: item.BrandLabel || item.BrandID || 'Unknown',
+        id: internalId,
+        uniqueId: internalId,
+        manufacturer: item.MfgCode || '',
+        brand: item.BrandLabel || item.BrandID || '',
         partNumber: item.PartNo,
         sku: item.PartNo,
         productName: this.getProductName(item.PartNo, descriptionsByPartNo),
@@ -193,12 +199,12 @@ export class PIESSeedService {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         // PIES data
-        piesItem: this.convertPIESItem(item, productId),
-        piesDescriptions: this.convertPIESDescriptions(item.PartNo, descriptionsByPartNo, productId),
-        piesAttributes: this.convertPIESAttributes(item.PartNo, attributesByPartNo, productId),
-        piesPackages: this.convertPIESPackages(item.PartNo, packagesByPartNo, productId),
-        piesAssets: this.convertPIESAssets(item.PartNo, assetsByPartNo, productId),
-        piesAssortments: this.convertPIESAssortments(item.PartNo, assortmentsByPartNo, productId)
+        piesItem: this.convertPIESItem(item, internalId),
+        piesDescriptions: this.convertPIESDescriptions(item.PartNo, descriptionsByPartNo, internalId),
+        piesAttributes: this.convertPIESAttributes(item.PartNo, attributesByPartNo, internalId),
+        piesPackages: this.convertPIESPackages(item.PartNo, packagesByPartNo, internalId),
+        piesAssets: this.convertPIESAssets(item.PartNo, assetsByPartNo, internalId),
+        piesAssortments: this.convertPIESAssortments(item.PartNo, assortmentsByPartNo, internalId)
       };
 
       products.push(product);
@@ -221,7 +227,7 @@ export class PIESSeedService {
   private getProductName(partNo: string, descriptions: Map<string, PIESDescriptionSeed[]>): string {
     const descs = descriptions.get(partNo) || [];
     const nameDesc = descs.find(d => d.DescriptionCode === 'DES' || d.DescriptionCode === 'LAB');
-    return nameDesc?.Description || `Product ${partNo}`;
+    return nameDesc?.Description || '';
   }
 
   private getShortDescription(partNo: string, descriptions: Map<string, PIESDescriptionSeed[]>): string {
@@ -338,8 +344,8 @@ export class PIESSeedService {
     // For now, we'll integrate with the existing dataService
     const { dataService } = await import('./dataService.js');
     
-    // Clear existing products and add new ones
-    (dataService as any).products = products;
+    // Convert and set products using internal IDs
+    dataService.setProductsFromPIES(products);
     
     console.log(`Stored ${products.length} products with PIES data`);
   }

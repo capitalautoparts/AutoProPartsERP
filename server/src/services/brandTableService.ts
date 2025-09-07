@@ -30,24 +30,13 @@ export class BrandTableService {
         aaiaId: record.data[2] || null
       }));
 
-      // Add sample brands if none found
-      if (this.brands.length === 0) {
-        this.brands = [
-          { brandId: 'PROBRAND', brandName: 'ProBrand', aaiaId: 'PB001' },
-          { brandId: 'CLEANAIR', brandName: 'CleanAir', aaiaId: 'CA001' },
-          { brandId: 'AUTOTECH', brandName: 'AutoTech', aaiaId: 'AT001' },
-          { brandId: 'PREMIUM', brandName: 'Premium Parts', aaiaId: 'PP001' }
-        ];
-      }
+      // Strict mode: do not inject sample brands
 
       console.log(`🏷️ BrandTable: Loaded ${this.brands.length} brands`);
     } catch (error) {
       console.error('Error loading BrandTable:', error);
-      // Fallback to sample data
-      this.brands = [
-        { brandId: 'PROBRAND', brandName: 'ProBrand', aaiaId: 'PB001' },
-        { brandId: 'CLEANAIR', brandName: 'CleanAir', aaiaId: 'CA001' }
-      ];
+      // Strict mode: keep brands empty on error
+      this.brands = [];
     }
     
     this.initialized = true;

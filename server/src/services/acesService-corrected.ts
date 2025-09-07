@@ -230,7 +230,17 @@ export class ACESServiceCorrected {
    * Get Part Types from PCdb - CORRECTED
    */
   async getPartTypes(): Promise<any[]> {
-    return extractedDatabaseService.getTableData('PCdb', 'Parts');
+    const parts = extractedDatabaseService.getTableData('PCdb', 'Parts');
+    const codeMaster = extractedDatabaseService.getTableData('PCdb', 'CodeMaster');
+    return parts.map((part: any) => {
+      const cm = codeMaster.find((c: any) => c.PartTerminologyID === part.PartTerminologyID);
+      return {
+        ...part,
+        CategoryID: cm?.CategoryID || null,
+        SubCategoryID: cm?.SubCategoryID || null,
+        PositionID: cm?.PositionID || null
+      };
+    });
   }
 
   /**
@@ -395,6 +405,65 @@ export class ACESServiceCorrected {
       positions: positions,
       codeMaster: codeMaster
     };
+  }
+
+  /**
+   * PCdb helpers: categories, subcategories and parts filtering
+   */
+  async getPCdbCategories(): Promise<any[]> {
+    return extractedDatabaseService.getTableData('PCdb', 'Categories');
+  }
+
+  async getPCdbSubcategories(categoryId?: string): Promise<any[]> {
+    const subCategories = extractedDatabaseService.getTableData('PCdb', 'Subcategories');
+    if (!categoryId) return subCategories;
+
+    // Derive SubCategory -> Category relationship using CodeMaster
+    const codeMaster = extractedDatabaseService.getTableData('PCdb', 'CodeMaster');
+    const subCategoryIds = new Set(
+      codeMaster
+        .filter((cm: any) => cm.CategoryID === categoryId)
+        .map((cm: any) => cm.SubCategoryID)
+        .filter((id: any) => !!id)
+    );
+    return subCategories.filter((sc: any) => subCategoryIds.has(sc.SubCategoryID));
+  }
+
+  async getPCdbPartTypes(filters: { categoryId?: string; subCategoryId?: string } = {}): Promise<any[]> {
+    const parts = extractedDatabaseService.getTableData('PCdb', 'Parts');
+    const codeMaster = extractedDatabaseService.getTableData('PCdb', 'CodeMaster');
+
+    // Join parts with CodeMaster to enrich with Category/SubCategory
+    const joined = parts.map((p: any) => {
+      const cm = codeMaster.find((cm: any) => cm.PartTerminologyID === p.PartTerminologyID);
+      return {
+        ...p,
+        CategoryID: cm?.CategoryID,
+        SubCategoryID: cm?.SubCategoryID
+      };
+    });
+
+    return joined.filter((p: any) => {
+      if (filters.subCategoryId && p.SubCategoryID !== filters.subCategoryId) return false;
+      if (filters.categoryId && p.CategoryID !== filters.categoryId) return false;
+      return true;
+    });
+  }
+
+  async getPCdbCategoryForSubcategory(subCategoryId: string): Promise<any | null> {
+    const codeMaster = extractedDatabaseService.getTableData('PCdb', 'CodeMaster');
+    const categories = extractedDatabaseService.getTableData('PCdb', 'Categories');
+    const match = codeMaster.find((cm: any) => cm.SubCategoryID === subCategoryId);
+    if (!match) return null;
+    return categories.find((c: any) => c.CategoryID === match.CategoryID) || null;
+  }
+
+  async getPCdbSubcategoryForPart(partTerminologyId: string): Promise<any | null> {
+    const codeMaster = extractedDatabaseService.getTableData('PCdb', 'CodeMaster');
+    const subCategories = extractedDatabaseService.getTableData('PCdb', 'Subcategories');
+    const match = codeMaster.find((cm: any) => cm.PartTerminologyID === partTerminologyId);
+    if (!match) return null;
+    return subCategories.find((sc: any) => sc.SubCategoryID === match.SubCategoryID) || null;
   }
 
   /**
@@ -697,12 +766,21 @@ export class ACESServiceCorrected {
     const categories = extractedDatabaseService.getTableData('PCdb', 'Categories');
     const subCategories = extractedDatabaseService.getTableData('PCdb', 'Subcategories');
     const positions = extractedDatabaseService.getTableData('PCdb', 'Positions');
-    
+    const codeMaster = extractedDatabaseService.getTableData('PCdb', 'CodeMaster');
+
     const part = parts.find(p => p.PartTerminologyID === partType);
     if (!part) return null;
-    
-    const categoryData = categories.find(c => c.CategoryID === category);
-    const subCategoryData = subCategories.find(sc => sc.SubCategoryID === part.SubCategoryID);
+
+    // Resolve SubCategory and Category from CodeMaster
+    const cmForPart = codeMaster.filter((cm: any) => cm.PartTerminologyID === partType);
+    if (cmForPart.length === 0) return null;
+    const cm = category ? cmForPart.find((r: any) => r.CategoryID === category) || cmForPart[0] : cmForPart[0];
+
+    const resolvedCategoryId = cm.CategoryID;
+    const resolvedSubCategoryId = cm.SubCategoryID;
+
+    const categoryData = categories.find(c => c.CategoryID === resolvedCategoryId);
+    const subCategoryData = subCategories.find(sc => sc.SubCategoryID === resolvedSubCategoryId);
     
     // Auto-suggest quantity and position based on part type
     let suggestedQuantity = 1;
@@ -725,8 +803,8 @@ export class ACESServiceCorrected {
     }
     
     return {
-      category: category,
-      subCategory: part.SubCategoryID,
+      category: resolvedCategoryId,
+      subCategory: resolvedSubCategoryId,
       partType: partType,
       position: suggestedPosition,
       quantity: suggestedQuantity,

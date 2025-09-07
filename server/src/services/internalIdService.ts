@@ -56,33 +56,21 @@ class InternalIdService {
    * Extract brand ID from existing product data
    */
   private extractBrandFromProduct(product: Product): string {
-    // Try multiple sources for brand ID
+    // Only accept BrandID from PIES data
     if (product.piesItem?.brandId) {
       return product.piesItem.brandId;
     }
-    
-    // Fallback to brand name (first 4 chars, cleaned)
-    if (product.brand) {
-      return product.brand.substring(0, 4).toUpperCase().replace(/[^A-Z0-9]/g, '');
-    }
-    
-    throw new Error(`Cannot determine brand ID for product: ${product.partNumber}`);
+
+    throw new Error(`Missing BrandID (PIES) for product: ${product.partNumber}`);
   }
 
   /**
    * Batch convert products to internal ID format
    */
   batchConvertToInternalId(products: Product[]): InternalIdProduct[] {
-    return products.map(product => {
-      try {
-        return this.convertToInternalId(product);
-      } catch (error) {
-        console.warn(`Failed to convert product ${product.partNumber}:`, error);
-        // Return with generated brand ID as fallback
-        const fallbackBrandId = 'UNKN';
-        return this.convertToInternalId(product, fallbackBrandId);
-      }
-    });
+    return products
+      .map(product => this.convertToInternalId(product))
+      .filter(Boolean) as InternalIdProduct[];
   }
 
   /**
@@ -152,20 +140,15 @@ class InternalIdService {
     
     let brandId: string | undefined;
     
-    // Try to extract brand ID
+    // Extract brand ID strictly from PIES
     try {
       if (product.piesItem?.brandId) {
         brandId = product.piesItem.brandId;
-      } else if (product.brand) {
-        brandId = product.brand.substring(0, 4).toUpperCase().replace(/[^A-Z0-9]/g, '');
-        if (brandId.length < 2) {
-          errors.push('Brand name too short to generate brand ID');
-        }
       } else {
-        errors.push('Brand ID or brand name is required');
+        errors.push('BrandID (from PIES) is required');
       }
     } catch (error) {
-      errors.push('Failed to extract brand ID');
+      errors.push('Failed to extract BrandID from PIES');
     }
     
     return {

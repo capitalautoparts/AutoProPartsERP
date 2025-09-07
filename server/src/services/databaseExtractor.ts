@@ -315,26 +315,18 @@ export class DatabaseExtractor {
       console.log('⚠️ No Make table found in records');
     }
     
-    // Create lookup maps with sample data fallbacks
+    // Create lookup maps strictly from database
     const makeMap = new Map();
     makes.forEach(record => {
       const [id, name] = record.data;
       makeMap.set(parseInt(id), name);
     });
     
-    // Add hardcoded sample lookups for missing IDs
-    if (!makeMap.has(40)) makeMap.set(40, 'Toyota'); // Sample make for ID 40
-    if (!makeMap.has(7)) makeMap.set(7, 'Fiat'); // From sample data
-    
     const modelMap = new Map();
     models.forEach(record => {
       const [id, name, makeId] = record.data; // Note: order might be id, name, makeId
       modelMap.set(parseInt(id), name);
     });
-    
-    // Add hardcoded sample lookups
-    if (!modelMap.has(2760)) modelMap.set(2760, 'Camry'); // Sample model for ID 2760
-    if (!modelMap.has(286)) modelMap.set(286, 'Challenger'); // From sample data
     
     console.log('🗺 MakeMap entries:', Array.from(makeMap.entries()));
     console.log('🗺 ModelMap entries:', Array.from(modelMap.entries()));
@@ -347,8 +339,8 @@ export class DatabaseExtractor {
         year: parseInt(year),
         makeId: parseInt(makeId),
         modelId: parseInt(modelId),
-        make: makeMap.get(parseInt(makeId)) || `Make_${makeId}`,
-        model: modelMap.get(parseInt(modelId)) || `Model_${modelId}`,
+        make: makeMap.get(parseInt(makeId)) || null,
+        model: modelMap.get(parseInt(modelId)) || null,
         table: 'BaseVehicle'
       };
     });

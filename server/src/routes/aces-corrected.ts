@@ -366,6 +366,56 @@ router.get('/pcdb-reference', async (req, res) => {
   }
 });
 
+// PCdb relationship helpers for Item tab
+router.get('/pcdb/categories', async (req, res) => {
+  try {
+    const categories = await acesServiceCorrected.getPCdbCategories();
+    res.json(categories);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to load categories' });
+  }
+});
+
+router.get('/pcdb/subcategories', async (req, res) => {
+  try {
+    const { categoryId } = req.query as { categoryId?: string };
+    const subcategories = await acesServiceCorrected.getPCdbSubcategories(categoryId);
+    res.json(subcategories);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to load subcategories' });
+  }
+});
+
+router.get('/pcdb/part-types', async (req, res) => {
+  try {
+    const { categoryId, subCategoryId } = req.query as { categoryId?: string; subCategoryId?: string };
+    const parts = await acesServiceCorrected.getPCdbPartTypes({ categoryId, subCategoryId });
+    res.json(parts);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to load part types' });
+  }
+});
+
+router.get('/pcdb/category-for-subcategory/:subCategoryId', async (req, res) => {
+  try {
+    const { subCategoryId } = req.params;
+    const category = await acesServiceCorrected.getPCdbCategoryForSubcategory(subCategoryId);
+    res.json(category);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to resolve category' });
+  }
+});
+
+router.get('/pcdb/subcategory-for-part/:partTerminologyId', async (req, res) => {
+  try {
+    const { partTerminologyId } = req.params;
+    const subCategory = await acesServiceCorrected.getPCdbSubcategoryForPart(partTerminologyId);
+    res.json(subCategory);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to resolve subcategory' });
+  }
+});
+
 // Get specific part specs by Category and Type
 router.get('/part-specs/:category/:partType', async (req, res) => {
   try {
