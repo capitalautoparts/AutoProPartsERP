@@ -5,6 +5,7 @@ import { ArrowLeft, Save } from 'lucide-react';
 import { productsApi } from '../services/api';
 import { vcdbApi } from '../services/vcdbApi';
 import { ACESBuilder } from '../components/ACESBuilder';
+import { PIESBuilder, PIESData } from '../components/PIESBuilder';
 
 
 
@@ -252,61 +253,56 @@ const ACESTab: React.FC<{ product: any }> = ({ product }) => {
 
 
 const PIESItemTab: React.FC<{ product: any }> = ({ product }) => {
-  const piesItem = product.piesItem;
-  
+  const piesItem = product.piesItem || {};
+
+  const initial: PIESData = {
+    item: {
+      partNo: piesItem.partNo || product.partNumber || '',
+      baseItemNo: piesItem.baseItemNo || '',
+      vmrsCode: piesItem.vmrsCode || '',
+      gtin: piesItem.gtin || '',
+      brandId: piesItem.brandId || product.piesItem?.brandId || '',
+      subBrandId: piesItem.subBrandId || '',
+      partType: piesItem.partType || '',
+      categoryId: piesItem.categoryCode || '',
+      unspsc: piesItem.unspsc || '',
+      mfgCode: piesItem.mfgCode || '',
+      groupCode: piesItem.groupCode || '',
+      subGroupCode: piesItem.subGroupCode || '',
+      itemQtySize: piesItem.itemQtySize || '',
+      itemQtyUom: piesItem.itemQtyUom || ''
+    },
+    descriptions: product.piesDescriptions || [],
+    prices: product.piesPrices || [],
+    expi: product.piesExpi || [],
+    attributes: product.piesAttributes?.map((a: any) => ({ paid: a.attributeId, value: a.attributeValue, uom: a.attributeUom })) || [],
+    packages: product.piesPackages?.map((p: any) => ({
+      packageUom: p.packageUom,
+      packageQuantity: p.packageQuantity,
+      packageLength: p.packageLength,
+      packageWidth: p.packageWidth,
+      packageHeight: p.packageHeight,
+      packageWeight: p.packageWeight,
+      dimensionUom: p.dimensionUom,
+      weightUom: p.weightUom
+    })) || [],
+    kits: product.piesKits || [],
+    interchange: product.piesInterchange?.map((i: any) => ({
+      interchangeType: i.interchangeType,
+      brandAaiaId: i.brandAaiaId,
+      brandLabel: i.brandLabel,
+      partNo: i.partNo
+    })) || [],
+    digitalAssets: product.piesAssets?.map((a: any) => ({ assetType: a.assetType, uri: a.uri, assetDescription: a.assetDescription })) || []
+  };
+
   return (
     <div>
       <h3 className="text-lg font-medium mb-4">PIES Item Information</h3>
-      <div className="grid grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Manufacturer Code</label>
-          <input type="text" defaultValue={piesItem?.mfgCode || ''} className="w-full border border-gray-300 rounded-md px-3 py-2" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Brand ID</label>
-          <input type="text" defaultValue={piesItem?.brandId || ''} className="w-full border border-gray-300 rounded-md px-3 py-2" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Part Number</label>
-          <input type="text" defaultValue={piesItem?.partNo || product.partNumber} className="w-full border border-gray-300 rounded-md px-3 py-2" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">GTIN</label>
-          <input type="text" defaultValue={piesItem?.gtin || ''} placeholder="Global Trade Item Number" className="w-full border border-gray-300 rounded-md px-3 py-2" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Brand Label</label>
-          <input type="text" defaultValue={piesItem?.brandLabel || product.brand} className="w-full border border-gray-300 rounded-md px-3 py-2" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">UNSPSC</label>
-          <input type="text" defaultValue={piesItem?.unspsc || ''} placeholder="UN Standard Products and Services Code" className="w-full border border-gray-300 rounded-md px-3 py-2" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Part Type</label>
-          <input type="text" defaultValue={piesItem?.partType || ''} className="w-full border border-gray-300 rounded-md px-3 py-2" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Category Code</label>
-          <input type="text" defaultValue={piesItem?.categoryCode || ''} className="w-full border border-gray-300 rounded-md px-3 py-2" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Hazmat Code</label>
-          <input type="text" defaultValue={piesItem?.hazMatCode || ''} className="w-full border border-gray-300 rounded-md px-3 py-2" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Item Qty Size</label>
-          <input type="number" defaultValue={piesItem?.itemQtySize || ''} className="w-full border border-gray-300 rounded-md px-3 py-2" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Item Qty UOM</label>
-          <input type="text" defaultValue={piesItem?.itemQtyUom || ''} className="w-full border border-gray-300 rounded-md px-3 py-2" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">VMRS Code</label>
-          <input type="text" defaultValue={piesItem?.vmrsCode || ''} className="w-full border border-gray-300 rounded-md px-3 py-2" />
-        </div>
-      </div>
+      <PIESBuilder value={initial} onChange={(updated) => {
+        // TODO: Wire to save action; for now, log
+        console.log('PIES updated', updated);
+      }} partTerminologyId={initial.item.partType} />
     </div>
   );
 };
