@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { SearchableSelect } from './SearchableSelect';
 
 // Segment models aligned to server PIES types
@@ -168,11 +168,12 @@ export const PIESBuilder: React.FC<PIESBuilderProps> = ({ value, onChange, partT
   }, [padb.MetaUOMCodes]);
 
   const allowedPAIDsForPart = useMemo(() => {
-    if (!partTerminologyId) return [] as string[];
+    const currentPartType = data.item.partType || partTerminologyId;
+    if (!currentPartType) return [] as string[];
     return (padb.PartAttributeAssignment || [])
-      .filter((row: any) => row.PartTerminologyID === partTerminologyId)
-      .map((row: any) => row.PAID);
-  }, [padb.PartAttributeAssignment, partTerminologyId]);
+      .filter((row: any) => String(row.PartTerminologyID) === String(currentPartType))
+      .map((row: any) => String(row.PAID));
+  }, [padb.PartAttributeAssignment, partTerminologyId, data.item.partType]);
 
   // Validation helpers
   const isValidPAID = (paid: string) => paidMap.has(paid);
@@ -208,10 +209,13 @@ export const PIESBuilder: React.FC<PIESBuilderProps> = ({ value, onChange, partT
   const [newDescription, setNewDescription] = useState<{ code: string; lang: string; desc: string }>({ code: 'DES', lang: 'EN', desc: '' });
   const [editDescIndex, setEditDescIndex] = useState<number | null>(null);
   const [editDescDraft, setEditDescDraft] = useState<{ code: string; lang: string; desc: string }>({ code: 'DES', lang: 'EN', desc: '' });
-  const [newPrice, setNewPrice] = useState<{ type: string; price: string; currency: string; uom: string }>({ type: 'LIST', price: '0', currency: 'USD', uom: '' });
-  const [newEXPI, setNewEXPI] = useState<{ code: string; value: string; uom: string }>({ code: '', value: '', uom: '' });
+  const [newPrice, setNewPrice] = useState<{ type: string; price: string; currency: string; uom: string }>({ type: 'LST', price: '0.00', currency: 'USD', uom: '' });
+  const [newEXPI, setNewEXPI] = useState<{ code: string; language: string; data: string }>({ code: '', language: 'EN', data: '' });
   const [newInterchange, setNewInterchange] = useState<{ type: string; aaia: string; label: string; part: string }>({ type: 'UP', aaia: '', label: '', part: '' });
-  const [newAttribute, setNewAttribute] = useState<{ paid: string; paName: string; uom: string; style: string; language: string; data: string; filterMode: 'filter' | 'custom' }>({ paid: '', paName: '', uom: '', style: '', language: 'EN', data: '', filterMode: 'filter' });
+  const [newAttribute, setNewAttribute] = useState<{ paid: string; paName: string; uom: string; style: string; language: string; data: string; filterMode: 'filter' | 'all' | 'custom' }>({ paid: '', paName: '', uom: '', style: '', language: 'EN', data: '', filterMode: 'filter' });
+  const [editAttrIndex, setEditAttrIndex] = useState<number | null>(null);
+  const [editAttrDraft, setEditAttrDraft] = useState<{ paid: string; paName: string; uom: string; style: string; language: string; data: string; filterMode: 'filter' | 'all' | 'custom' }>({ paid: '', paName: '', uom: '', style: '', language: 'EN', data: '', filterMode: 'filter' });
+  const [newPackage, setNewPackage] = useState({ packQty: '1', uom: '', height: '', width: '', length: '', dimUom: '', weight: '', weightUom: '' });
 
   // Validation helpers for Item Segment
   const isValidPartNumber = (s: string) => typeof s === 'string' && s.trim().length > 0 && s.trim().length <= 50;
@@ -457,34 +461,61 @@ export const PIESBuilder: React.FC<PIESBuilderProps> = ({ value, onChange, partT
 
   const renderPricesTab = () => {
     return (
-      <div className="space-y-4 max-w-4xl">
-        <div className="grid grid-cols-5 gap-2 items-end">
-          <div>
-            <label className="block text-xs mb-1">Type</label>
-            <select className="p-2 border rounded text-sm w-full" value={newPrice.type} onChange={e=>setNewPrice({ ...newPrice, type: e.target.value })}>
-              {['LIST','MSRP','COST','JOBBER'].map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
-          </div>
+      <div className="space-y-4 max-w-5xl">
+        <h4 className="text-base font-medium text-gray-900">Add Price</h4>
+        <div className="grid grid-cols-5 gap-3 items-end">
           <div>
             <label className="block text-xs mb-1">Price</label>
-            <input className="p-2 border rounded text-sm w-full" type="number" value={newPrice.price} onChange={e=>setNewPrice({ ...newPrice, price: e.target.value })} />
-          </div>
-          <div>
-            <label className="block text-xs mb-1">Currency</label>
-            <select className="p-2 border rounded text-sm w-full" value={newPrice.currency} onChange={e=>setNewPrice({ ...newPrice, currency: e.target.value })}>
-              {['USD','CAD','EUR'].map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
+            <input className="w-full p-2 border rounded text-sm" type="number" step="0.01" value={newPrice.price} onChange={e=>setNewPrice({ ...newPrice, price: parseFloat(e.target.value||'0').toFixed(2) })} placeholder="0.00" />
           </div>
           <div>
             <label className="block text-xs mb-1">UOM</label>
-            <input className="p-2 border rounded text-sm w-full" value={newPrice.uom} onChange={e=>setNewPrice({ ...newPrice, uom: e.target.value })} />
+            <select className="w-full p-2 border rounded text-sm" value={newPrice.uom} onChange={e=>setNewPrice({ ...newPrice, uom: e.target.value })}>
+              <option value="">Select Price UOM</option>
+              <option value="EA">Each</option>
+              <option value="HU">Hundred</option>
+              <option value="TH">Thousand</option>
+              <option value="PR">Pair</option>
+              <option value="ST">Set</option>
+              <option value="KT">Kit</option>
+              <option value="PK">Pack</option>
+              <option value="CS">Case</option>
+            </select>
           </div>
-          <button className="px-3 py-2 border rounded text-sm" onClick={()=>{
+          <div>
+            <label className="block text-xs mb-1">Type</label>
+            <select className="w-full p-2 border rounded text-sm" value={newPrice.type} onChange={e=>setNewPrice({ ...newPrice, type: e.target.value })}>
+              <option value="AC1">AC1 - Special Additional Cost 1</option>
+              <option value="AC2">AC2 - Special Additional Cost 2</option>
+              <option value="CR1">CR1 - Core 1</option>
+              <option value="CR2">CR2 - Core 2</option>
+              <option value="DLR">DLR - Dealer</option>
+              <option value="JBR">JBR - Jobber</option>
+              <option value="LST">LST - List</option>
+              <option value="RET">RET - Retail</option>
+              <option value="USD">USD - US Dollar</option>
+              <option value="WLS">WLS - Wholesaler</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs mb-1">Currency</label>
+            <select className="w-full p-2 border rounded text-sm" value={newPrice.currency} onChange={e=>setNewPrice({ ...newPrice, currency: e.target.value })}>
+              <option value="USD">USD - US Dollar</option>
+              <option value="CAD">CAD - Canadian Dollar</option>
+              <option value="EUR">EUR - Euro</option>
+              <option value="GBP">GBP - Pound Sterling</option>
+              <option value="JPY">JPY - Yen</option>
+              <option value="CNY">CNY - Yuan Renminbi</option>
+              <option value="MXN">MXN - Mexican Peso</option>
+            </select>
+          </div>
+          <button className="px-4 py-2 border rounded text-sm" onClick={()=>{
             update({ prices:[...data.prices,{ priceType: newPrice.type, price: parseFloat(newPrice.price||'0'), currency: newPrice.currency, priceUom: newPrice.uom||undefined }]});
-            setNewPrice({ type: 'LIST', price: '0', currency: 'USD', uom: '' });
+            setNewPrice({ type: 'LST', price: '0.00', currency: 'USD', uom: '' });
           }}>Add</button>
         </div>
-        <div className="overflow-x-auto">
+        <h4 className="text-base font-medium text-gray-900 mt-6">Current Prices</h4>
+        <div className="overflow-x-auto border rounded">
           <table className="min-w-full divide-y divide-gray-200">
             <thead>
               <tr>
@@ -492,6 +523,7 @@ export const PIESBuilder: React.FC<PIESBuilderProps> = ({ value, onChange, partT
                 <th className="px-3 py-2 text-left text-xs text-gray-500">Price</th>
                 <th className="px-3 py-2 text-left text-xs text-gray-500">Currency</th>
                 <th className="px-3 py-2 text-left text-xs text-gray-500">UOM</th>
+                <th className="px-3 py-2 text-right text-xs text-gray-500">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -500,7 +532,13 @@ export const PIESBuilder: React.FC<PIESBuilderProps> = ({ value, onChange, partT
                   <td className="px-3 py-2 text-sm">{p.priceType}</td>
                   <td className="px-3 py-2 text-sm">{p.price}</td>
                   <td className="px-3 py-2 text-sm">{p.currency}</td>
-                  <td className="px-3 py-2 text-sm">{p.priceUom || ''}</td>
+                  <td className="px-3 py-2 text-sm">{p.priceUom || '-'}</td>
+                  <td className="px-3 py-2 text-sm text-right whitespace-nowrap">
+                    <button className="px-2 py-1 border rounded text-xs text-red-700" onClick={() => {
+                      const next = data.prices.filter((_, i) => i !== idx);
+                      update({ prices: next });
+                    }}>Delete</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -512,41 +550,54 @@ export const PIESBuilder: React.FC<PIESBuilderProps> = ({ value, onChange, partT
 
   const renderEXPI = () => {
     return (
-      <div className="space-y-4 max-w-4xl">
-        <div className="grid grid-cols-5 gap-2 items-end">
+      <div className="space-y-4 max-w-5xl">
+        <h4 className="text-base font-medium text-gray-900">Add EXPI</h4>
+        <div className="grid grid-cols-4 gap-3 items-end">
           <div>
-            <label className="block text-xs mb-1">EXPI Code</label>
-            <input className="p-2 border rounded text-sm w-full" value={newEXPI.code} onChange={e=>setNewEXPI({ ...newEXPI, code: e.target.value })} placeholder="e.g. COI" />
-          </div>
-          <div className="col-span-2">
-            <label className="block text-xs mb-1">Value</label>
-            <input className="p-2 border rounded text-sm w-full" value={newEXPI.value} onChange={e=>setNewEXPI({ ...newEXPI, value: e.target.value })} />
+            <label className="block text-xs mb-1">Code</label>
+            <input className="w-full p-2 border rounded text-sm" value={newEXPI.code} onChange={e=>setNewEXPI({ ...newEXPI, code: e.target.value })} placeholder="EXPI Code" />
           </div>
           <div>
-            <label className="block text-xs mb-1">UOM</label>
-            <SearchableSelect options={uomOptions} value={newEXPI.uom} onChange={(v)=>setNewEXPI({ ...newEXPI, uom: v })} placeholder="UOM" />
+            <label className="block text-xs mb-1">Language</label>
+            <select className="w-full p-2 border rounded text-sm" value={newEXPI.language} onChange={e=>setNewEXPI({ ...newEXPI, language: e.target.value })}>
+              <option value="EN">EN</option>
+              <option value="FR">FR</option>
+              <option value="ES">ES</option>
+            </select>
           </div>
-          <button className="px-3 py-2 border rounded text-sm" onClick={()=>{
+          <div>
+            <label className="block text-xs mb-1">Data</label>
+            <input className="w-full p-2 border rounded text-sm" value={newEXPI.data} onChange={e=>setNewEXPI({ ...newEXPI, data: e.target.value })} placeholder="EXPI Data" />
+          </div>
+          <button className="px-4 py-2 border rounded text-sm" onClick={()=>{
             if(!newEXPI.code.trim()) return; 
-            update({ expi:[...data.expi, { expiCode: newEXPI.code.trim(), expiValue: newEXPI.value, uom: newEXPI.uom||undefined }]});
-            setNewEXPI({ code: '', value: '', uom: '' });
+            update({ expi:[...data.expi, { expiCode: newEXPI.code.trim(), expiValue: newEXPI.data, languageCode: newEXPI.language }]});
+            setNewEXPI({ code: '', language: 'EN', data: '' });
           }}>Add</button>
         </div>
-        <div className="overflow-x-auto">
+        <h4 className="text-base font-medium text-gray-900 mt-6">Current EXPI</h4>
+        <div className="overflow-x-auto border rounded">
           <table className="min-w-full divide-y divide-gray-200">
             <thead>
               <tr>
                 <th className="px-3 py-2 text-left text-xs text-gray-500">Code</th>
-                <th className="px-3 py-2 text-left text-xs text-gray-500">Value</th>
-                <th className="px-3 py-2 text-left text-xs text-gray-500">UOM</th>
+                <th className="px-3 py-2 text-left text-xs text-gray-500">Language</th>
+                <th className="px-3 py-2 text-left text-xs text-gray-500">Data</th>
+                <th className="px-3 py-2 text-right text-xs text-gray-500">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {data.expi.map((e, idx) => (
                 <tr key={idx}>
                   <td className="px-3 py-2 text-sm">{e.expiCode}</td>
+                  <td className="px-3 py-2 text-sm">{e.languageCode || 'EN'}</td>
                   <td className="px-3 py-2 text-sm">{e.expiValue}</td>
-                  <td className="px-3 py-2 text-sm">{e.uom || ''}</td>
+                  <td className="px-3 py-2 text-sm text-right whitespace-nowrap">
+                    <button className="px-2 py-1 border rounded text-xs text-red-700" onClick={() => {
+                      const next = data.expi.filter((_, i) => i !== idx);
+                      update({ expi: next });
+                    }}>Delete</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -557,7 +608,15 @@ export const PIESBuilder: React.FC<PIESBuilderProps> = ({ value, onChange, partT
   };
 
   const renderAttributes = () => {
-    const filteredAttributeOptions = newAttribute.filterMode === 'filter' ? attributeOptions : [];
+    // Debug: log the current part type and available assignments
+    console.log('Current partTerminologyId:', partTerminologyId);
+    console.log('PartAttributeAssignment data:', padb.PartAttributeAssignment);
+    console.log('Allowed PAIDs for part:', allowedPAIDsForPart);
+    
+    const filteredAttributeOptions = newAttribute.filterMode === 'filter' ? attributeOptions : 
+                                   newAttribute.filterMode === 'all' ? (padb.PartAttributes || []).map((r: any) => ({ value: r.PAID, label: `${r.PAID} - ${r.PAName || ''}` })) : [];
+    
+    console.log('Filtered options:', filteredAttributeOptions);
     const selectedPAName = newAttribute.paid ? paidMap.get(newAttribute.paid)?.PAName || '' : '';
     const displayPAName = newAttribute.filterMode === 'filter' ? selectedPAName : newAttribute.paName;
 
@@ -568,7 +627,11 @@ export const PIESBuilder: React.FC<PIESBuilderProps> = ({ value, onChange, partT
         <div className="flex gap-4">
           <label className="flex items-center">
             <input type="radio" name="attrMode" checked={newAttribute.filterMode === 'filter'} onChange={() => setNewAttribute({ ...newAttribute, filterMode: 'filter', paid: '', paName: '' })} className="mr-2" />
-            <span className="text-sm">Filter PAID {partTerminologyId && `(Part Type: ${partTerminologyId})`}</span>
+            <span className="text-sm">Filter PAID {(data.item.partType || partTerminologyId) && `(Part Type: ${data.item.partType || partTerminologyId}) - ${allowedPAIDsForPart.length} available`}</span>
+          </label>
+          <label className="flex items-center">
+            <input type="radio" name="attrMode" checked={newAttribute.filterMode === 'all'} onChange={() => setNewAttribute({ ...newAttribute, filterMode: 'all', paid: '', paName: '' })} className="mr-2" />
+            <span className="text-sm">Filter PAID (All - Not Filtered By Part Type) - {(padb.PartAttributes || []).length} total</span>
           </label>
           <label className="flex items-center">
             <input type="radio" name="attrMode" checked={newAttribute.filterMode === 'custom'} onChange={() => setNewAttribute({ ...newAttribute, filterMode: 'custom', paid: '', paName: '' })} className="mr-2" />
@@ -579,15 +642,37 @@ export const PIESBuilder: React.FC<PIESBuilderProps> = ({ value, onChange, partT
         <div className="grid grid-cols-5 gap-3">
           <div>
             <label className="block text-xs mb-1">PAID</label>
-            {newAttribute.filterMode === 'filter' ? (
-              <SearchableSelect options={filteredAttributeOptions} value={newAttribute.paid} onChange={(val) => setNewAttribute({ ...newAttribute, paid: val })} placeholder="Select PAID" />
+            {newAttribute.filterMode !== 'custom' ? (
+              <SearchableSelect options={filteredAttributeOptions} value={newAttribute.paid} onChange={(val) => {
+                // Find PAPTID for this PAID and PartTerminologyID combination
+                const currentPartType = data.item.partType || partTerminologyId;
+                const paptidRow = (padb.PartAttributeAssignment || []).find((row: any) => 
+                  String(row.PAID) === String(val) && 
+                  (!currentPartType || String(row.PartTerminologyID) === String(currentPartType))
+                );
+                
+                // Find UOM assignments for this PAPTID
+                const uomAssignments = (padb.MetaUOMCodeAssignment || []).filter((u: any) => 
+                  String(u.PAPTID) === String(paptidRow?.PAPTID)
+                );
+                
+                // Get the first UOM code if available
+                let suggestedUom = '';
+                if (uomAssignments.length > 0) {
+                  const metaUomId = uomAssignments[0].MetaUomID;
+                  const uomCode = (padb.MetaUOMCodes || []).find((u: any) => String(u.MetaUOMID) === String(metaUomId));
+                  suggestedUom = uomCode?.UOMCode || '';
+                }
+                
+                setNewAttribute({ ...newAttribute, paid: val, uom: suggestedUom });
+              }} placeholder="Select PAID" />
             ) : (
               <input className="w-full p-2 border rounded text-sm bg-gray-100" value="" readOnly placeholder="Custom mode" />
             )}
           </div>
           <div>
             <label className="block text-xs mb-1">PA Name</label>
-            {newAttribute.filterMode === 'filter' ? (
+            {newAttribute.filterMode !== 'custom' ? (
               <input className="w-full p-2 border rounded text-sm bg-gray-50" value={displayPAName} readOnly placeholder="Auto from PAID" />
             ) : (
               <input className="w-full p-2 border rounded text-sm" value={newAttribute.paName} onChange={(e) => setNewAttribute({ ...newAttribute, paName: e.target.value })} placeholder="Custom name" />
@@ -619,7 +704,7 @@ export const PIESBuilder: React.FC<PIESBuilderProps> = ({ value, onChange, partT
           <button className="px-4 py-2 border rounded text-sm" onClick={() => {
             if (!newAttribute.data.trim()) return;
             const newAttr = {
-              paid: newAttribute.filterMode === 'filter' ? newAttribute.paid : '',
+              paid: newAttribute.filterMode !== 'custom' ? newAttribute.paid : '',
               value: newAttribute.data,
               uom: newAttribute.uom || undefined
             };
@@ -648,10 +733,29 @@ export const PIESBuilder: React.FC<PIESBuilderProps> = ({ value, onChange, partT
                   <td className="px-3 py-2 text-sm">{a.uom || '-'}</td>
                   <td className="px-3 py-2 text-sm">{a.value}</td>
                   <td className="px-3 py-2 text-sm text-right whitespace-nowrap">
-                    <button className="px-2 py-1 border rounded text-xs text-red-700" onClick={() => {
-                      const next = data.attributes.filter((_, i) => i !== idx);
-                      update({ attributes: next });
-                    }}>Delete</button>
+                    {editAttrIndex === idx ? (
+                      <>
+                        <button className="px-2 py-1 mr-2 border rounded text-xs" onClick={() => {
+                          const next = [...data.attributes];
+                          next[idx] = { paid: editAttrDraft.paid, value: editAttrDraft.data, uom: editAttrDraft.uom };
+                          update({ attributes: next });
+                          setEditAttrIndex(null);
+                        }}>Save</button>
+                        <button className="px-2 py-1 border rounded text-xs" onClick={() => setEditAttrIndex(null)}>Cancel</button>
+                      </>
+                    ) : (
+                      <>
+                        <button className="px-2 py-1 mr-2 border rounded text-xs" onClick={() => {
+                          setEditAttrIndex(idx);
+                          setEditAttrDraft({ paid: a.paid, paName: a.paid ? paidMap.get(a.paid)?.PAName || '' : '', uom: a.uom || '', style: '', language: 'EN', data: a.value, filterMode: 'filter' });
+                        }}>Edit</button>
+                        <button className="px-2 py-1 border rounded text-xs text-red-700" onClick={() => {
+                          const next = data.attributes.filter((_, i) => i !== idx);
+                          update({ attributes: next });
+                          if (editAttrIndex === idx) setEditAttrIndex(null);
+                        }}>Delete</button>
+                      </>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -663,66 +767,188 @@ export const PIESBuilder: React.FC<PIESBuilderProps> = ({ value, onChange, partT
   };
 
   const renderPackages = () => (
-    <div className="space-y-3 max-w-5xl">
-      <button className="px-3 py-1 border rounded text-sm" onClick={addPackage}>Add Package</button>
-      {data.packages.map((p, idx) => (
-        <div key={idx} className="grid grid-cols-8 gap-2 items-center">
-          <input className="p-2 border rounded text-sm" placeholder="Qty" type="number" value={p.packageQuantity} onChange={e=>{ const next=[...data.packages]; next[idx]={...p, packageQuantity: parseInt(e.target.value||'0')}; update({packages:next}); }} />
-          <SearchableSelect options={uomOptions} value={p.packageUom} onChange={(val)=>{ const next=[...data.packages]; next[idx]={...p, packageUom: val}; update({packages:next}); }} placeholder="Pkg UOM" />
-          <input className="p-2 border rounded text-sm" placeholder="Len" type="number" value={p.packageLength || ''} onChange={e=>{ const next=[...data.packages]; next[idx]={...p, packageLength: parseFloat(e.target.value||'')}; update({packages:next}); }} />
-          <input className="p-2 border rounded text-sm" placeholder="Wid" type="number" value={p.packageWidth || ''} onChange={e=>{ const next=[...data.packages]; next[idx]={...p, packageWidth: parseFloat(e.target.value||'')}; update({packages:next}); }} />
-          <input className="p-2 border rounded text-sm" placeholder="Hgt" type="number" value={p.packageHeight || ''} onChange={e=>{ const next=[...data.packages]; next[idx]={...p, packageHeight: parseFloat(e.target.value||'')}; update({packages:next}); }} />
-          <SearchableSelect options={uomOptions} value={p.dimensionUom || ''} onChange={(val)=>{ const next=[...data.packages]; next[idx]={...p, dimensionUom: val}; update({packages:next}); }} placeholder="Dim UOM" />
-          <input className="p-2 border rounded text-sm" placeholder="Wgt" type="number" value={p.packageWeight || ''} onChange={e=>{ const next=[...data.packages]; next[idx]={...p, packageWeight: parseFloat(e.target.value||'')}; update({packages:next}); }} />
-          <SearchableSelect options={uomOptions} value={p.weightUom || ''} onChange={(val)=>{ const next=[...data.packages]; next[idx]={...p, weightUom: val}; update({packages:next}); }} placeholder="Wgt UOM" />
+    <div className="space-y-4 max-w-5xl">
+      <h4 className="text-base font-medium text-gray-900">Add Package</h4>
+      <div className="grid grid-cols-4 gap-3">
+        <div>
+          <label className="block text-xs mb-1">Pack Qty</label>
+          <input className="w-full p-2 border rounded text-sm" type="number" value={newPackage.packQty} onChange={e=>setNewPackage({...newPackage, packQty: e.target.value})} />
         </div>
-      ))}
+        <div>
+          <label className="block text-xs mb-1">UOM</label>
+          <SearchableSelect options={uomOptions} value={newPackage.uom} onChange={(val)=>setNewPackage({...newPackage, uom: val})} placeholder="Select UOM" />
+        </div>
+        <div>
+          <label className="block text-xs mb-1">Weight</label>
+          <input className="w-full p-2 border rounded text-sm" type="number" step="0.01" value={newPackage.weight} onChange={e=>setNewPackage({...newPackage, weight: e.target.value})} />
+        </div>
+        <div>
+          <label className="block text-xs mb-1">Weight UOM</label>
+          <SearchableSelect options={uomOptions} value={newPackage.weightUom} onChange={(val)=>setNewPackage({...newPackage, weightUom: val})} placeholder="Weight UOM" />
+        </div>
+        <div className="col-span-4">
+          <button className="px-4 py-2 border rounded text-sm" onClick={()=>{
+            update({ packages:[...data.packages, { packageQuantity: parseInt(newPackage.packQty||'1'), packageUom: newPackage.uom, packageWeight: parseFloat(newPackage.weight||'0'), weightUom: newPackage.weightUom }]});
+            setNewPackage({ packQty: '1', uom: '', height: '', width: '', length: '', dimUom: '', weight: '', weightUom: '' });
+          }}>Add Package</button>
+        </div>
+      </div>
+      <h4 className="text-base font-medium text-gray-900 mt-6">Current Packages</h4>
+      <div className="overflow-x-auto border rounded">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead>
+            <tr>
+              <th className="px-3 py-2 text-left text-xs text-gray-500">Pack Qty</th>
+              <th className="px-3 py-2 text-left text-xs text-gray-500">UOM</th>
+              <th className="px-3 py-2 text-left text-xs text-gray-500">Weight</th>
+              <th className="px-3 py-2 text-right text-xs text-gray-500">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {data.packages.map((p, idx) => (
+              <tr key={idx}>
+                <td className="px-3 py-2 text-sm">{p.packageQuantity}</td>
+                <td className="px-3 py-2 text-sm">{p.packageUom}</td>
+                <td className="px-3 py-2 text-sm">{p.packageWeight} {p.weightUom}</td>
+                <td className="px-3 py-2 text-sm text-right whitespace-nowrap">
+                  <button className="px-2 py-1 border rounded text-xs text-red-700" onClick={() => {
+                    const next = data.packages.filter((_, i) => i !== idx);
+                    update({ packages: next });
+                  }}>Delete</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 
-  const renderKits = () => (
-    <div className="space-y-3 max-w-4xl">
-      <button className="px-3 py-1 border rounded text-sm" onClick={addKit}>Add Kit Component</button>
-      {data.kits.map((k, idx) => (
-        <div key={idx} className="grid grid-cols-5 gap-2 items-center">
-          <input className="p-2 border rounded text-sm" placeholder="Master PartNo" value={k.kitMasterPartNo} onChange={e=>{ const n=[...data.kits]; n[idx]={...k, kitMasterPartNo:e.target.value}; update({kits:n}); }} />
-          <input className="p-2 border rounded text-sm" placeholder="Component PartNo" value={k.kitComponentPartNo} onChange={e=>{ const n=[...data.kits]; n[idx]={...k, kitComponentPartNo:e.target.value}; update({kits:n}); }} />
-          <input className="p-2 border rounded text-sm" placeholder="Qty" type="number" value={k.kitComponentQuantity} onChange={e=>{ const n=[...data.kits]; n[idx]={...k, kitComponentQuantity: parseInt(e.target.value||'0')}; update({kits:n}); }} />
-          <SearchableSelect options={uomOptions} value={k.kitComponentUom || ''} onChange={(val)=>{ const n=[...data.kits]; n[idx]={...k, kitComponentUom: val}; update({kits:n}); }} placeholder="UOM" />
+  const renderKits = () => {
+    const [newKit, setNewKit] = useState({ partNumber: '', brand: '', subBrand: '', cmptId: '', language: 'EN', descCode: '', partType: '', soldSep: 'Yes', description: '' });
+    
+    return (
+      <div className="space-y-4 max-w-5xl">
+        <h4 className="text-base font-medium text-gray-900">Add Kit Component</h4>
+        <div className="grid grid-cols-4 gap-3">
+          <div>
+            <label className="block text-xs mb-1">Part Number</label>
+            <input className="w-full p-2 border rounded text-sm" value={newKit.partNumber} onChange={e=>setNewKit({...newKit, partNumber: e.target.value})} />
+          </div>
+          <div>
+            <label className="block text-xs mb-1">Brand</label>
+            <SearchableSelect options={brands.map((b: any) => ({ value: b.brandId, label: `${b.brandId} - ${b.brandName || ''}` }))} value={newKit.brand} onChange={(val)=>setNewKit({...newKit, brand: val})} placeholder="Select Brand" />
+          </div>
+          <div>
+            <label className="block text-xs mb-1">Sub Brand</label>
+            <input className="w-full p-2 border rounded text-sm" value={newKit.subBrand} onChange={e=>setNewKit({...newKit, subBrand: e.target.value})} />
+          </div>
+          <div>
+            <label className="block text-xs mb-1">CMPT ID</label>
+            <input className="w-full p-2 border rounded text-sm" value={newKit.cmptId} onChange={e=>setNewKit({...newKit, cmptId: e.target.value})} />
+          </div>
+          <div>
+            <label className="block text-xs mb-1">Language</label>
+            <select className="w-full p-2 border rounded text-sm" value={newKit.language} onChange={e=>setNewKit({...newKit, language: e.target.value})}>
+              <option value="EN">EN</option>
+              <option value="FR">FR</option>
+              <option value="ES">ES</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs mb-1">Desc Code</label>
+            <input className="w-full p-2 border rounded text-sm" value={newKit.descCode} onChange={e=>setNewKit({...newKit, descCode: e.target.value})} />
+          </div>
+          <div>
+            <label className="block text-xs mb-1">Part Type</label>
+            <SearchableSelect options={pcdb.partTypes.map((p: any) => ({ value: p.PartTerminologyID, label: `${p.PartTerminologyID} - ${p.PartTerminologyName || ''}` }))} value={newKit.partType} onChange={(val)=>setNewKit({...newKit, partType: val})} placeholder="Select Part Type" />
+          </div>
+          <div>
+            <label className="block text-xs mb-1">Sold Sep</label>
+            <div className="flex gap-2 mt-2">
+              <label className="flex items-center"><input type="radio" name="soldSep" checked={newKit.soldSep === 'Yes'} onChange={()=>setNewKit({...newKit, soldSep: 'Yes'})} className="mr-1" />Yes</label>
+              <label className="flex items-center"><input type="radio" name="soldSep" checked={newKit.soldSep === 'No'} onChange={()=>setNewKit({...newKit, soldSep: 'No'})} className="mr-1" />No</label>
+            </div>
+          </div>
+          <div className="col-span-4">
+            <label className="block text-xs mb-1">Description</label>
+            <textarea className="w-full p-2 border rounded text-sm" rows={2} value={newKit.description} onChange={e=>setNewKit({...newKit, description: e.target.value})} />
+          </div>
+          <div className="col-span-4 flex gap-2">
+            <button className="px-4 py-2 border rounded text-sm" onClick={()=>{
+              update({ kits:[...data.kits, { kitMasterPartNo: newKit.partNumber, kitComponentPartNo: newKit.partNumber, kitComponentQuantity: 1 }]});
+              setNewKit({ partNumber: '', brand: '', subBrand: '', cmptId: '', language: 'EN', descCode: '', partType: '', soldSep: 'Yes', description: '' });
+            }}>Add Kit Component</button>
+            <button className="px-4 py-2 bg-blue-600 text-white rounded text-sm">ACES</button>
+          </div>
         </div>
-      ))}
-    </div>
-  );
+        <h4 className="text-base font-medium text-gray-900 mt-6">Current Kit Components</h4>
+        <div className="overflow-x-auto border rounded">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead>
+              <tr>
+                <th className="px-3 py-2 text-left text-xs text-gray-500">Part Number</th>
+                <th className="px-3 py-2 text-left text-xs text-gray-500">Brand</th>
+                <th className="px-3 py-2 text-left text-xs text-gray-500">Part Type</th>
+                <th className="px-3 py-2 text-left text-xs text-gray-500">Sold Sep</th>
+                <th className="px-3 py-2 text-left text-xs text-gray-500">Description</th>
+                <th className="px-3 py-2 text-right text-xs text-gray-500">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {data.kits.map((k, idx) => (
+                <tr key={idx}>
+                  <td className="px-3 py-2 text-sm">{k.kitComponentPartNo}</td>
+                  <td className="px-3 py-2 text-sm">-</td>
+                  <td className="px-3 py-2 text-sm">-</td>
+                  <td className="px-3 py-2 text-sm">-</td>
+                  <td className="px-3 py-2 text-sm">-</td>
+                  <td className="px-3 py-2 text-sm text-right whitespace-nowrap">
+                    <button className="px-2 py-1 border rounded text-xs text-red-700" onClick={() => {
+                      const next = data.kits.filter((_, i) => i !== idx);
+                      update({ kits: next });
+                    }}>Delete</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  };
 
   const renderInterchange = () => {
     return (
-      <div className="space-y-4 max-w-4xl">
-        <div className="grid grid-cols-5 gap-2 items-end">
+      <div className="space-y-4 max-w-5xl">
+        <h4 className="text-base font-medium text-gray-900">Add Interchange</h4>
+        <div className="grid grid-cols-5 gap-3 items-end">
           <div>
             <label className="block text-xs mb-1">Type</label>
-            <select className="p-2 border rounded text-sm w-full" value={newInterchange.type} onChange={e=>setNewInterchange({ ...newInterchange, type: e.target.value })}>
+            <select className="w-full p-2 border rounded text-sm" value={newInterchange.type} onChange={e=>setNewInterchange({ ...newInterchange, type: e.target.value })}>
               {['OE','OES','UP','IP'].map(x => <option key={x} value={x}>{x}</option>)}
             </select>
           </div>
           <div>
             <label className="block text-xs mb-1">Brand AAIA</label>
-            <input className="p-2 border rounded text-sm w-full" value={newInterchange.aaia} onChange={e=>setNewInterchange({ ...newInterchange, aaia: e.target.value })} />
+            <input className="w-full p-2 border rounded text-sm" value={newInterchange.aaia} onChange={e=>setNewInterchange({ ...newInterchange, aaia: e.target.value })} />
           </div>
           <div>
             <label className="block text-xs mb-1">Brand Label</label>
-            <input className="p-2 border rounded text-sm w-full" value={newInterchange.label} onChange={e=>setNewInterchange({ ...newInterchange, label: e.target.value })} />
+            <input className="w-full p-2 border rounded text-sm" value={newInterchange.label} onChange={e=>setNewInterchange({ ...newInterchange, label: e.target.value })} />
           </div>
           <div>
             <label className="block text-xs mb-1">Part No</label>
-            <input className="p-2 border rounded text-sm w-full" value={newInterchange.part} onChange={e=>setNewInterchange({ ...newInterchange, part: e.target.value })} />
+            <input className="w-full p-2 border rounded text-sm" value={newInterchange.part} onChange={e=>setNewInterchange({ ...newInterchange, part: e.target.value })} />
           </div>
-          <button className="px-3 py-2 border rounded text-sm" onClick={()=>{
+          <button className="px-4 py-2 border rounded text-sm" onClick={()=>{
             if(!newInterchange.part.trim()) return; 
             update({ interchange:[...data.interchange,{ interchangeType:newInterchange.type, brandAaiaId:newInterchange.aaia||undefined, brandLabel:newInterchange.label||undefined, partNo:newInterchange.part }]});
             setNewInterchange({ type: 'UP', aaia: '', label: '', part: '' });
           }}>Add</button>
         </div>
-        <div className="overflow-x-auto">
+        <h4 className="text-base font-medium text-gray-900 mt-6">Current Interchange</h4>
+        <div className="overflow-x-auto border rounded">
           <table className="min-w-full divide-y divide-gray-200">
             <thead>
               <tr>
@@ -730,15 +956,22 @@ export const PIESBuilder: React.FC<PIESBuilderProps> = ({ value, onChange, partT
                 <th className="px-3 py-2 text-left text-xs text-gray-500">Brand AAIA</th>
                 <th className="px-3 py-2 text-left text-xs text-gray-500">Brand Label</th>
                 <th className="px-3 py-2 text-left text-xs text-gray-500">Part No</th>
+                <th className="px-3 py-2 text-right text-xs text-gray-500">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {data.interchange.map((i, idx) => (
                 <tr key={idx}>
                   <td className="px-3 py-2 text-sm">{i.interchangeType}</td>
-                  <td className="px-3 py-2 text-sm">{i.brandAaiaId || ''}</td>
-                  <td className="px-3 py-2 text-sm">{i.brandLabel || ''}</td>
+                  <td className="px-3 py-2 text-sm">{i.brandAaiaId || '-'}</td>
+                  <td className="px-3 py-2 text-sm">{i.brandLabel || '-'}</td>
                   <td className="px-3 py-2 text-sm">{i.partNo}</td>
+                  <td className="px-3 py-2 text-sm text-right whitespace-nowrap">
+                    <button className="px-2 py-1 border rounded text-xs text-red-700" onClick={() => {
+                      const next = data.interchange.filter((_, i) => i !== idx);
+                      update({ interchange: next });
+                    }}>Delete</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -749,15 +982,37 @@ export const PIESBuilder: React.FC<PIESBuilderProps> = ({ value, onChange, partT
   };
 
   const renderAssets = () => (
-    <div className="space-y-3 max-w-4xl">
-      <button className="px-3 py-1 border rounded text-sm" onClick={addAsset}>Add Asset</button>
-      {data.digitalAssets.map((a, idx) => (
-        <div key={idx} className="grid grid-cols-4 gap-2 items-center">
-          <input className="p-2 border rounded text-sm" placeholder="Type (P04, P01)" value={a.assetType} onChange={e=>{ const n=[...data.digitalAssets]; n[idx]={...a, assetType:e.target.value}; update({digitalAssets:n}); }} />
-          <input className="p-2 border rounded text-sm col-span-2" placeholder="URI" value={a.uri} onChange={e=>{ const n=[...data.digitalAssets]; n[idx]={...a, uri:e.target.value}; update({digitalAssets:n}); }} />
-          <input className="p-2 border rounded text-sm" placeholder="Description" value={a.assetDescription || ''} onChange={e=>{ const n=[...data.digitalAssets]; n[idx]={...a, assetDescription:e.target.value}; update({digitalAssets:n}); }} />
-        </div>
-      ))}
+    <div className="space-y-4 max-w-5xl">
+      <h4 className="text-base font-medium text-gray-900">Add Digital Asset</h4>
+      <button className="px-4 py-2 border rounded text-sm" onClick={addAsset}>Add Asset</button>
+      <h4 className="text-base font-medium text-gray-900 mt-6">Current Digital Assets</h4>
+      <div className="overflow-x-auto border rounded">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead>
+            <tr>
+              <th className="px-3 py-2 text-left text-xs text-gray-500">Type</th>
+              <th className="px-3 py-2 text-left text-xs text-gray-500">URI</th>
+              <th className="px-3 py-2 text-left text-xs text-gray-500">Description</th>
+              <th className="px-3 py-2 text-right text-xs text-gray-500">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {data.digitalAssets.map((a, idx) => (
+              <tr key={idx}>
+                <td className="px-3 py-2 text-sm">{a.assetType}</td>
+                <td className="px-3 py-2 text-sm">{a.uri}</td>
+                <td className="px-3 py-2 text-sm">{a.assetDescription || '-'}</td>
+                <td className="px-3 py-2 text-sm text-right whitespace-nowrap">
+                  <button className="px-2 py-1 border rounded text-xs text-red-700" onClick={() => {
+                    const next = data.digitalAssets.filter((_, i) => i !== idx);
+                    update({ digitalAssets: next });
+                  }}>Delete</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 
