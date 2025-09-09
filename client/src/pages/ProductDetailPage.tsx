@@ -304,37 +304,15 @@ const ProfileTab: React.FC<{ product: any }> = ({ product }) => {
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">Unit Type</label>
         <select defaultValue={product.unitType} className="w-full border border-gray-300 rounded-md px-3 py-2">
-  
-      <label className="block text-sm font-medium text-gray-700 mb-2">SKU</label>
-      <input type="text" defaultValue={product.sku} className="w-full border border-gray-300 rounded-md px-3 py-2" />
+          <option value="Each">Each</option>
+          <option value="Set">Set</option>
+          <option value="Pair">Pair</option>
+          <option value="Kit">Kit</option>
+        </select>
+      </div>
     </div>
-    <div className="col-span-2">
-      <label className="block text-sm font-medium text-gray-700 mb-2">Product Name</label>
-      <input type="text" defaultValue={product.productName} className="w-full border border-gray-300 rounded-md px-3 py-2" />
-    </div>
-    <div className="col-span-2">
-      <label className="block text-sm font-medium text-gray-700 mb-2">Short Description</label>
-      <textarea defaultValue={product.shortDescription} rows={3} className="w-full border border-gray-300 rounded-md px-3 py-2" />
-    </div>
-    <div className="col-span-2">
-      <label className="block text-sm font-medium text-gray-700 mb-2">Long Description</label>
-      <textarea defaultValue={product.longDescription} rows={5} className="w-full border border-gray-300 rounded-md px-3 py-2" />
-    </div>
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2">Stock</label>
-      <input type="number" defaultValue={product.stock} className="w-full border border-gray-300 rounded-md px-3 py-2" />
-    </div>
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2">Unit Type</label>
-      <select defaultValue={product.unitType} className="w-full border border-gray-300 rounded-md px-3 py-2">
-        <option value="Each">Each</option>
-        <option value="Set">Set</option>
-        <option value="Pair">Pair</option>
-        <option value="Kit">Kit</option>
-      </select>
-    </div>
-  </div>
-);
+  );
+};
 
 const ACESTab: React.FC<{ product: any }> = ({ product }) => {
   const applications = product.acesApplications || [];
