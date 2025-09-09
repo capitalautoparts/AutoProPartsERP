@@ -196,13 +196,13 @@ export const PIESBuilder: React.FC<PIESBuilderProps> = ({ value, onChange, partT
 
   // UI helpers
   const attributeOptions = useMemo(() => {
-    const all = (padb.PartAttributes || []).map((r: any) => ({ value: r.PAID, label: `' + (r.PAID) + ' - ' + (r.PAName || '') + '` }));
+    const all = (padb.PartAttributes || []).map((r: any) => ({ value: r.PAID, label: `${r.PAID} - ${r.PAName || ''}` }));
     if (!partTerminologyId) return all;
     const allowed = new Set(allowedPAIDsForPart);
     return all.filter(opt => allowed.has(opt.value));
   }, [padb.PartAttributes, allowedPAIDsForPart, partTerminologyId]);
 
-  const uomOptions = useMemo(() => (padb.MetaUOMCodes || []).map((r: any) => ({ value: r.UOMCode, label: `' + (r.UOMCode) + ' - ' + (r.UOMLabel || r.UOMDescription || '') + '` })), [padb.MetaUOMCodes]);
+  const uomOptions = useMemo(() => (padb.MetaUOMCodes || []).map((r: any) => ({ value: r.UOMCode, label: `${r.UOMCode} - ${r.UOMLabel || r.UOMDescription || ''}` })), [padb.MetaUOMCodes]);
 
   // Quick-add form state for non-Item segments
   const [newDescription, setNewDescription] = useState<{ code: string; lang: string; desc: string }>({ code: 'DES', lang: 'EN', desc: '' });
@@ -211,6 +211,7 @@ export const PIESBuilder: React.FC<PIESBuilderProps> = ({ value, onChange, partT
   const [newPrice, setNewPrice] = useState<{ type: string; price: string; currency: string; uom: string }>({ type: 'LIST', price: '0', currency: 'USD', uom: '' });
   const [newEXPI, setNewEXPI] = useState<{ code: string; value: string; uom: string }>({ code: '', value: '', uom: '' });
   const [newInterchange, setNewInterchange] = useState<{ type: string; aaia: string; label: string; part: string }>({ type: 'UP', aaia: '', label: '', part: '' });
+  const [newAttribute, setNewAttribute] = useState<{ paid: string; paName: string; uom: string; style: string; language: string; data: string; filterMode: 'filter' | 'custom' }>({ paid: '', paName: '', uom: '', style: '', language: 'EN', data: '', filterMode: 'filter' });
 
   // Validation helpers for Item Segment
   const isValidPartNumber = (s: string) => typeof s === 'string' && s.trim().length > 0 && s.trim().length <= 50;
@@ -555,28 +556,111 @@ export const PIESBuilder: React.FC<PIESBuilderProps> = ({ value, onChange, partT
     );
   };
 
-  const renderAttributes = () => (
-    <div className="space-y-3 max-w-5xl">
-      <div className="flex items-center gap-2">
-        <button className="px-3 py-1 border rounded text-sm" onClick={addAttribute}>Add Attribute</button>
-        {partTerminologyId && <span className="text-xs text-gray-600">Filtered by PartType {partTerminologyId}</span>}
-      </div>
-      {data.attributes.map((a, idx) => {
-        const paidValid = isValidPAID(a.paid);
-        const paidAllowed = isPAIDAllowedForPart(a.paid);
-        return (
-          <div key={idx} className="grid grid-cols-6 gap-2 items-center">
-            <SearchableSelect options={attributeOptions} value={a.paid} onChange={(val)=>{ const next=[...data.attributes]; next[idx]={...a, paid:val}; update({attributes:next}); }} placeholder="PAID" />
-            {!paidValid && a.paid && <span className="text-xs text-red-600">Unknown PAID</span>}
-            {paidValid && !paidAllowed && <span className="text-xs text-yellow-700">Not assigned to this PartType</span>}
-            <input className="p-2 border rounded text-sm col-span-2" placeholder="Value" value={a.value} onChange={e=>{ const next=[...data.attributes]; next[idx]={...a, value:e.target.value}; update({attributes:next}); }} />
-            <SearchableSelect options={uomOptions} value={a.uom || ''} onChange={(val)=>{ const next=[...data.attributes]; next[idx]={...a, uom:val}; update({attributes:next}); }} placeholder="UOM" />
-            {a.uom && !isValidUOM(a.uom) && <span className="text-xs text-red-600">Invalid UOM</span>}
+  const renderAttributes = () => {
+    const filteredAttributeOptions = newAttribute.filterMode === 'filter' ? attributeOptions : [];
+    const selectedPAName = newAttribute.paid ? paidMap.get(newAttribute.paid)?.PAName || '' : '';
+    const displayPAName = newAttribute.filterMode === 'filter' ? selectedPAName : newAttribute.paName;
+
+    return (
+      <div className="space-y-4 max-w-5xl">
+        <h4 className="text-base font-medium text-gray-900">Add Attribute</h4>
+        
+        <div className="flex gap-4">
+          <label className="flex items-center">
+            <input type="radio" name="attrMode" checked={newAttribute.filterMode === 'filter'} onChange={() => setNewAttribute({ ...newAttribute, filterMode: 'filter', paid: '', paName: '' })} className="mr-2" />
+            <span className="text-sm">Filter PAID {partTerminologyId && `(Part Type: ${partTerminologyId})`}</span>
+          </label>
+          <label className="flex items-center">
+            <input type="radio" name="attrMode" checked={newAttribute.filterMode === 'custom'} onChange={() => setNewAttribute({ ...newAttribute, filterMode: 'custom', paid: '', paName: '' })} className="mr-2" />
+            <span className="text-sm">Custom (No PAID)</span>
+          </label>
+        </div>
+
+        <div className="grid grid-cols-5 gap-3">
+          <div>
+            <label className="block text-xs mb-1">PAID</label>
+            {newAttribute.filterMode === 'filter' ? (
+              <SearchableSelect options={filteredAttributeOptions} value={newAttribute.paid} onChange={(val) => setNewAttribute({ ...newAttribute, paid: val })} placeholder="Select PAID" />
+            ) : (
+              <input className="w-full p-2 border rounded text-sm bg-gray-100" value="" readOnly placeholder="Custom mode" />
+            )}
           </div>
-        );
-      })}
-    </div>
-  );
+          <div>
+            <label className="block text-xs mb-1">PA Name</label>
+            {newAttribute.filterMode === 'filter' ? (
+              <input className="w-full p-2 border rounded text-sm bg-gray-50" value={displayPAName} readOnly placeholder="Auto from PAID" />
+            ) : (
+              <input className="w-full p-2 border rounded text-sm" value={newAttribute.paName} onChange={(e) => setNewAttribute({ ...newAttribute, paName: e.target.value })} placeholder="Custom name" />
+            )}
+          </div>
+          <div>
+            <label className="block text-xs mb-1">UOM</label>
+            <SearchableSelect options={uomOptions} value={newAttribute.uom} onChange={(val) => setNewAttribute({ ...newAttribute, uom: val })} placeholder="Select UOM" />
+          </div>
+          <div>
+            <label className="block text-xs mb-1">Style</label>
+            <input className="w-full p-2 border rounded text-sm" value={newAttribute.style} onChange={(e) => setNewAttribute({ ...newAttribute, style: e.target.value })} placeholder="Style" />
+          </div>
+          <div>
+            <label className="block text-xs mb-1">Language</label>
+            <select className="w-full p-2 border rounded text-sm" value={newAttribute.language} onChange={(e) => setNewAttribute({ ...newAttribute, language: e.target.value })}>
+              <option value="EN">EN</option>
+              <option value="FR">FR</option>
+              <option value="ES">ES</option>
+            </select>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-6 gap-3 items-end">
+          <div className="col-span-5">
+            <label className="block text-xs mb-1">Data</label>
+            <textarea rows={2} className="w-full p-2 border rounded text-sm" value={newAttribute.data} onChange={(e) => setNewAttribute({ ...newAttribute, data: e.target.value })} placeholder="Attribute data/value" />
+          </div>
+          <button className="px-4 py-2 border rounded text-sm" onClick={() => {
+            if (!newAttribute.data.trim()) return;
+            const newAttr = {
+              paid: newAttribute.filterMode === 'filter' ? newAttribute.paid : '',
+              value: newAttribute.data,
+              uom: newAttribute.uom || undefined
+            };
+            update({ attributes: [...data.attributes, newAttr] });
+            setNewAttribute({ paid: '', paName: '', uom: '', style: '', language: 'EN', data: '', filterMode: 'filter' });
+          }}>Add</button>
+        </div>
+
+        <h4 className="text-base font-medium text-gray-900 mt-6">Current Attributes</h4>
+        <div className="overflow-x-auto border rounded">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead>
+              <tr>
+                <th className="px-3 py-2 text-left text-xs text-gray-500">PAID</th>
+                <th className="px-3 py-2 text-left text-xs text-gray-500">PA Name</th>
+                <th className="px-3 py-2 text-left text-xs text-gray-500">UOM</th>
+                <th className="px-3 py-2 text-left text-xs text-gray-500">Data</th>
+                <th className="px-3 py-2 text-right text-xs text-gray-500">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {data.attributes.map((a, idx) => (
+                <tr key={idx}>
+                  <td className="px-3 py-2 text-sm">{a.paid || '-'}</td>
+                  <td className="px-3 py-2 text-sm">{a.paid ? paidMap.get(a.paid)?.PAName || '' : '-'}</td>
+                  <td className="px-3 py-2 text-sm">{a.uom || '-'}</td>
+                  <td className="px-3 py-2 text-sm">{a.value}</td>
+                  <td className="px-3 py-2 text-sm text-right whitespace-nowrap">
+                    <button className="px-2 py-1 border rounded text-xs text-red-700" onClick={() => {
+                      const next = data.attributes.filter((_, i) => i !== idx);
+                      update({ attributes: next });
+                    }}>Delete</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  };
 
   const renderPackages = () => (
     <div className="space-y-3 max-w-5xl">
