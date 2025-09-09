@@ -16,7 +16,11 @@ interface DatabaseInfo {
 }
 
 export class ExtractedDatabaseService {
-  private extractedPath = 'C:\\Users\\Brian\\Documents\\AutoProPartsERP\\extracted_databases';
+  // Resolve the extracted_databases path relative to the repo root so it
+  // works across different machines and usernames.
+  // When the server runs from `server/`, `process.cwd()` is that folder.
+  // Navigate one level up to the repo root and then into extracted_databases.
+  private extractedPath = path.resolve(process.cwd(), '..', 'extracted_databases');
   private databases: Map<string, DatabaseInfo> = new Map();
 
   async loadAllDatabases(): Promise<Map<string, DatabaseInfo>> {
@@ -26,7 +30,8 @@ export class ExtractedDatabaseService {
       VCdb: path.join(this.extractedPath, 'VCdb', 'vcdb_ascii'),
       PCdb: path.join(this.extractedPath, 'PCdb', 'pcdb_ascii'),
       PAdb: path.join(this.extractedPath, 'PAdb', 'padb_ascii'),
-      Qdb: path.join(this.extractedPath, 'Qdb', 'qdb_ascii')
+      Qdb: path.join(this.extractedPath, 'Qdb', 'qdb_ascii'),
+      Brand: path.join(this.extractedPath, 'Brand')
     };
 
     for (const [dbName, dbPath] of Object.entries(dbPaths)) {
@@ -95,7 +100,8 @@ export class ExtractedDatabaseService {
   private parseHeaders(headerLine: string): string[] {
     // Handle both pipe (|) and tab (\t) delimited files
     const delimiter = headerLine.includes('|') ? '|' : '\t';
-    return headerLine.split(delimiter).map(h => h.trim());
+    const strip = (s: string) => s.replace(/^"([\s\S]*)"$/, '$1').replace(/^'([\s\S]*)'$/, '$1').trim();
+    return headerLine.split(delimiter).map(h => strip(h));
   }
 
   private parseDataRow(dataLine: string, headers: string[]): Record<string, any> | null {
@@ -104,8 +110,16 @@ export class ExtractedDatabaseService {
       const values = dataLine.split(delimiter);
       
       const row: Record<string, any> = {};
+      const strip = (s?: string) => {
+        if (s == null) return null;
+        let v = s.trim();
+        if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
+          v = v.slice(1, -1);
+        }
+        return v;
+      };
       headers.forEach((header, index) => {
-        row[header] = values[index]?.trim() || null;
+        row[header] = strip(values[index]);
       });
       
       return row;

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+﻿import React, { useEffect, useMemo, useState } from 'react';
 import { SearchableSelect } from './SearchableSelect';
 
 // Segment models aligned to server PIES types
@@ -94,10 +94,13 @@ interface PIESBuilderProps {
   value?: PIESData;
   onChange?: (data: PIESData) => void;
   partTerminologyId?: string; // PCdb PartTerminologyID to filter PAIDs
+  // Optional: render a specific segment controlled by parent tabs
+  activeTab?: 'Item' | 'Descriptions' | 'Prices' | 'EXPI' | 'Attributes' | 'Packages' | 'Kits' | 'Interchange' | 'Assets';
 }
 
-export const PIESBuilder: React.FC<PIESBuilderProps> = ({ value, onChange, partTerminologyId }) => {
-  const [activeTab, setActiveTab] = useState<'Item' | 'Descriptions' | 'Prices' | 'EXPI' | 'Attributes' | 'Packages' | 'Kits' | 'Interchange' | 'Assets'>('Item');
+export const PIESBuilder: React.FC<PIESBuilderProps> = ({ value, onChange, partTerminologyId, activeTab }) => {
+  // When no activeTab is provided, default to 'Item'.
+  const currentTab: 'Item' | 'Descriptions' | 'Prices' | 'EXPI' | 'Attributes' | 'Packages' | 'Kits' | 'Interchange' | 'Assets' = activeTab || 'Item';
 
   // Base data
   const [data, setData] = useState<PIESData>(
@@ -193,13 +196,21 @@ export const PIESBuilder: React.FC<PIESBuilderProps> = ({ value, onChange, partT
 
   // UI helpers
   const attributeOptions = useMemo(() => {
-    const all = (padb.PartAttributes || []).map((r: any) => ({ value: r.PAID, label: `${r.PAID} — ${r.PAName}` }));
+    const all = (padb.PartAttributes || []).map((r: any) => ({ value: r.PAID, label: `' + (r.PAID) + ' - ' + (r.PAName || '') + '` }));
     if (!partTerminologyId) return all;
     const allowed = new Set(allowedPAIDsForPart);
     return all.filter(opt => allowed.has(opt.value));
   }, [padb.PartAttributes, allowedPAIDsForPart, partTerminologyId]);
 
-  const uomOptions = useMemo(() => (padb.MetaUOMCodes || []).map((r: any) => ({ value: r.UOMCode, label: `${r.UOMCode} — ${r.UOMLabel || r.UOMDescription}` })), [padb.MetaUOMCodes]);
+  const uomOptions = useMemo(() => (padb.MetaUOMCodes || []).map((r: any) => ({ value: r.UOMCode, label: `' + (r.UOMCode) + ' - ' + (r.UOMLabel || r.UOMDescription || '') + '` })), [padb.MetaUOMCodes]);
+
+  // Quick-add form state for non-Item segments
+  const [newDescription, setNewDescription] = useState<{ code: string; lang: string; desc: string }>({ code: 'DES', lang: 'EN', desc: '' });
+  const [editDescIndex, setEditDescIndex] = useState<number | null>(null);
+  const [editDescDraft, setEditDescDraft] = useState<{ code: string; lang: string; desc: string }>({ code: 'DES', lang: 'EN', desc: '' });
+  const [newPrice, setNewPrice] = useState<{ type: string; price: string; currency: string; uom: string }>({ type: 'LIST', price: '0', currency: 'USD', uom: '' });
+  const [newEXPI, setNewEXPI] = useState<{ code: string; value: string; uom: string }>({ code: '', value: '', uom: '' });
+  const [newInterchange, setNewInterchange] = useState<{ type: string; aaia: string; label: string; part: string }>({ type: 'UP', aaia: '', label: '', part: '' });
 
   // Validation helpers for Item Segment
   const isValidPartNumber = (s: string) => typeof s === 'string' && s.trim().length > 0 && s.trim().length <= 50;
@@ -253,7 +264,7 @@ export const PIESBuilder: React.FC<PIESBuilderProps> = ({ value, onChange, partT
         </div>
         <div>
           <label className="block text-sm mb-1">Brand (B05)</label>
-          <SearchableSelect options={brands.map((b: any) => ({ value: b.brandId, label: `${b.brandId} — ${b.brandName}` }))} value={data.item.brandId} onChange={(val)=> update({ item: { ...data.item, brandId: val } })} placeholder="Select Brand" />
+          <SearchableSelect options={brands.map((b: any) => ({ value: b.brandId, label: ((b.brandId || "") + " - " + (b.brandName || "")) }))} value={data.item.brandId} onChange={(val)=> update({ item: { ...data.item, brandId: val } })} placeholder="Select Brand" />
           {data.item.brandId && !brandExists(data.item.brandId) && <p className="text-xs text-red-600 mt-1">Brand not found in BrandTable</p>}
         </div>
         <div>
@@ -264,7 +275,7 @@ export const PIESBuilder: React.FC<PIESBuilderProps> = ({ value, onChange, partT
       <div className="grid grid-cols-3 gap-3">
         <div>
           <label className="block text-sm mb-1">Part Type (B07)</label>
-          <SearchableSelect options={pcdb.partTypes.map((p: any) => ({ value: p.PartTerminologyID, label: `${p.PartTerminologyID} — ${p.PartTerminologyName}` }))} value={data.item.partType || ''} onChange={(val)=> {
+          <SearchableSelect options={pcdb.partTypes.map((p: any) => ({ value: p.PartTerminologyID, label: `${p.PartTerminologyID} - ${p.PartTerminologyName || ''}` }))} value={data.item.partType || ''} onChange={(val)=> {
             const row = partTypeRow(val);
             update({ item: { ...data.item, partType: val, categoryId: row?.CategoryID } });
           }} placeholder="Select Part Type" />
@@ -294,58 +305,255 @@ export const PIESBuilder: React.FC<PIESBuilderProps> = ({ value, onChange, partT
     </div>
   );
 
-  const renderDescriptionsTab = () => (
-    <div className="space-y-3 max-w-4xl">
-      <button className="px-3 py-1 border rounded text-sm" onClick={addDescription}>Add Description</button>
-      {data.descriptions.map((d, idx) => (
-        <div key={idx} className="grid grid-cols-4 gap-2 items-center">
-          <select className="p-2 border rounded text-sm" value={d.descriptionCode} onChange={e => {
-            const next = [...data.descriptions];
-            next[idx] = { ...d, descriptionCode: e.target.value };
-            update({ descriptions: next });
-          }}>
-            {['DES','LAB','MKT','FAB'].map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
-          <input className="p-2 border rounded text-sm col-span-3" value={d.description} onChange={e => {
-            const next = [...data.descriptions];
-            next[idx] = { ...d, description: e.target.value };
-            update({ descriptions: next });
-          }} />
+  const renderDescriptionsTab = () => {
+    const codeMeta: Array<[string, number, string]> = [
+      ['ABR',12,'Product Description - Abbreviated'],
+      ['APS',240,'Application Summary'],
+      ['ASC',2000,'Associated Comments'],
+      ['ASM',2000,'Application Summary (Long)'],
+      ['CAP',240,'Caption'],
+      ['DEF',80,'AAIA Part Type Description'],
+      ['DES',80,'Product Description - Long'],
+      ['EXT',240,'Product Description - Extended'],
+      ['FAB',240,'Features and Benefits'],
+      ['INV',40,'Product Description - Invoice'],
+      ['KEY',2000,'Key Search Words'],
+      ['KSW',80,'Key Search Word'],
+      ['LAB',80,'Label Description'],
+      ['MKT',2000,'Marketing Description'],
+      ['SHO',20,'Product Description - Short'],
+      ['SHP',2000,'Shipping Restrictions'],
+      ['SLA',2000,'Slang Description'],
+      ['SLD',80,'Slang Description'],
+      ['TLE',80,'Title'],
+      ['TRA',2000,'Transcription'],
+      ['TTD',2000,'Technical Tips - Marketing Description'],
+      ['TTP',240,'Technical Tips'],
+      ['UNS',80,'UN/SPSC Description'],
+      ['VMR',80,'VMRS Description']
+    ];
+    const maxLen = (() => {
+      const map: Record<string, number> = {
+        ABR: 12, APS: 240, ASC: 2000, ASM: 2000, CAP: 240, DEF: 80, DES: 80, EXT: 240,
+        FAB: 240, INV: 40, KEY: 2000, KSW: 80, LAB: 80, MKT: 2000, SHO: 20, SHP: 2000,
+        SLA: 2000, SLD: 80, TLE: 80, TRA: 2000, TTD: 2000, TTP: 240, UNS: 80, VMR: 80
+      };
+      return map[newDescription.code] ?? 80;
+    })();
+    const CodeOptions = codeMeta.map(([c]) => ({ value: c, label: c }));
+    const LanguageOptions = [
+      { value: 'EN', label: 'EN' },
+      { value: 'FR', label: 'FR' },
+      { value: 'ES', label: 'ES' }
+    ];
+    return (
+      <div className="space-y-4 max-w-5xl">
+        <h4 className="text-base font-medium text-gray-900">Add Description</h4>
+        <div className="grid grid-cols-12 gap-3 items-start">
+          <div className="col-span-3">
+            <label className="block text-xs mb-1">Code</label>
+            <SearchableSelect options={CodeOptions} value={newDescription.code} onChange={(val)=>setNewDescription({ ...newDescription, code: val })} placeholder="Select Code" />
+            <div className="text-xs text-gray-500 mt-1">
+              {(() => {
+                const meta = codeMeta.find(x => x[0] === newDescription.code);
+                return meta ? `Max ${meta[1]} â€” ${meta[2]}` : '';
+              })()}
+            </div>
+          </div>
+          <div className="col-span-2">
+            <label className="block text-xs mb-1">Language</label>
+            <SearchableSelect options={LanguageOptions} value={newDescription.lang || 'EN'} onChange={(val)=>setNewDescription({ ...newDescription, lang: val })} placeholder="EN" />
+          </div>
+          <div className="col-span-6">
+            <label className="block text-xs mb-1">Description</label>
+            <textarea rows={3} maxLength={maxLen} className="p-2 border rounded text-sm w-full" value={newDescription.desc}
+              onChange={e=>setNewDescription({ ...newDescription, desc: e.target.value })} />
+            <div className="text-xs text-gray-500 mt-1">{newDescription.desc.length}/{maxLen}</div>
+          </div>
+          <button className="col-span-1 self-start mt-6 px-4 py-2 border rounded text-sm whitespace-nowrap" onClick={()=>{
+            if(!newDescription.desc.trim()) return; 
+            update({ descriptions:[...data.descriptions,{ descriptionCode:newDescription.code, description:newDescription.desc, languageCode: (newDescription.lang || 'EN') }]}); 
+            setNewDescription({ code: 'DES', desc: '', lang: 'EN' } as any);
+          }}>Add</button>
         </div>
-      ))}
-    </div>
-  );
+        <h4 className="text-base font-medium text-gray-900 mt-6">Current Descriptions</h4>
+        <div className="overflow-x-auto border rounded">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead>
+              <tr>
+                <th className="px-3 py-2 text-left text-xs text-gray-500">Code</th>
+                <th className="px-3 py-2 text-left text-xs text-gray-500">Language</th>
+                <th className="px-3 py-2 text-left text-xs text-gray-500">Description</th>
+                <th className="px-3 py-2 text-right text-xs text-gray-500">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {data.descriptions.map((d, idx) => {
+                const isEditing = editDescIndex === idx;
+                const rowMax = (() => {
+                  const found = codeMeta.find(x => x[0] === (isEditing ? editDescDraft.code : d.descriptionCode));
+                  return found ? found[1] : 80;
+                })();
+                const codeOptions = codeMeta.map(([c]) => ({ value: c, label: c }));
+                return (
+                  <tr key={idx}>
+                    <td className="px-3 py-2 text-sm align-top">
+                      {isEditing ? (
+                        <SearchableSelect options={codeOptions} value={editDescDraft.code} onChange={(val)=>setEditDescDraft({ ...editDescDraft, code: val })} placeholder="Code" />
+                      ) : d.descriptionCode}
+                    </td>
+                    <td className="px-3 py-2 text-sm align-top">
+                      {isEditing ? (
+                        <SearchableSelect options={[{value:'EN',label:'EN'},{value:'FR',label:'FR'},{value:'ES',label:'ES'}]} value={editDescDraft.lang || 'EN'} onChange={(val)=>setEditDescDraft({ ...editDescDraft, lang: val })} placeholder="Lang" />
+                      ) : (d.languageCode || 'EN')}
+                    </td>
+                    <td className="px-3 py-2 text-sm">
+                      {isEditing ? (
+                        rowMax > 120 ? (
+                          <textarea rows={3} maxLength={rowMax} className="w-full p-2 border rounded text-sm" value={editDescDraft.desc} onChange={(e)=>setEditDescDraft({ ...editDescDraft, desc: e.target.value })} />
+                        ) : (
+                          <input maxLength={rowMax} className="w-full p-2 border rounded text-sm" value={editDescDraft.desc} onChange={(e)=>setEditDescDraft({ ...editDescDraft, desc: e.target.value })} />
+                        )
+                      ) : d.description}
+                      {isEditing && (
+                        <div className="text-xs text-gray-500 mt-1">{editDescDraft.desc.length}/{rowMax}</div>
+                      )}
+                    </td>
+                    <td className="px-3 py-2 text-sm text-right whitespace-nowrap">
+                      {isEditing ? (
+                        <>
+                          <button className="px-2 py-1 mr-2 border rounded text-xs" onClick={()=>{
+                            const next = [...data.descriptions];
+                            next[idx] = { descriptionCode: editDescDraft.code, languageCode: editDescDraft.lang || 'EN', description: editDescDraft.desc } as any;
+                            update({ descriptions: next });
+                            setEditDescIndex(null);
+                          }}>Save</button>
+                          <button className="px-2 py-1 border rounded text-xs" onClick={()=>setEditDescIndex(null)}>Cancel</button>
+                        </>
+                      ) : (
+                        <>
+                          <button className="px-2 py-1 mr-2 border rounded text-xs" onClick={()=>{
+                            setEditDescIndex(idx);
+                            setEditDescDraft({ code: d.descriptionCode, lang: d.languageCode || 'EN', desc: d.description });
+                          }}>Edit</button>
+                          <button className="px-2 py-1 border rounded text-xs text-red-700" onClick={()=>{
+                            const next = data.descriptions.filter((_, i) => i !== idx);
+                            update({ descriptions: next });
+                            if (editDescIndex === idx) setEditDescIndex(null);
+                          }}>Delete</button>
+                        </>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  };
 
-  const renderPricesTab = () => (
-    <div className="space-y-3 max-w-4xl">
-      <button className="px-3 py-1 border rounded text-sm" onClick={addPrice}>Add Price</button>
-      {data.prices.map((p, idx) => (
-        <div key={idx} className="grid grid-cols-5 gap-2 items-center">
-          <select className="p-2 border rounded text-sm" value={p.priceType} onChange={e => { const next=[...data.prices]; next[idx]={...p, priceType:e.target.value}; update({prices:next}); }}>
-            {['LIST','MSRP','COST','JOBBER'].map(t => <option key={t} value={t}>{t}</option>)}
-          </select>
-          <input type="number" className="p-2 border rounded text-sm" value={p.price} onChange={e => { const next=[...data.prices]; next[idx]={...p, price: parseFloat(e.target.value||'0')}; update({prices:next}); }} />
-          <input className="p-2 border rounded text-sm" placeholder="Currency" value={p.currency} onChange={e => { const next=[...data.prices]; next[idx]={...p, currency:e.target.value}; update({prices:next}); }} />
-          <SearchableSelect options={uomOptions} value={p.priceUom || ''} onChange={(val)=>{const next=[...data.prices]; next[idx]={...p, priceUom:val}; update({prices:next});}} placeholder="UOM (optional)" />
-          {p.priceUom && !isValidUOM(p.priceUom) && <p className="text-xs text-red-600">Invalid UOM</p>}
+  const renderPricesTab = () => {
+    return (
+      <div className="space-y-4 max-w-4xl">
+        <div className="grid grid-cols-5 gap-2 items-end">
+          <div>
+            <label className="block text-xs mb-1">Type</label>
+            <select className="p-2 border rounded text-sm w-full" value={newPrice.type} onChange={e=>setNewPrice({ ...newPrice, type: e.target.value })}>
+              {['LIST','MSRP','COST','JOBBER'].map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs mb-1">Price</label>
+            <input className="p-2 border rounded text-sm w-full" type="number" value={newPrice.price} onChange={e=>setNewPrice({ ...newPrice, price: e.target.value })} />
+          </div>
+          <div>
+            <label className="block text-xs mb-1">Currency</label>
+            <select className="p-2 border rounded text-sm w-full" value={newPrice.currency} onChange={e=>setNewPrice({ ...newPrice, currency: e.target.value })}>
+              {['USD','CAD','EUR'].map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs mb-1">UOM</label>
+            <input className="p-2 border rounded text-sm w-full" value={newPrice.uom} onChange={e=>setNewPrice({ ...newPrice, uom: e.target.value })} />
+          </div>
+          <button className="px-3 py-2 border rounded text-sm" onClick={()=>{
+            update({ prices:[...data.prices,{ priceType: newPrice.type, price: parseFloat(newPrice.price||'0'), currency: newPrice.currency, priceUom: newPrice.uom||undefined }]});
+            setNewPrice({ type: 'LIST', price: '0', currency: 'USD', uom: '' });
+          }}>Add</button>
         </div>
-      ))}
-    </div>
-  );
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead>
+              <tr>
+                <th className="px-3 py-2 text-left text-xs text-gray-500">Type</th>
+                <th className="px-3 py-2 text-left text-xs text-gray-500">Price</th>
+                <th className="px-3 py-2 text-left text-xs text-gray-500">Currency</th>
+                <th className="px-3 py-2 text-left text-xs text-gray-500">UOM</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {data.prices.map((p, idx) => (
+                <tr key={idx}>
+                  <td className="px-3 py-2 text-sm">{p.priceType}</td>
+                  <td className="px-3 py-2 text-sm">{p.price}</td>
+                  <td className="px-3 py-2 text-sm">{p.currency}</td>
+                  <td className="px-3 py-2 text-sm">{p.priceUom || ''}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  };
 
-  const renderEXPI = () => (
-    <div className="space-y-3 max-w-4xl">
-      <button className="px-3 py-1 border rounded text-sm" onClick={addEXPI}>Add EXPI</button>
-      {data.expi.map((eItem, idx) => (
-        <div key={idx} className="grid grid-cols-4 gap-2 items-center">
-          <input className="p-2 border rounded text-sm" placeholder="EXPI Code" value={eItem.expiCode} onChange={e => { const next=[...data.expi]; next[idx]={...eItem, expiCode:e.target.value}; update({expi:next}); }} />
-          <input className="p-2 border rounded text-sm col-span-2" placeholder="Value" value={eItem.expiValue} onChange={e => { const next=[...data.expi]; next[idx]={...eItem, expiValue:e.target.value}; update({expi:next}); }} />
-          <SearchableSelect options={uomOptions} value={eItem.uom || ''} onChange={(val)=>{ const next=[...data.expi]; next[idx]={...eItem, uom: val}; update({expi:next}); }} placeholder="UOM" />
-          {eItem.uom && !isValidUOM(eItem.uom) && <p className="text-xs text-red-600">Invalid UOM</p>}
+  const renderEXPI = () => {
+    return (
+      <div className="space-y-4 max-w-4xl">
+        <div className="grid grid-cols-5 gap-2 items-end">
+          <div>
+            <label className="block text-xs mb-1">EXPI Code</label>
+            <input className="p-2 border rounded text-sm w-full" value={newEXPI.code} onChange={e=>setNewEXPI({ ...newEXPI, code: e.target.value })} placeholder="e.g. COI" />
+          </div>
+          <div className="col-span-2">
+            <label className="block text-xs mb-1">Value</label>
+            <input className="p-2 border rounded text-sm w-full" value={newEXPI.value} onChange={e=>setNewEXPI({ ...newEXPI, value: e.target.value })} />
+          </div>
+          <div>
+            <label className="block text-xs mb-1">UOM</label>
+            <SearchableSelect options={uomOptions} value={newEXPI.uom} onChange={(v)=>setNewEXPI({ ...newEXPI, uom: v })} placeholder="UOM" />
+          </div>
+          <button className="px-3 py-2 border rounded text-sm" onClick={()=>{
+            if(!newEXPI.code.trim()) return; 
+            update({ expi:[...data.expi, { expiCode: newEXPI.code.trim(), expiValue: newEXPI.value, uom: newEXPI.uom||undefined }]});
+            setNewEXPI({ code: '', value: '', uom: '' });
+          }}>Add</button>
         </div>
-      ))}
-    </div>
-  );
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead>
+              <tr>
+                <th className="px-3 py-2 text-left text-xs text-gray-500">Code</th>
+                <th className="px-3 py-2 text-left text-xs text-gray-500">Value</th>
+                <th className="px-3 py-2 text-left text-xs text-gray-500">UOM</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {data.expi.map((e, idx) => (
+                <tr key={idx}>
+                  <td className="px-3 py-2 text-sm">{e.expiCode}</td>
+                  <td className="px-3 py-2 text-sm">{e.expiValue}</td>
+                  <td className="px-3 py-2 text-sm">{e.uom || ''}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  };
 
   const renderAttributes = () => (
     <div className="space-y-3 max-w-5xl">
@@ -402,21 +610,59 @@ export const PIESBuilder: React.FC<PIESBuilderProps> = ({ value, onChange, partT
     </div>
   );
 
-  const renderInterchange = () => (
-    <div className="space-y-3 max-w-4xl">
-      <button className="px-3 py-1 border rounded text-sm" onClick={addInterchange}>Add Interchange</button>
-      {data.interchange.map((i, idx) => (
-        <div key={idx} className="grid grid-cols-4 gap-2 items-center">
-          <select className="p-2 border rounded text-sm" value={i.interchangeType} onChange={e=>{ const n=[...data.interchange]; n[idx]={...i, interchangeType:e.target.value}; update({interchange:n}); }}>
-            {['OE','OES','UP','IP'].map(t => <option key={t} value={t}>{t}</option>)}
-          </select>
-          <input className="p-2 border rounded text-sm" placeholder="Brand AAIA" value={i.brandAaiaId || ''} onChange={e=>{ const n=[...data.interchange]; n[idx]={...i, brandAaiaId:e.target.value}; update({interchange:n}); }} />
-          <input className="p-2 border rounded text-sm" placeholder="Brand Label" value={i.brandLabel || ''} onChange={e=>{ const n=[...data.interchange]; n[idx]={...i, brandLabel:e.target.value}; update({interchange:n}); }} />
-          <input className="p-2 border rounded text-sm" placeholder="Part No" value={i.partNo} onChange={e=>{ const n=[...data.interchange]; n[idx]={...i, partNo:e.target.value}; update({interchange:n}); }} />
+  const renderInterchange = () => {
+    return (
+      <div className="space-y-4 max-w-4xl">
+        <div className="grid grid-cols-5 gap-2 items-end">
+          <div>
+            <label className="block text-xs mb-1">Type</label>
+            <select className="p-2 border rounded text-sm w-full" value={newInterchange.type} onChange={e=>setNewInterchange({ ...newInterchange, type: e.target.value })}>
+              {['OE','OES','UP','IP'].map(x => <option key={x} value={x}>{x}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs mb-1">Brand AAIA</label>
+            <input className="p-2 border rounded text-sm w-full" value={newInterchange.aaia} onChange={e=>setNewInterchange({ ...newInterchange, aaia: e.target.value })} />
+          </div>
+          <div>
+            <label className="block text-xs mb-1">Brand Label</label>
+            <input className="p-2 border rounded text-sm w-full" value={newInterchange.label} onChange={e=>setNewInterchange({ ...newInterchange, label: e.target.value })} />
+          </div>
+          <div>
+            <label className="block text-xs mb-1">Part No</label>
+            <input className="p-2 border rounded text-sm w-full" value={newInterchange.part} onChange={e=>setNewInterchange({ ...newInterchange, part: e.target.value })} />
+          </div>
+          <button className="px-3 py-2 border rounded text-sm" onClick={()=>{
+            if(!newInterchange.part.trim()) return; 
+            update({ interchange:[...data.interchange,{ interchangeType:newInterchange.type, brandAaiaId:newInterchange.aaia||undefined, brandLabel:newInterchange.label||undefined, partNo:newInterchange.part }]});
+            setNewInterchange({ type: 'UP', aaia: '', label: '', part: '' });
+          }}>Add</button>
         </div>
-      ))}
-    </div>
-  );
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead>
+              <tr>
+                <th className="px-3 py-2 text-left text-xs text-gray-500">Type</th>
+                <th className="px-3 py-2 text-left text-xs text-gray-500">Brand AAIA</th>
+                <th className="px-3 py-2 text-left text-xs text-gray-500">Brand Label</th>
+                <th className="px-3 py-2 text-left text-xs text-gray-500">Part No</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {data.interchange.map((i, idx) => (
+                <tr key={idx}>
+                  <td className="px-3 py-2 text-sm">{i.interchangeType}</td>
+                  <td className="px-3 py-2 text-sm">{i.brandAaiaId || ''}</td>
+                  <td className="px-3 py-2 text-sm">{i.brandLabel || ''}</td>
+                  <td className="px-3 py-2 text-sm">{i.partNo}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  };
 
   const renderAssets = () => (
     <div className="space-y-3 max-w-4xl">
@@ -433,21 +679,16 @@ export const PIESBuilder: React.FC<PIESBuilderProps> = ({ value, onChange, partT
 
   return (
     <div>
-      <div className="flex space-x-2 mb-4">
-        {['Item','Descriptions','Prices','EXPI','Attributes','Packages','Kits','Interchange','Assets'].map(t => (
-          <button key={t} className={`px-3 py-1 border rounded text-sm ${activeTab===t ? 'bg-blue-50 border-blue-300' : ''}`} onClick={()=>setActiveTab(t as any)}>{t}</button>
-        ))}
-      </div>
-
-      {activeTab === 'Item' && renderItemTab()}
-      {activeTab === 'Descriptions' && renderDescriptionsTab()}
-      {activeTab === 'Prices' && renderPricesTab()}
-      {activeTab === 'EXPI' && renderEXPI()}
-      {activeTab === 'Attributes' && renderAttributes()}
-      {activeTab === 'Packages' && renderPackages()}
-      {activeTab === 'Kits' && renderKits()}
-      {activeTab === 'Interchange' && renderInterchange()}
-      {activeTab === 'Assets' && renderAssets()}
+      {currentTab === 'Item' && renderItemTab()}
+      {currentTab === 'Descriptions' && renderDescriptionsTab()}
+      {currentTab === 'Prices' && renderPricesTab()}
+      {currentTab === 'EXPI' && renderEXPI()}
+      {currentTab === 'Attributes' && renderAttributes()}
+      {currentTab === 'Packages' && renderPackages()}
+      {currentTab === 'Kits' && renderKits()}
+      {currentTab === 'Interchange' && renderInterchange()}
+      {currentTab === 'Assets' && renderAssets()}
     </div>
   );
 };
+

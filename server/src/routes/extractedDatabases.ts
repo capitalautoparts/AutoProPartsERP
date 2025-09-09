@@ -159,6 +159,44 @@ router.get('/qdb', async (req, res) => {
   }
 });
 
+// Brand Routes (ASCII)
+router.get('/brand', async (req, res) => {
+  try {
+    const brand = extractedDatabaseService.getDatabase('Brand');
+    if (!brand) return res.status(404).json({ error: 'Brand not found' });
+    res.json({
+      name: brand.name,
+      tableCount: brand.tables.length,
+      totalRows: brand.totalRows,
+      tables: brand.tables.map(t => ({ name: t.name, rowCount: t.rowCount, headers: t.headers }))
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to load Brand' });
+  }
+});
+
+router.get('/brand/:tableName', async (req, res) => {
+  try {
+    const { tableName } = req.params;
+    const { limit, search, field } = req.query;
+    let data;
+    if (search) {
+      data = extractedDatabaseService.searchTable('Brand', tableName, search as string, field as string);
+    } else {
+      data = extractedDatabaseService.getTableData('Brand', tableName, limit ? parseInt(limit as string) : undefined);
+    }
+    const table = extractedDatabaseService.getTable('Brand', tableName);
+    res.json({
+      tableName,
+      headers: table?.headers || [],
+      rowCount: table?.rowCount || 0,
+      data
+    });
+  } catch (error) {
+    res.status(500).json({ error: `Failed to load Brand table: ${req.params.tableName}` });
+  }
+});
+
 router.get('/qdb/:tableName', async (req, res) => {
   try {
     const { tableName } = req.params;

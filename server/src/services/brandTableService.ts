@@ -1,4 +1,5 @@
 import { databaseExtractor } from './databaseExtractor.js';
+import { extractedDatabaseService } from './extractedDatabaseService.js';
 
 export class BrandTableService {
   private brands: any[] = [];
@@ -18,29 +19,34 @@ export class BrandTableService {
 
   private async initializeData() {
     try {
-      const records = await databaseExtractor.extractBrandTableData();
-      console.log(`🏷️ BrandTable: Found ${records.length} records`);
-      
-      // Look for Brand table records
-      const brandRecords = records.filter(r => r.table === 'Brand' || r.table === 'BrandTable');
-      
-      this.brands = brandRecords.map(record => ({
-        brandId: record.data[0],
-        brandName: record.data[1],
-        aaiaId: record.data[2] || null
-      }));
-
-      // Strict mode: do not inject sample brands
-
-      console.log(`🏷️ BrandTable: Loaded ${this.brands.length} brands`);
-    } catch (error) {
-      console.error('Error loading BrandTable:', error);
-      // Strict mode: keep brands empty on error
+      // Prefer ASCII parsed by ExtractedDatabaseService when available
+      const ascii = extractedDatabaseService.getTable('Brand', 'AutoCare_BrandTable');
+      if (ascii) {
+        this.brands = (ascii.data || []).map((row: any) => ({
+          brandId: row['BrandID'] || row['brandid'] || row['brandId'],
+          brandName: row['BrandName'] || row['brandname'] || row['brandName'],
+          aaiaId: row['BrandID'] || null
+        }));
+        console.log(`BrandTable ASCII: Loaded ${this.brands.length} brands`);
+      } else {
+        // Fallback to ZIP extraction under extracted_databases/BrandTable
+        const records = await databaseExtractor.extractBrandTableData();
+        const brandRecords = records.filter(r => r.table === 'Brand' || r.table === 'BrandTable');
+        this.brands = brandRecords.map(record => ({
+          brandId: record.data[0],
+          brandName: record.data[1],
+          aaiaId: record.data[2] || null
+        }));
+        console.log(`BrandTable ZIP: Loaded ${this.brands.length} brands`);
+      }
+    } catch (error: any) {
+      console.error('Error loading BrandTable:', error?.message || error);
       this.brands = [];
     }
-    
+
     this.initialized = true;
   }
 }
 
 export const brandTableService = new BrandTableService();
+
