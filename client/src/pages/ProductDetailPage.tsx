@@ -44,11 +44,11 @@ const ProductDetailPage: React.FC = () => {
 
   const piesTabs = [
     { id: 'item', name: 'Item' },
-    { id: 'description', name: 'Description' },
-    { id: 'price', name: 'Price' },
+    { id: 'descriptions', name: 'Descriptions' },
+    { id: 'prices', name: 'Prices' },
     { id: 'expi', name: 'EXPI' },
     { id: 'attributes', name: 'Attributes' },
-    { id: 'package', name: 'Package' },
+    { id: 'packages', name: 'Packages' },
     { id: 'kits', name: 'Kits' },
     { id: 'interchange', name: 'Interchange' },
     { id: 'assets', name: 'Assets' },
@@ -208,11 +208,11 @@ const ProductDetailPage: React.FC = () => {
             <h3 className="text-lg font-medium mb-4">
               {
                 (activePiesTab === 'item' && 'PIES Item Information') ||
-                (activePiesTab === 'description' && 'PIES Descriptions') ||
-                (activePiesTab === 'price' && 'PIES Pricing') ||
+                (activePiesTab === 'descriptions' && 'PIES Descriptions') ||
+                (activePiesTab === 'prices' && 'PIES Pricing') ||
                 (activePiesTab === 'expi' && 'PIES Extended Product Information (EXPI)') ||
                 (activePiesTab === 'attributes' && 'PIES Attributes') ||
-                (activePiesTab === 'package' && 'PIES Package Information') ||
+                (activePiesTab === 'packages' && 'PIES Package Information') ||
                 (activePiesTab === 'kits' && 'PIES Kits') ||
                 (activePiesTab === 'interchange' && 'PIES Interchange') ||
                 (activePiesTab === 'assets' && 'PIES Digital Assets') ||
@@ -222,22 +222,12 @@ const ProductDetailPage: React.FC = () => {
             </h3>
 
             {/* PIES Tab Content - reuse PIESBuilder with external tabs */}
-            {['item','description','price','expi','attributes','package','kits','interchange','assets'].includes(activePiesTab) && (
+            {['item','descriptions','prices','expi','attributes','packages','kits','interchange','assets'].includes(activePiesTab) && (
               <PIESBuilder
                 value={piesInitial}
                 onChange={(updated) => { console.log('PIES updated', updated); }}
                 partTerminologyId={piesInitial.item.partType}
-                activeTab={
-                  (activePiesTab === 'item' && 'Item') ||
-                  (activePiesTab === 'description' && 'Descriptions') ||
-                  (activePiesTab === 'price' && 'Prices') ||
-                  (activePiesTab === 'expi' && 'EXPI') ||
-                  (activePiesTab === 'attributes' && 'Attributes') ||
-                  (activePiesTab === 'package' && 'Packages') ||
-                  (activePiesTab === 'kits' && 'Kits') ||
-                  (activePiesTab === 'interchange' && 'Interchange') ||
-                  'Assets'
-                }
+                activeTab={activePiesTab === 'item' ? 'Item' : activePiesTab === 'descriptions' ? 'Descriptions' : activePiesTab === 'prices' ? 'Prices' : activePiesTab === 'expi' ? 'EXPI' : activePiesTab === 'attributes' ? 'Attributes' : activePiesTab === 'packages' ? 'Packages' : activePiesTab === 'kits' ? 'Kits' : activePiesTab === 'interchange' ? 'Interchange' : 'Assets'}
               />
             )}
             {activePiesTab === 'assortments' && <PIESAssortmentsTab />}
@@ -279,12 +269,9 @@ const ProfileTab: React.FC<{ product: any }> = ({ product }) => {
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">Part Number</label>
-        <input type="text" defaultValue={product.partNumber} className="w-full border border-gray-300 rounded-md px-3 py-2" />
+        <input type="text" defaultValue={product.partNumber} className="w-full border border-gray-300 rounded-md px-3 py-2" style={{textTransform: 'uppercase'}} onChange={e => e.target.value = e.target.value.toUpperCase()} />
       </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">SKU</label>
-        <input type="text" defaultValue={product.sku} className="w-full border border-gray-300 rounded-md px-3 py-2" />
-      </div>
+
       <div className="col-span-2">
         <label className="block text-sm font-medium text-gray-700 mb-2">Product Name</label>
         <input type="text" defaultValue={product.productName} className="w-full border border-gray-300 rounded-md px-3 py-2" />

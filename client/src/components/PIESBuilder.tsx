@@ -62,6 +62,10 @@ export interface KitSegment {
   kitComponentPartNo: string;
   kitComponentQuantity: number;
   kitComponentUom?: string; // MetaUOMCodes
+  brand?: string;
+  partType?: string;
+  soldSep?: string;
+  description?: string;
 }
 
 export interface InterchangeSegment {
@@ -72,6 +76,8 @@ export interface InterchangeSegment {
 }
 
 export interface DigitalAssetSegment {
+  fileName?: string;
+  fileType?: string;
   assetType: string; // P04, P01 etc
   uri: string;
   representation?: string;
@@ -248,7 +254,7 @@ export const PIESBuilder: React.FC<PIESBuilderProps> = ({ value, onChange, partT
       <div className="grid grid-cols-3 gap-3">
         <div>
           <label className="block text-sm mb-1">Part Number (B01)</label>
-          <input className={`w-full p-2 border rounded text-sm ${!isValidPartNumber(data.item.partNo) ? 'border-red-400' : ''}`} value={data.item.partNo} onChange={e => update({ item: { ...data.item, partNo: e.target.value } })} placeholder="Max 50 chars" />
+          <input className={`w-full p-2 border rounded text-sm ${!isValidPartNumber(data.item.partNo) ? 'border-red-400' : ''}`} value={data.item.partNo} onChange={e => update({ item: { ...data.item, partNo: e.target.value.toUpperCase() } })} placeholder="Max 50 chars" style={{textTransform: 'uppercase'}} />
           {!isValidPartNumber(data.item.partNo) && <p className="text-xs text-red-600 mt-1">Required, max 50 characters</p>}
         </div>
         <div>
@@ -824,8 +830,10 @@ export const PIESBuilder: React.FC<PIESBuilderProps> = ({ value, onChange, partT
     </div>
   );
 
+  // Move newKit state to top level
+  const [newKit, setNewKit] = useState({ partNumber: '', brand: '', subBrand: '', cmptId: '', language: 'EN', descCode: '', partType: '', soldSep: 'Yes', description: '' });
+
   const renderKits = () => {
-    const [newKit, setNewKit] = useState({ partNumber: '', brand: '', subBrand: '', cmptId: '', language: 'EN', descCode: '', partType: '', soldSep: 'Yes', description: '' });
     
     return (
       <div className="space-y-4 max-w-5xl">
@@ -833,7 +841,7 @@ export const PIESBuilder: React.FC<PIESBuilderProps> = ({ value, onChange, partT
         <div className="grid grid-cols-4 gap-3">
           <div>
             <label className="block text-xs mb-1">Part Number</label>
-            <input className="w-full p-2 border rounded text-sm" value={newKit.partNumber} onChange={e=>setNewKit({...newKit, partNumber: e.target.value})} />
+            <input className="w-full p-2 border rounded text-sm" value={newKit.partNumber} onChange={e=>setNewKit({...newKit, partNumber: e.target.value.toUpperCase()})} style={{textTransform: 'uppercase'}} />
           </div>
           <div>
             <label className="block text-xs mb-1">Brand</label>
@@ -876,7 +884,16 @@ export const PIESBuilder: React.FC<PIESBuilderProps> = ({ value, onChange, partT
           </div>
           <div className="col-span-4 flex gap-2">
             <button className="px-4 py-2 border rounded text-sm" onClick={()=>{
-              update({ kits:[...data.kits, { kitMasterPartNo: newKit.partNumber, kitComponentPartNo: newKit.partNumber, kitComponentQuantity: 1 }]});
+              if(!newKit.partNumber.trim()) return;
+              update({ kits:[...data.kits, { 
+                kitMasterPartNo: data.item.partNo || newKit.partNumber, 
+                kitComponentPartNo: newKit.partNumber, 
+                kitComponentQuantity: 1,
+                brand: newKit.brand,
+                partType: newKit.partType,
+                soldSep: newKit.soldSep,
+                description: newKit.description
+              }]});
               setNewKit({ partNumber: '', brand: '', subBrand: '', cmptId: '', language: 'EN', descCode: '', partType: '', soldSep: 'Yes', description: '' });
             }}>Add Kit Component</button>
             <button className="px-4 py-2 bg-blue-600 text-white rounded text-sm">ACES</button>
@@ -896,21 +913,25 @@ export const PIESBuilder: React.FC<PIESBuilderProps> = ({ value, onChange, partT
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {data.kits.map((k, idx) => (
-                <tr key={idx}>
-                  <td className="px-3 py-2 text-sm">{k.kitComponentPartNo}</td>
-                  <td className="px-3 py-2 text-sm">-</td>
-                  <td className="px-3 py-2 text-sm">-</td>
-                  <td className="px-3 py-2 text-sm">-</td>
-                  <td className="px-3 py-2 text-sm">-</td>
-                  <td className="px-3 py-2 text-sm text-right whitespace-nowrap">
-                    <button className="px-2 py-1 border rounded text-xs text-red-700" onClick={() => {
-                      const next = data.kits.filter((_, i) => i !== idx);
-                      update({ kits: next });
-                    }}>Delete</button>
-                  </td>
-                </tr>
-              ))}
+              {data.kits.map((k, idx) => {
+                const brandName = k.brand ? brands.find(b => b.brandId === k.brand)?.brandName || k.brand : '-';
+                const partTypeName = k.partType ? pcdb.partTypes.find(p => p.PartTerminologyID === k.partType)?.PartTerminologyName || k.partType : '-';
+                return (
+                  <tr key={idx}>
+                    <td className="px-3 py-2 text-sm">{k.kitComponentPartNo}</td>
+                    <td className="px-3 py-2 text-sm">{brandName}</td>
+                    <td className="px-3 py-2 text-sm">{partTypeName}</td>
+                    <td className="px-3 py-2 text-sm">{k.soldSep || '-'}</td>
+                    <td className="px-3 py-2 text-sm">{k.description || '-'}</td>
+                    <td className="px-3 py-2 text-sm text-right whitespace-nowrap">
+                      <button className="px-2 py-1 border rounded text-xs text-red-700" onClick={() => {
+                        const next = data.kits.filter((_, i) => i !== idx);
+                        update({ kits: next });
+                      }}>Delete</button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -931,7 +952,10 @@ export const PIESBuilder: React.FC<PIESBuilderProps> = ({ value, onChange, partT
           </div>
           <div>
             <label className="block text-xs mb-1">Brand AAIA</label>
-            <input className="w-full p-2 border rounded text-sm" value={newInterchange.aaia} onChange={e=>setNewInterchange({ ...newInterchange, aaia: e.target.value })} />
+            <SearchableSelect options={brands.map((b: any) => ({ value: b.brandId, label: `${b.brandId} - ${b.brandName || ''}` }))} value={newInterchange.aaia} onChange={(val)=>{
+              const selectedBrand = brands.find((b: any) => b.brandId === val);
+              setNewInterchange({ ...newInterchange, aaia: val, label: selectedBrand?.brandName || '' });
+            }} placeholder="Select Brand" />
           </div>
           <div>
             <label className="block text-xs mb-1">Brand Label</label>
@@ -939,7 +963,7 @@ export const PIESBuilder: React.FC<PIESBuilderProps> = ({ value, onChange, partT
           </div>
           <div>
             <label className="block text-xs mb-1">Part No</label>
-            <input className="w-full p-2 border rounded text-sm" value={newInterchange.part} onChange={e=>setNewInterchange({ ...newInterchange, part: e.target.value })} />
+            <input className="w-full p-2 border rounded text-sm" value={newInterchange.part} onChange={e=>setNewInterchange({ ...newInterchange, part: e.target.value.toUpperCase() })} style={{textTransform: 'uppercase'}} />
           </div>
           <button className="px-4 py-2 border rounded text-sm" onClick={()=>{
             if(!newInterchange.part.trim()) return; 
@@ -981,35 +1005,104 @@ export const PIESBuilder: React.FC<PIESBuilderProps> = ({ value, onChange, partT
     );
   };
 
+  // Asset form state
+  const [newAsset, setNewAsset] = useState({ fileName: '', fileType: '', uri: '', assetType: '' });
+  const [assetTypes, setAssetTypes] = useState<any[]>([]);
+  const [fileTypes, setFileTypes] = useState<any[]>([]);
+
+  // Load asset and file types from ACES CodedValues
+  useEffect(() => {
+    fetch('/api/databases/aces/CodedValues').then(r => r.json())
+      .then(codedValuesData => {
+        console.log('CodedValues response:', codedValuesData);
+        const codedValues = codedValuesData.data || codedValuesData || [];
+        const assetTypes = codedValues.filter((cv: any) => cv.CodeType === 'AssetDetailType');
+        const fileTypes = codedValues.filter((cv: any) => cv.CodeType === 'FileType');
+        console.log('Asset types:', assetTypes);
+        console.log('File types:', fileTypes);
+        setAssetTypes(assetTypes);
+        setFileTypes(fileTypes);
+      }).catch(err => {
+        console.error('Failed to load coded values:', err);
+        setAssetTypes([]);
+        setFileTypes([]);
+      });
+  }, []);
+
   const renderAssets = () => (
     <div className="space-y-4 max-w-5xl">
       <h4 className="text-base font-medium text-gray-900">Add Digital Asset</h4>
-      <button className="px-4 py-2 border rounded text-sm" onClick={addAsset}>Add Asset</button>
+      <div className="grid grid-cols-4 gap-3 items-end">
+        <div>
+          <label className="block text-xs mb-1">File Name</label>
+          <input className="w-full p-2 border rounded text-sm" value={newAsset.fileName} onChange={e=>setNewAsset({...newAsset, fileName: e.target.value})} placeholder="Perfect-Fitment.png" />
+        </div>
+        <div>
+          <label className="block text-xs mb-1">File Type</label>
+          <select className="w-full p-2 border rounded text-sm" value={newAsset.fileType} onChange={e=>setNewAsset({...newAsset, fileType: e.target.value})}>
+            <option value="">Select File Type</option>
+            {fileTypes.map(ft => (
+              <option key={ft.CodeValue} value={ft.CodeValue}>{ft.CodeValue} - {ft.CodeDescription}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs mb-1">Asset Type</label>
+          <select className="w-full p-2 border rounded text-sm" value={newAsset.assetType} onChange={e=>setNewAsset({...newAsset, assetType: e.target.value})}>
+            <option value="">Select Asset Type</option>
+            {assetTypes.map(at => (
+              <option key={at.CodeValue} value={at.CodeValue}>{at.CodeValue} - {at.CodeDescription}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs mb-1">URI</label>
+          <input className="w-full p-2 border rounded text-sm" value={newAsset.uri} onChange={e=>setNewAsset({...newAsset, uri: e.target.value})} placeholder="https://..." />
+        </div>
+        <div className="col-span-4">
+          <button className="px-4 py-2 border rounded text-sm" onClick={()=>{
+            if(!newAsset.fileName.trim() || !newAsset.uri.trim()) return;
+            update({ digitalAssets:[...data.digitalAssets, { 
+              fileName: newAsset.fileName,
+              fileType: newAsset.fileType,
+              assetType: newAsset.assetType, 
+              uri: newAsset.uri 
+            }]});
+            setNewAsset({ fileName: '', fileType: '', uri: '', assetType: '' });
+          }}>Add Asset</button>
+        </div>
+      </div>
       <h4 className="text-base font-medium text-gray-900 mt-6">Current Digital Assets</h4>
       <div className="overflow-x-auto border rounded">
         <table className="min-w-full divide-y divide-gray-200">
           <thead>
             <tr>
-              <th className="px-3 py-2 text-left text-xs text-gray-500">Type</th>
+              <th className="px-3 py-2 text-left text-xs text-gray-500">File Name</th>
+              <th className="px-3 py-2 text-left text-xs text-gray-500">File Type</th>
+              <th className="px-3 py-2 text-left text-xs text-gray-500">Asset Type</th>
               <th className="px-3 py-2 text-left text-xs text-gray-500">URI</th>
-              <th className="px-3 py-2 text-left text-xs text-gray-500">Description</th>
               <th className="px-3 py-2 text-right text-xs text-gray-500">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {data.digitalAssets.map((a, idx) => (
-              <tr key={idx}>
-                <td className="px-3 py-2 text-sm">{a.assetType}</td>
-                <td className="px-3 py-2 text-sm">{a.uri}</td>
-                <td className="px-3 py-2 text-sm">{a.assetDescription || '-'}</td>
-                <td className="px-3 py-2 text-sm text-right whitespace-nowrap">
-                  <button className="px-2 py-1 border rounded text-xs text-red-700" onClick={() => {
-                    const next = data.digitalAssets.filter((_, i) => i !== idx);
-                    update({ digitalAssets: next });
-                  }}>Delete</button>
-                </td>
-              </tr>
-            ))}
+            {data.digitalAssets.map((a, idx) => {
+              const fileTypeName = a.fileType ? fileTypes.find(ft => ft.CodeValue === a.fileType)?.CodeDescription || a.fileType : '-';
+              const assetTypeName = a.assetType ? assetTypes.find(at => at.CodeValue === a.assetType)?.CodeDescription || a.assetType : '-';
+              return (
+                <tr key={idx}>
+                  <td className="px-3 py-2 text-sm">{a.fileName || '-'}</td>
+                  <td className="px-3 py-2 text-sm">{fileTypeName}</td>
+                  <td className="px-3 py-2 text-sm">{a.assetType}</td>
+                  <td className="px-3 py-2 text-sm truncate max-w-xs">{a.uri}</td>
+                  <td className="px-3 py-2 text-sm text-right whitespace-nowrap">
+                    <button className="px-2 py-1 border rounded text-xs text-red-700" onClick={() => {
+                      const next = data.digitalAssets.filter((_, i) => i !== idx);
+                      update({ digitalAssets: next });
+                    }}>Delete</button>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

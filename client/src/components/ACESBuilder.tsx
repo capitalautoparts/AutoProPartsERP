@@ -464,6 +464,15 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
   const [qualifierSpecs, setQualifierSpecs] = useState({
     qualifiers: [] as Array<{ qualifierId: string, qualifierValue: string }>
   });
+  
+  // Load Qdb data
+  const [qdbData, setQdbData] = useState<any[]>([]);
+  
+  useEffect(() => {
+    fetch('/api/databases/qdb/Qualifier').then(r => r.json())
+      .then(data => setQdbData(data.data || []))
+      .catch(() => setQdbData([]));
+  }, []);
 
   // Get filtered options for cascading dropdowns
   const getFilteredSubCategories = () => {
@@ -2175,79 +2184,77 @@ export const ACESBuilder: React.FC<ACESBuilderProps> = ({ applications = [], onU
                   <p className="text-xs text-blue-700">Add qualifiers to further specify application conditions and exceptions</p>
                 </div>
                 
-                <div className="border border-gray-200 rounded p-4">
-                  <h5 className="text-sm font-medium mb-3">Add Qualifier</h5>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Qualifier Type</label>
-                      <SearchableSelect
-                        options={qdbRefData.tables?.find((t: any) => t.name.includes('Qualifier'))?.data?.map((q: any) => ({ 
-                          value: q.QualifierID || q.id, 
-                          label: q.QualifierName || q.name || q.Description 
-                        })) || []}
-                        value=""
-                        onChange={(value) => {
-                          const newQualifier = { qualifierId: value, qualifierValue: '' };
-                          setQualifierSpecs(prev => ({
-                            qualifiers: [...prev.qualifiers, newQualifier]
-                          }));
-                        }}
-                        placeholder="Select Qualifier Type"
-                      />
-                    </div>
-                    <div className="flex items-end">
-                      <p className="text-xs text-gray-500">{qdbRefData.tables?.length || 0} Qdb tables loaded</p>
+                <div className="grid grid-cols-2 gap-6">
+                  {/* Qualifier List */}
+                  <div className="border border-gray-200 rounded p-4">
+                    <h5 className="text-sm font-medium mb-3">Available Qualifiers</h5>
+                    <div className="space-y-2 max-h-96 overflow-y-auto">
+                      {qdbData.map((q: any) => (
+                        <div key={q.QualifierID || q.id} className="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded">
+                          <input type="checkbox" className="h-4 w-4" onChange={(e) => {
+                            if (e.target.checked) {
+                              setQualifierSpecs(prev => ({
+                                qualifiers: [...prev.qualifiers, { qualifierId: q.QualifierID || q.id, qualifierValue: '' }]
+                              }));
+                            } else {
+                              setQualifierSpecs(prev => ({
+                                qualifiers: prev.qualifiers.filter(qual => qual.qualifierId !== (q.QualifierID || q.id))
+                              }));
+                            }
+                          }} />
+                          <div className="flex-1">
+                            <div className="text-sm font-medium">{q.QualifierType || 'Qualifier'}</div>
+                            <div className="text-xs text-gray-500">ID: {q.QualifierID || q.id} | Params: {q.QualifierParameterCount || 0}</div>
+                            <div className="text-xs text-gray-600 break-words">{q.QualifierText || q.Description || q.QualifierMask || ''}</div>
+                          </div>
+                        </div>
+                      )) || []}
                     </div>
                   </div>
-                </div>
-                
-                {qualifierSpecs.qualifiers.length > 0 && (
+                  
+                  {/* Selected Qualifiers */}
                   <div className="border border-gray-200 rounded p-4">
-                    <h5 className="text-sm font-medium mb-3">Current Qualifiers ({qualifierSpecs.qualifiers.length})</h5>
+                    <h5 className="text-sm font-medium mb-3">Selected Qualifiers ({qualifierSpecs.qualifiers.length})</h5>
                     <div className="space-y-3">
                       {qualifierSpecs.qualifiers.map((qualifier, index) => {
-                        const qualifierType = qdbRefData.tables?.find((t: any) => t.name.includes('Qualifier'))?.data?.find((q: any) => 
+                        const qualifierData = qdbData.find((q: any) => 
                           (q.QualifierID || q.id) === qualifier.qualifierId
                         );
                         
                         return (
-                          <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded">
-                            <div className="flex-1">
-                              <span className="text-sm font-medium">
-                                {qualifierType?.QualifierName || qualifierType?.name || 'Unknown Qualifier'}
-                              </span>
-                            </div>
-                            <div className="flex-1">
-                              <input
-                                type="text"
-                                value={qualifier.qualifierValue}
-                                onChange={(e) => {
-                                  const updatedQualifiers = [...qualifierSpecs.qualifiers];
-                                  updatedQualifiers[index].qualifierValue = e.target.value;
+                          <div key={index} className="border border-gray-200 rounded p-3">
+                            <div className="flex justify-between items-start mb-2">
+                              <div>
+                                <div className="text-sm font-medium">{qualifierData?.QualifierType || 'Qualifier'}</div>
+                                <div className="text-xs text-gray-500">ID: {qualifier.qualifierId}</div>
+                              </div>
+                              <button
+                                onClick={() => {
+                                  const updatedQualifiers = qualifierSpecs.qualifiers.filter((_, i) => i !== index);
                                   setQualifierSpecs({ qualifiers: updatedQualifiers });
                                 }}
-                                placeholder="Qualifier value"
-                                className="w-full p-2 border rounded text-sm"
-                              />
+                                className="text-red-600 hover:text-red-800 text-xs px-2 py-1 border border-red-300 rounded hover:bg-red-50"
+                              >
+                                Remove
+                              </button>
                             </div>
-                            <button
-                              onClick={() => {
-                                const updatedQualifiers = qualifierSpecs.qualifiers.filter((_, i) => i !== index);
+                            <div className="text-xs text-gray-600 mb-2">{qualifierData?.QualifierText || qualifierData?.QualifierMask || ''}</div>
+                            <textarea
+                              value={qualifier.qualifierValue}
+                              onChange={(e) => {
+                                const updatedQualifiers = [...qualifierSpecs.qualifiers];
+                                updatedQualifiers[index].qualifierValue = e.target.value;
                                 setQualifierSpecs({ qualifiers: updatedQualifiers });
                               }}
-                              className="text-red-600 hover:text-red-800 text-sm px-2 py-1 border border-red-300 rounded hover:bg-red-50"
-                            >
-                              Remove
-                            </button>
+                              placeholder="Enter qualifier value/notes"
+                              className="w-full p-2 border rounded text-sm"
+                              rows={2}
+                            />
                           </div>
                         );
                       })}
                     </div>
                   </div>
-                )}
-                
-                <div className="text-sm text-gray-600">
-                  <p>Qualifiers provide additional application specificity beyond basic vehicle fitment</p>
                 </div>
               </>
             ) : (
