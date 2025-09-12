@@ -1,0 +1,278 @@
+{
+	"info": {
+		"_postman_id": "4ac2a5bc-193c-4fa5-913a-dff863997bcd",
+		"name": "GLS Canada API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "19286627",
+		"_collection_link": "https://lunar-station-259809.postman.co/workspace/AutoPlus~50652414-4d9b-4fb8-acef-7ce7a8a53de5/collection/19286627-4ac2a5bc-193c-4fa5-913a-dff863997bcd?action=share&source=collection_link&creator=19286627"
+	},
+	"item": [
+		{
+			"name": "Authentication Test",
+			"item": [
+				{
+					"name": "Validate Account",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/v1/account/validate",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"v1",
+								"account",
+								"validate"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Rate",
+			"item": [
+				{
+					"name": "Get a Quick Rate - Basic",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"sender\": {\n        \"number\": \"{{senderNumber}}\",\n        \"postalCode\": \"{{senderPostalCode}}\",\n        \"provinceCode\": \"{{senderProvinceCode}}\",\n        \"countryCode\": \"CA\",\n        \"name\": \"{{senderName}}\"\n    },\n    \"consignee\": {\n        \"number\": \"{{consigneeNumber}}\",\n        \"postalCode\": \"{{consigneePostalCode}}\",\n        \"provinceCode\": \"{{consigneeProvinceCode}}\",\n        \"countryCode\": \"CA\",\n        \"name\": \"{{consigneeName}}\"\n    },\n    \"billing\": \"{{billingAccount}}\",\n    \"paymentType\": \"{{paymentType}}\",\n    \"deliveryType\": \"{{deliveryType}}\",\n    \"unitOfMeasurement\": \"{{unitOfMeasurement}}\",\n    \"parcels\": [\n        {\n            \"parcelType\": \"Box\",\n            \"quantity\": 1,\n            \"weight\": {{parcelWeight}},\n            \"length\": {{parcelLength}},\n            \"depth\": {{parcelDepth}},\n            \"width\": {{parcelWidth}}\n        }\n    ],\n    \"category\": \"Parcel\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/v1/rate",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"v1",
+								"rate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get a Quick Rate - With Surcharges",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"sender\": {\n        \"number\": \"{{senderNumber}}\",\n        \"postalCode\": \"{{senderPostalCode}}\",\n        \"provinceCode\": \"{{senderProvinceCode}}\",\n        \"countryCode\": \"CA\",\n        \"name\": \"{{senderName}}\"\n    },\n    \"consignee\": {\n        \"number\": \"{{consigneeNumber}}\",\n        \"postalCode\": \"{{consigneePostalCode}}\",\n        \"provinceCode\": \"{{consigneeProvinceCode}}\",\n        \"countryCode\": \"CA\",\n        \"name\": \"{{consigneeName}}\"\n    },\n    \"billing\": \"{{billingAccount}}\",\n    \"paymentType\": \"{{paymentType}}\",\n    \"deliveryType\": \"{{deliveryType}}\",\n    \"unitOfMeasurement\": \"{{unitOfMeasurement}}\",\n    \"surcharges\": [\n        {\n            \"type\": \"DCV\",\n            \"value\": 100.00\n        }\n    ],\n    \"parcels\": [\n        {\n            \"parcelType\": \"Box\",\n            \"quantity\": 1,\n            \"weight\": {{parcelWeight}},\n            \"length\": {{parcelLength}},\n            \"depth\": {{parcelDepth}},\n            \"width\": {{parcelWidth}}\n        }\n    ],\n    \"category\": \"Parcel\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/v1/rate",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"v1",
+								"rate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Rate for Existing Shipment",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/v1/rate/{{testShipmentId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"v1",
+								"rate",
+								"{{testShipmentId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get a Quick Rate - Multiple Packages (2 parcels)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"sender\": {\n        \"number\": \"{{senderNumber}}\",\n        \"postalCode\": \"{{senderPostalCode}}\",\n        \"provinceCode\": \"{{senderProvinceCode}}\",\n        \"countryCode\": \"CA\",\n        \"name\": \"{{senderName}}\"\n    },\n    \"consignee\": {\n        \"number\": \"{{consigneeNumber}}\",\n        \"postalCode\": \"{{consigneePostalCode}}\",\n        \"provinceCode\": \"{{consigneeProvinceCode}}\",\n        \"countryCode\": \"CA\",\n        \"name\": \"{{consigneeName}}\"\n    },\n    \"billing\": \"{{billingAccount}}\",\n    \"paymentType\": \"{{paymentType}}\",\n    \"deliveryType\": \"{{deliveryType}}\",\n    \"unitOfMeasurement\": \"{{unitOfMeasurement}}\",\n    \"parcels\": [\n        {\n            \"parcelType\": \"Box\",\n            \"quantity\": 1,\n            \"weight\": {{parcelWeight}},\n            \"length\": {{parcelLength}},\n            \"depth\": {{parcelDepth}},\n            \"width\": {{parcelWidth}}\n        },\n        {\n            \"parcelType\": \"Box\",\n            \"quantity\": 1,\n            \"weight\": {{parcel2Weight}},\n            \"length\": {{parcel2Length}},\n            \"depth\": {{parcel2Depth}},\n            \"width\": {{parcel2Width}}\n        }\n    ],\n    \"category\": \"Parcel\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/v1/rate",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"v1",
+								"rate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get a Quick Rate - Multiple Packages (3 parcels)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"sender\": {\n        \"number\": \"{{senderNumber}}\",\n        \"postalCode\": \"{{senderPostalCode}}\",\n        \"provinceCode\": \"{{senderProvinceCode}}\",\n        \"countryCode\": \"CA\",\n        \"name\": \"{{senderName}}\"\n    },\n    \"consignee\": {\n        \"number\": \"{{consigneeNumber}}\",\n        \"postalCode\": \"{{consigneePostalCode}}\",\n        \"provinceCode\": \"{{consigneeProvinceCode}}\",\n        \"countryCode\": \"CA\",\n        \"name\": \"{{consigneeName}}\"\n    },\n    \"billing\": \"{{billingAccount}}\",\n    \"paymentType\": \"{{paymentType}}\",\n    \"deliveryType\": \"{{deliveryType}}\",\n    \"unitOfMeasurement\": \"{{unitOfMeasurement}}\",\n    \"parcels\": [\n        {\n            \"parcelType\": \"Box\",\n            \"quantity\": 1,\n            \"weight\": {{parcelWeight}},\n            \"length\": {{parcelLength}},\n            \"depth\": {{parcelDepth}},\n            \"width\": {{parcelWidth}}\n        },\n        {\n            \"parcelType\": \"Box\",\n            \"quantity\": 1,\n            \"weight\": {{parcel2Weight}},\n            \"length\": {{parcel2Length}},\n            \"depth\": {{parcel2Depth}},\n            \"width\": {{parcel2Width}}\n        },\n        {\n            \"parcelType\": \"Box\",\n            \"quantity\": 1,\n            \"weight\": {{parcel3Weight}},\n            \"length\": {{parcel3Length}},\n            \"depth\": {{parcel3Depth}},\n            \"width\": {{parcel3Width}}\n        }\n    ],\n    \"category\": \"Parcel\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/v1/rate",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"v1",
+								"rate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get a Quick Rate - Multiple Quantities (same package type)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"sender\": {\n        \"number\": \"{{senderNumber}}\",\n        \"postalCode\": \"{{senderPostalCode}}\",\n        \"provinceCode\": \"{{senderProvinceCode}}\",\n        \"countryCode\": \"CA\",\n        \"name\": \"{{senderName}}\"\n    },\n    \"consignee\": {\n        \"number\": \"{{consigneeNumber}}\",\n        \"postalCode\": \"{{consigneePostalCode}}\",\n        \"provinceCode\": \"{{consigneeProvinceCode}}\",\n        \"countryCode\": \"CA\",\n        \"name\": \"{{consigneeName}}\"\n    },\n    \"billing\": \"{{billingAccount}}\",\n    \"paymentType\": \"{{paymentType}}\",\n    \"deliveryType\": \"{{deliveryType}}\",\n    \"unitOfMeasurement\": \"{{unitOfMeasurement}}\",\n    \"parcels\": [\n        {\n            \"parcelType\": \"Box\",\n            \"quantity\": 5,\n            \"weight\": {{parcelWeight}},\n            \"length\": {{parcelLength}},\n            \"depth\": {{parcelDepth}},\n            \"width\": {{parcelWidth}}\n        }\n    ],\n    \"category\": \"Parcel\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/v1/rate",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"v1",
+								"rate"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Tracking",
+			"item": [
+				{
+					"name": "Get a summary of multiple tracking number",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/v1/tracking/list/{{testTrackingNumber}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"v1",
+								"tracking",
+								"list",
+								"{{testTrackingNumber}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get tracking details for a tracking number",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/v1/tracking/{{testTrackingNumber}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"v1",
+								"tracking",
+								"{{testTrackingNumber}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search for shipments by multiple different parameters for a given account",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/v1/tracking/search/{{testReference}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"v1",
+								"tracking",
+								"search",
+								"{{testReference}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "basic",
+		"basic": [
+			{
+				"key": "password",
+				"value": "{{password}}",
+				"type": "string"
+			},
+			{
+				"key": "username",
+				"value": "{{username}}",
+				"type": "string"
+			}
+		]
+	}
+}

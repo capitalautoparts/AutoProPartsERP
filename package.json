@@ -10,7 +10,9 @@
     "install-all": "npm install && cd client && npm install && cd ../server && npm install"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "esbuild": "^0.25.9",
+    "tsx": "^4.20.5"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.883.0"

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Plus, Minus, Truck, DollarSign, Package as PkgIcon } from 'lucide-react';
+import { Plus, Minus, Truck, DollarSign } from 'lucide-react';
+import shippingApi from '../../services/shippingApi';
 
 interface Pkg {
   id: string;
@@ -53,14 +54,50 @@ const RateShoppingTab: React.FC = () => {
     setIsLoading(true);
     setError(null);
     try {
-      // TODO: integrate with backend API
-      await new Promise(r => setTimeout(r, 800));
-      setQuotes([
-        { carrier: 'GLS Canada', service: 'Ground', totalCost: 116.47, baseCost: 88.38, fuelSurcharge: 22.54, taxes: 5.55, transitDays: '3-5', deliveryDate: '2025-09-15', color: 'blue' },
-        { carrier: 'Nationex', service: 'Standard', totalCost: 79.38, baseCost: 62.58, fuelSurcharge: 13.02, taxes: 3.78, transitDays: '12', deliveryDate: '2025-09-25', color: 'green' },
-      ]);
-    } catch (e) {
-      setError('Failed to get rate quotes');
+      // gather credentials from localStorage (saved on Settings page)
+      const credsRaw = localStorage.getItem('shipping_credentials');
+      const credentials = credsRaw ? JSON.parse(credsRaw) : {};
+
+      const shipment = {
+        origin: {
+          company: origin.company,
+          streetNumber: origin.streetNumber,
+          postalCode: origin.postalCode,
+          province: origin.province,
+        },
+        destination: {
+          company: destination.company,
+          streetNumber: destination.streetNumber,
+          postalCode: destination.postalCode,
+          province: destination.province,
+        },
+        packages: packages.map(p => ({
+          weight: p.weight,
+          length: p.length,
+          width: p.width,
+          height: p.height,
+          quantity: p.quantity,
+        }))
+      };
+
+      const resp = await shippingApi.getRateQuotes(shipment as any, credentials);
+      const srvQuotes = (resp?.quotes || []) as Array<any>;
+      const mapped: RateQuote[] = srvQuotes.map((q: any) => ({
+        carrier: q.carrier,
+        service: q.service,
+        totalCost: Number(q.totalCost ?? q.total ?? 0),
+        baseCost: Number(q.baseCost ?? q.subTotal ?? 0),
+        fuelSurcharge: Number(q.fuelSurcharge ?? q.fuelCharge ?? 0),
+        taxes: Number(q.taxes ?? 0),
+        transitDays: String(q.transitDays ?? 'N/A'),
+        deliveryDate: String(q.deliveryDate ?? 'N/A'),
+        color: (q.color as any) || 'blue',
+      }));
+
+      setQuotes(mapped);
+    } catch (e: any) {
+      setError(e?.message || 'Failed to get rate quotes');
+      setQuotes([]);
     } finally {
       setIsLoading(false);
     }
@@ -211,4 +248,3 @@ const RateShoppingTab: React.FC = () => {
 };
 
 export default RateShoppingTab;
-

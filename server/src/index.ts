@@ -15,6 +15,7 @@ import referenceRouter from './routes/reference.js';
 import vcdbRouter from './routes/vcdb.js';
 import extractedDatabasesRouter from './routes/extractedDatabases.js';
 import deploymentRouter from './routes/deployment.js';
+import shippingRouter from './routes/shipping.js';
 import { dataService } from './services/dataService.js';
 import { fullVcdbService } from './services/fullVcdbService.js';
 import { pcdbPadbService } from './services/pcdbPadbService.js';
@@ -45,6 +46,7 @@ app.use('/api/reference', referenceRouter);
 app.use('/api/vcdb', vcdbRouter);
 app.use('/api/databases', extractedDatabasesRouter);
 app.use('/api/deployment', deploymentRouter);
+app.use('/api/shipping', shippingRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -134,6 +136,7 @@ async function startServer() {
       console.log(`🏗️ ACES Builder: http://localhost:${PORT}/api/aces`);
       console.log(`✅ ACES Corrected: http://localhost:${PORT}/api/aces-corrected`);
       console.log(`🏗️ ACES 4.2 Builder: http://localhost:${PORT}/api/aces42`);
+      console.log(`?? Shipping API: http://localhost:${PORT}/api/shipping`);
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);
@@ -142,3 +145,7 @@ async function startServer() {
 }
 
 startServer();
+
+
+
+

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Save, TestTube, CheckCircle, XCircle, Eye, EyeOff } from 'lucide-react';
+import shippingApi from '../services/shippingApi';
 
 interface CarrierCredentials {
   gls: {
@@ -7,6 +8,10 @@ interface CarrierCredentials {
     password: string;
     billingAccount: string;
     environment: 'sandbox' | 'production';
+    paymentType?: string; // e.g., Prepaid
+    deliveryType?: string; // e.g., GRD
+    unitOfMeasurement?: 'K' | 'L'; // K=kg, L=lb
+    baseUrl?: string; // optional override
   };
   nationex: {
     customerId: string;
@@ -22,7 +27,7 @@ interface CarrierCredentials {
 
 const ShippingSettingsPage: React.FC = () => {
   const [credentials, setCredentials] = useState<CarrierCredentials>({
-    gls: { username: '', password: '', billingAccount: '', environment: 'sandbox' },
+    gls: { username: '', password: '', billingAccount: '', environment: 'sandbox', paymentType: 'Prepaid', deliveryType: 'GRD', unitOfMeasurement: 'L' },
     nationex: { customerId: '302853', apiKey: '5c2fIY9Yb2rrQC9kHssh73fz38JgjoRg', environment: 'sandbox' },
     canpar: { username: '', password: '', environment: 'sandbox' },
   });
@@ -37,18 +42,29 @@ const ShippingSettingsPage: React.FC = () => {
     setCredentials(prev => ({ ...prev, [carrier]: { ...prev[carrier], [field]: value } }));
   };
 
+  // Load saved credentials on mount so Save persists across reloads
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('shipping_credentials');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setCredentials(prev => ({
+          gls: { ...prev.gls, ...(parsed.gls || {}) },
+          nationex: { ...prev.nationex, ...(parsed.nationex || {}) },
+          canpar: { ...prev.canpar, ...(parsed.canpar || {}) },
+        }));
+      }
+    } catch {}
+  }, []);
+
   const testConnection = async (carrier: keyof CarrierCredentials) => {
     setConnectionStatus(prev => ({ ...prev, [carrier]: 'testing' }));
     try {
-      // Placeholder for API call; simulate for now
-      await new Promise(r => setTimeout(r, 1000));
-      const ok = carrier === 'nationex'
-        ? !!(credentials.nationex.customerId && credentials.nationex.apiKey)
-        : carrier === 'gls'
-        ? !!(credentials.gls.username && credentials.gls.password)
-        : !!(credentials.canpar.username && credentials.canpar.password);
+      const payload = (credentials as any)[carrier];
+      const resp = await shippingApi.testConnection(carrier, payload);
+      const ok = !!resp?.success;
       setConnectionStatus(prev => ({ ...prev, [carrier]: ok ? 'success' : 'error' }));
-    } catch {
+    } catch (e) {
       setConnectionStatus(prev => ({ ...prev, [carrier]: 'error' }));
     }
   };
@@ -102,7 +118,10 @@ const ShippingSettingsPage: React.FC = () => {
       <div className="bg-white border border-gray-200 rounded-lg p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-blue-500 mr-2" /> <h3 className="font-medium text-gray-900">GLS Canada</h3></div>
-          <div className="flex items-center space-x-2">{getStatusIcon(connectionStatus.gls)}<button onClick={() => testConnection('gls')} className="text-sm text-blue-600">Test</button></div>
+        <div className="flex items-center space-x-3">{getStatusIcon(connectionStatus.gls)}
+          <span className="text-xs text-gray-500 capitalize">{connectionStatus.gls !== 'idle' ? connectionStatus.gls : ''}</span>
+          <button onClick={() => testConnection('gls')} className="text-sm text-blue-600">Test</button>
+        </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -127,6 +146,27 @@ const ShippingSettingsPage: React.FC = () => {
               <option value="production">Production</option>
             </select>
           </div>
+          <div>
+            <label className="block text-sm text-gray-700 mb-1">Payment Type</label>
+            <select className="w-full border rounded px-3 py-2 text-sm" value={credentials.gls.paymentType || 'Prepaid'} onChange={e=>updateCredentials('gls','paymentType',e.target.value)}>
+              <option value="Prepaid">Prepaid</option>
+              <option value="Collect">Collect</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm text-gray-700 mb-1">Delivery Type</label>
+            <select className="w-full border rounded px-3 py-2 text-sm" value={credentials.gls.deliveryType || 'GRD'} onChange={e=>updateCredentials('gls','deliveryType',e.target.value)}>
+              <option value="GRD">GRD (Ground)</option>
+              <option value="EXP">EXP (Express)</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm text-gray-700 mb-1">Unit of Measurement</label>
+            <select className="w-full border rounded px-3 py-2 text-sm" value={credentials.gls.unitOfMeasurement || 'L'} onChange={e=>updateCredentials('gls','unitOfMeasurement',e.target.value)}>
+              <option value="L">Pounds (L)</option>
+              <option value="K">Kilograms (K)</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -134,7 +174,9 @@ const ShippingSettingsPage: React.FC = () => {
       <div className="bg-white border border-gray-200 rounded-lg p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-green-500 mr-2" /> <h3 className="font-medium text-gray-900">Nationex</h3></div>
-          <div className="flex items-center space-x-2">{getStatusIcon(connectionStatus.nationex)}<button onClick={() => testConnection('nationex')} className="text-sm text-blue-600">Test</button></div>
+        <div className="flex items-center space-x-3">{getStatusIcon(connectionStatus.nationex)}
+          <span className="text-xs text-gray-500 capitalize">{connectionStatus.nationex !== 'idle' ? connectionStatus.nationex : ''}</span>
+          <button onClick={() => testConnection('nationex')} className="text-sm text-blue-600">Test</button></div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -162,7 +204,9 @@ const ShippingSettingsPage: React.FC = () => {
       <div className="bg-white border border-gray-200 rounded-lg p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-red-500 mr-2" /> <h3 className="font-medium text-gray-900">Canpar</h3></div>
-          <div className="flex items-center space-x-2">{getStatusIcon(connectionStatus.canpar)}<button onClick={() => testConnection('canpar')} className="text-sm text-blue-600">Test</button></div>
+        <div className="flex items-center space-x-3">{getStatusIcon(connectionStatus.canpar)}
+          <span className="text-xs text-gray-500 capitalize">{connectionStatus.canpar !== 'idle' ? connectionStatus.canpar : ''}</span>
+          <button onClick={() => testConnection('canpar')} className="text-sm text-blue-600">Test</button></div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -190,4 +234,3 @@ const ShippingSettingsPage: React.FC = () => {
 };
 
 export default ShippingSettingsPage;
-

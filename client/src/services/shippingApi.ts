@@ -10,7 +10,8 @@ class ShippingAPI {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const anyImportMeta: any = import.meta as any;
     const viteEnv = anyImportMeta?.env?.VITE_API_BASE_URL;
-    this.baseUrl = viteEnv || 'http://localhost:3001/api';
+    // Default to existing ERP API prefix (proxied by Vite to server:3000)
+    this.baseUrl = viteEnv || '/api/shipping';
   }
 
   async getRateQuotes(shipment: Shipment, credentials: unknown) {
@@ -35,4 +36,3 @@ class ShippingAPI {
 }
 
 export default new ShippingAPI();
-
