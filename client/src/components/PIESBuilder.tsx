@@ -78,9 +78,9 @@ export interface InterchangeSegment {
 export interface DigitalAssetSegment {
   fileName?: string;
   fileType?: string;
-  assetType: string; // P04, P01 etc
+  assetType: string; // P04, P01 etc (PCdb ACESCodedValues: AssetDetailType)
   uri: string;
-  representation?: string;
+  representation?: string; // (PCdb ACESCodedValues: Representation)
   assetDescription?: string;
 }
 
@@ -1006,26 +1006,31 @@ export const PIESBuilder: React.FC<PIESBuilderProps> = ({ value, onChange, partT
   };
 
   // Asset form state
-  const [newAsset, setNewAsset] = useState({ fileName: '', fileType: '', uri: '', assetType: '' });
+  const [newAsset, setNewAsset] = useState({ fileName: '', fileType: '', uri: '', assetType: '', representation: '', assetDescription: '' });
   const [assetTypes, setAssetTypes] = useState<any[]>([]);
   const [fileTypes, setFileTypes] = useState<any[]>([]);
+  const [representationTypes, setRepresentationTypes] = useState<any[]>([]);
 
-  // Load asset and file types from ACES CodedValues
+  // Load asset, file and representation types from PCdb ACES coded values
   useEffect(() => {
-    fetch('/api/databases/aces/CodedValues').then(r => r.json())
+    fetch('/api/databases/pcdb/ACESCodedValues').then(r => r.json())
       .then(codedValuesData => {
         console.log('CodedValues response:', codedValuesData);
         const codedValues = codedValuesData.data || codedValuesData || [];
-        const assetTypes = codedValues.filter((cv: any) => cv.CodeType === 'AssetDetailType');
-        const fileTypes = codedValues.filter((cv: any) => cv.CodeType === 'FileType');
+        const assetTypes = codedValues.filter((cv: any) => cv.Element === 'AssetDetailType');
+        const fileTypes = codedValues.filter((cv: any) => cv.Element === 'FileType');
+        const repTypes = codedValues.filter((cv: any) => cv.Element === 'Representation');
         console.log('Asset types:', assetTypes);
         console.log('File types:', fileTypes);
+        console.log('Representation types:', repTypes);
         setAssetTypes(assetTypes);
         setFileTypes(fileTypes);
+        setRepresentationTypes(repTypes);
       }).catch(err => {
         console.error('Failed to load coded values:', err);
         setAssetTypes([]);
         setFileTypes([]);
+        setRepresentationTypes([]);
       });
   }, []);
 
@@ -1039,25 +1044,38 @@ export const PIESBuilder: React.FC<PIESBuilderProps> = ({ value, onChange, partT
         </div>
         <div>
           <label className="block text-xs mb-1">File Type</label>
-          <select className="w-full p-2 border rounded text-sm" value={newAsset.fileType} onChange={e=>setNewAsset({...newAsset, fileType: e.target.value})}>
-            <option value="">Select File Type</option>
-            {fileTypes.map(ft => (
-              <option key={ft.CodeValue} value={ft.CodeValue}>{ft.CodeValue} - {ft.CodeDescription}</option>
-            ))}
-          </select>
+          <SearchableSelect 
+            options={fileTypes.map((ft: any) => ({ value: ft.CodedValue, label: `${ft.CodedValue} - ${ft.CodeDescription}` }))}
+            value={newAsset.fileType}
+            onChange={(val)=>setNewAsset({...newAsset, fileType: val})}
+            placeholder="Select File Type" 
+          />
         </div>
         <div>
           <label className="block text-xs mb-1">Asset Type</label>
-          <select className="w-full p-2 border rounded text-sm" value={newAsset.assetType} onChange={e=>setNewAsset({...newAsset, assetType: e.target.value})}>
-            <option value="">Select Asset Type</option>
-            {assetTypes.map(at => (
-              <option key={at.CodeValue} value={at.CodeValue}>{at.CodeValue} - {at.CodeDescription}</option>
-            ))}
-          </select>
+          <SearchableSelect 
+            options={assetTypes.map((at: any) => ({ value: at.CodedValue, label: `${at.CodedValue} - ${at.CodeDescription}` }))}
+            value={newAsset.assetType}
+            onChange={(val)=>setNewAsset({...newAsset, assetType: val})}
+            placeholder="Select Asset Type" 
+          />
         </div>
         <div>
           <label className="block text-xs mb-1">URI</label>
           <input className="w-full p-2 border rounded text-sm" value={newAsset.uri} onChange={e=>setNewAsset({...newAsset, uri: e.target.value})} placeholder="https://..." />
+        </div>
+        <div>
+          <label className="block text-xs mb-1">Representation</label>
+          <SearchableSelect 
+            options={representationTypes.map((rt: any) => ({ value: rt.CodedValue, label: `${rt.CodedValue} - ${rt.CodeDescription}` }))}
+            value={newAsset.representation || ''}
+            onChange={(val)=>setNewAsset({...newAsset, representation: val})}
+            placeholder="Select Representation" 
+          />
+        </div>
+        <div className="col-span-3">
+          <label className="block text-xs mb-1">Asset Description</label>
+          <input className="w-full p-2 border rounded text-sm" value={newAsset.assetDescription || ''} onChange={e=>setNewAsset({...newAsset, assetDescription: e.target.value})} placeholder="Describe the asset (e.g., angle, context)" />
         </div>
         <div className="col-span-4">
           <button className="px-4 py-2 border rounded text-sm" onClick={()=>{
@@ -1066,9 +1084,11 @@ export const PIESBuilder: React.FC<PIESBuilderProps> = ({ value, onChange, partT
               fileName: newAsset.fileName,
               fileType: newAsset.fileType,
               assetType: newAsset.assetType, 
-              uri: newAsset.uri 
+              uri: newAsset.uri,
+              representation: newAsset.representation || undefined,
+              assetDescription: newAsset.assetDescription || undefined
             }]});
-            setNewAsset({ fileName: '', fileType: '', uri: '', assetType: '' });
+            setNewAsset({ fileName: '', fileType: '', uri: '', assetType: '', representation: '', assetDescription: '' });
           }}>Add Asset</button>
         </div>
       </div>
@@ -1080,19 +1100,24 @@ export const PIESBuilder: React.FC<PIESBuilderProps> = ({ value, onChange, partT
               <th className="px-3 py-2 text-left text-xs text-gray-500">File Name</th>
               <th className="px-3 py-2 text-left text-xs text-gray-500">File Type</th>
               <th className="px-3 py-2 text-left text-xs text-gray-500">Asset Type</th>
+              <th className="px-3 py-2 text-left text-xs text-gray-500">Representation</th>
+              <th className="px-3 py-2 text-left text-xs text-gray-500">Description</th>
               <th className="px-3 py-2 text-left text-xs text-gray-500">URI</th>
               <th className="px-3 py-2 text-right text-xs text-gray-500">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {data.digitalAssets.map((a, idx) => {
-              const fileTypeName = a.fileType ? fileTypes.find(ft => ft.CodeValue === a.fileType)?.CodeDescription || a.fileType : '-';
-              const assetTypeName = a.assetType ? assetTypes.find(at => at.CodeValue === a.assetType)?.CodeDescription || a.assetType : '-';
-              return (
+             {data.digitalAssets.map((a, idx) => {
+               const fileTypeName = a.fileType ? fileTypes.find(ft => ft.CodedValue === a.fileType)?.CodeDescription || a.fileType : '-';
+               const assetTypeName = a.assetType ? assetTypes.find(at => at.CodedValue === a.assetType)?.CodeDescription || a.assetType : '-';
+              const repName = a.representation ? representationTypes.find(rt => rt.CodedValue === a.representation)?.CodeDescription || a.representation : '-';
+               return (
                 <tr key={idx}>
                   <td className="px-3 py-2 text-sm">{a.fileName || '-'}</td>
                   <td className="px-3 py-2 text-sm">{fileTypeName}</td>
-                  <td className="px-3 py-2 text-sm">{a.assetType}</td>
+                  <td className="px-3 py-2 text-sm">{assetTypeName}</td>
+                  <td className="px-3 py-2 text-sm">{repName}</td>
+                  <td className="px-3 py-2 text-sm">{a.assetDescription || '-'}</td>
                   <td className="px-3 py-2 text-sm truncate max-w-xs">{a.uri}</td>
                   <td className="px-3 py-2 text-sm text-right whitespace-nowrap">
                     <button className="px-2 py-1 border rounded text-xs text-red-700" onClick={() => {

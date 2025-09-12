@@ -6,17 +6,21 @@ import ProductDetailPage from './pages/ProductDetailPage';
 import OrdersPage from './pages/OrdersPage';
 import CustomersPage from './pages/CustomersPage';
 import ModulePage from './pages/ModulePage';
+import SettingsPage from './pages/SettingsPage';
+import DashboardPage from './pages/DashboardPage';
 
 
 function App() {
   return (
     <Routes>
       <Route path="/" element={<Layout><Outlet /></Layout>}>
-        <Route index element={<Navigate to="/products" replace />} />
+        <Route index element={<Navigate to="/dashboard" replace />} />
+        <Route path="dashboard" element={<DashboardPage />} />
         <Route path="products" element={<ProductsPage />} />
         <Route path="products/:id" element={<ProductDetailPage />} />
         <Route path="orders" element={<OrdersPage />} />
         <Route path="customers" element={<CustomersPage />} />
+        <Route path="settings" element={<SettingsPage />} />
 
         <Route 
           path="marketing" 

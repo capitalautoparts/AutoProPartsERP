@@ -1,6 +1,7 @@
 import React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { 
+  LayoutDashboard,
   Package, 
   Users, 
   ShoppingCart, 
@@ -17,6 +18,7 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigation = [
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Products (PIM)', href: '/products', icon: Package },
     { name: 'Orders', href: '/orders', icon: ShoppingCart },
     { name: 'Customers', href: '/customers', icon: Users },
@@ -56,6 +58,22 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 </li>
               );
             })}
+            {/* Settings entry */}
+            <li>
+              <NavLink
+                to="/settings"
+                className={({ isActive }) =>
+                  `flex items-center px-4 py-2 text-sm font-medium rounded-md ${
+                    isActive
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`
+                }
+              >
+                <Settings className="mr-3 h-5 w-5" />
+                Settings
+              </NavLink>
+            </li>
           </ul>
         </nav>
       </div>
