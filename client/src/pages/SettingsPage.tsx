@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Package, Users, TrendingUp, Calculator, ShoppingBag, Warehouse, Plug, Truck, Shield } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import ShippingSettingsPage from './ShippingSettingsPage';
 
 type SettingsTab = 'PIM' | 'Customers' | 'Marketing' | 'Accounting' | 'Purchasing' | 'Warehouse' | 'Integrations' | 'Shipping' | 'UsersRoles';
 
@@ -16,10 +18,24 @@ const tabs: { id: SettingsTab; name: string; icon: React.ElementType; descriptio
 ];
 
 const SettingsPage: React.FC = () => {
-  const [active, setActive] = useState<SettingsTab>('PIM');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabIds = useMemo(() => tabs.map(t => t.id), []);
+  const initialTab = (searchParams.get('tab') as SettingsTab) || 'PIM';
+  const [active, setActive] = useState<SettingsTab>(tabIds.includes(initialTab) ? initialTab : 'PIM');
 
   const ActiveIcon = tabs.find(t => t.id === active)?.icon || Package;
   const ActiveDesc = tabs.find(t => t.id === active)?.description || '';
+
+  useEffect(() => {
+    const current = searchParams.get('tab');
+    if (current !== active) {
+      setSearchParams(prev => {
+        const p = new URLSearchParams(prev);
+        p.set('tab', active);
+        return p;
+      }, { replace: true });
+    }
+  }, [active]);
 
   return (
     <div>
@@ -55,42 +71,48 @@ const SettingsPage: React.FC = () => {
       </div>
 
       {/* Active Tab Content */}
-      <div className="bg-white shadow rounded-lg p-6">
-        <div className="flex items-center mb-4">
-          <ActiveIcon className="w-5 h-5 text-gray-700 mr-2" />
-          <h2 className="text-lg font-medium text-gray-900">{active} Settings</h2>
+      {active === 'Shipping' ? (
+        <div className="bg-white shadow rounded-lg p-6">
+          <ShippingSettingsPage />
         </div>
-        <p className="text-sm text-gray-600 mb-4">{ActiveDesc}</p>
+      ) : (
+        <div className="bg-white shadow rounded-lg p-6">
+          <div className="flex items-center mb-4">
+            <ActiveIcon className="w-5 h-5 text-gray-700 mr-2" />
+            <h2 className="text-lg font-medium text-gray-900">{active} Settings</h2>
+          </div>
+          <p className="text-sm text-gray-600 mb-4">{ActiveDesc}</p>
 
-        {/* Placeholder form content; easy to expand per module */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm text-gray-700 mb-1">Enable {active}</label>
-            <select className="w-full border rounded px-2 py-2 text-sm">
-              <option>Enabled</option>
-              <option>Disabled</option>
-            </select>
+          {/* Placeholder form content; easy to expand per module */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm text-gray-700 mb-1">Enable {active}</label>
+              <select className="w-full border rounded px-2 py-2 text-sm">
+                <option>Enabled</option>
+                <option>Disabled</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm text-gray-700 mb-1">Default View</label>
+              <select className="w-full border rounded px-2 py-2 text-sm">
+                <option>Summary</option>
+                <option>Details</option>
+                <option>Advanced</option>
+              </select>
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-sm text-gray-700 mb-1">Notes</label>
+              <textarea rows={3} className="w-full border rounded px-2 py-2 text-sm" placeholder={`Notes for ${active} configuration`} />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm text-gray-700 mb-1">Default View</label>
-            <select className="w-full border rounded px-2 py-2 text-sm">
-              <option>Summary</option>
-              <option>Details</option>
-              <option>Advanced</option>
-            </select>
-          </div>
-
-          <div className="md:col-span-2">
-            <label className="block text-sm text-gray-700 mb-1">Notes</label>
-            <textarea rows={3} className="w-full border rounded px-2 py-2 text-sm" placeholder={`Notes for ${active} configuration`} />
+          <div className="mt-6 flex justify-end">
+            <button className="px-4 py-2 bg-blue-600 text-white rounded text-sm">Save Changes</button>
           </div>
         </div>
-
-        <div className="mt-6 flex justify-end">
-          <button className="px-4 py-2 bg-blue-600 text-white rounded text-sm">Save Changes</button>
-        </div>
-      </div>
+      )}
     </div>
   );
 };

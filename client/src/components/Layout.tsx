@@ -9,7 +9,8 @@ import {
   Calculator, 
   ShoppingBag, 
   Warehouse,
-  Settings
+  Settings,
+  Truck
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -22,6 +23,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { name: 'Products (PIM)', href: '/products', icon: Package },
     { name: 'Orders', href: '/orders', icon: ShoppingCart },
     { name: 'Customers', href: '/customers', icon: Users },
+    { name: 'Shipping', href: '/shipping', icon: Truck },
 
     { name: 'Marketing', href: '/marketing', icon: TrendingUp },
     { name: 'Accounting', href: '/accounting', icon: Calculator },

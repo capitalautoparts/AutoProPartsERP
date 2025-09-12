@@ -8,6 +8,8 @@ import CustomersPage from './pages/CustomersPage';
 import ModulePage from './pages/ModulePage';
 import SettingsPage from './pages/SettingsPage';
 import DashboardPage from './pages/DashboardPage';
+import ShippingPage from './pages/ShippingPage';
+import ShippingSettingsPage from './pages/ShippingSettingsPage';
 
 
 function App() {
@@ -21,6 +23,8 @@ function App() {
         <Route path="orders" element={<OrdersPage />} />
         <Route path="customers" element={<CustomersPage />} />
         <Route path="settings" element={<SettingsPage />} />
+        <Route path="shipping" element={<ShippingPage />} />
+        <Route path="shipping/settings" element={<ShippingSettingsPage />} />
 
         <Route 
           path="marketing" 
