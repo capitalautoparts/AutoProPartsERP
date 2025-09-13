@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Save } from 'lucide-react';
 import { productsApi } from '../services/api';
 import { vcdbApi } from '../services/vcdbApi';
@@ -12,6 +12,7 @@ import { PIESBuilder, PIESData } from '../components/PIESBuilder';
 const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('profile');
   const [activePiesTab, setActivePiesTab] = useState('item');
 
@@ -141,6 +142,72 @@ const ProductDetailPage: React.FC = () => {
     digitalAssets: product.piesAssets?.map((a: any) => ({ assetType: a.assetType, uri: a.uri, assetDescription: a.assetDescription })) || []
   };
 
+  // Local editable state
+  const [profileDraft, setProfileDraft] = useState({
+    productName: product?.productName || '',
+    shortDescription: product?.shortDescription || '',
+    longDescription: product?.longDescription || '',
+  });
+  const [piesDraft, setPiesDraft] = useState<PIESData>(piesInitial);
+  const [acesDraft, setAcesDraft] = useState<any[]>(product?.acesApplications || []);
+
+  React.useEffect(() => {
+    if (product) {
+      setProfileDraft({
+        productName: product.productName || '',
+        shortDescription: product.shortDescription || '',
+        longDescription: product.longDescription || '',
+      });
+    }
+  }, [product?.id]);
+
+  React.useEffect(() => {
+    setPiesDraft(piesInitial);
+    setAcesDraft(product?.acesApplications || []);
+  }, [product?.id]);
+
+  const updateMutation = useMutation({
+    mutationFn: async () => {
+      const updates: any = {
+        productName: profileDraft.productName,
+        shortDescription: profileDraft.shortDescription,
+        longDescription: profileDraft.longDescription,
+        piesItem: {
+          ...(product?.piesItem || {}),
+          partNo: piesDraft.item.partNo,
+          baseItemNo: piesDraft.item.baseItemNo,
+          vmrsCode: piesDraft.item.vmrsCode,
+          gtin: piesDraft.item.gtin,
+          brandId: piesDraft.item.brandId,
+          subBrandId: piesDraft.item.subBrandId,
+          partType: piesDraft.item.partType,
+          categoryCode: piesDraft.item.categoryId,
+          unspsc: piesDraft.item.unspsc,
+          mfgCode: piesDraft.item.mfgCode,
+          groupCode: piesDraft.item.groupCode,
+          subGroupCode: piesDraft.item.subGroupCode,
+          itemQtySize: piesDraft.item.itemQtySize as any,
+          itemQtyUom: piesDraft.item.itemQtyUom,
+        },
+        piesDescriptions: piesDraft.descriptions,
+        // Keep prices/expi/attributes/etc optional to avoid overwriting unless PIESBuilder exposes them fully
+        acesApplications: acesDraft,
+      };
+      const res = await productsApi.update(id!, updates);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['product', id] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+    },
+    onError: (e) => {
+      console.error('Failed to save product', e);
+      alert('Failed to save product');
+    }
+  });
+
+  const handleSave = () => updateMutation.mutate();
+
   return (
     <div>
       <div className="mb-6">
@@ -153,9 +220,9 @@ const ProductDetailPage: React.FC = () => {
         </button>
         <div className="mt-2 flex items-center justify-between">
           <h1 className="text-2xl font-semibold text-gray-900">{product.productName}</h1>
-          <button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+          <button onClick={handleSave} className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50" disabled={updateMutation.isLoading}>
             <Save className="h-4 w-4 mr-2" />
-            Save Changes
+            {updateMutation.isLoading ? 'Saving…' : 'Save Changes'}
           </button>
         </div>
       </div>
@@ -181,8 +248,8 @@ const ProductDetailPage: React.FC = () => {
 
       {/* Tab Content */}
       <div className="bg-white shadow rounded-lg p-6">
-        {activeTab === 'profile' && <ProfileTab product={product} />}
-        {activeTab === 'aces' && <ACESTab product={product} />}
+        {activeTab === 'profile' && <ProfileTab product={product} profileDraft={profileDraft} setProfileDraft={setProfileDraft} />}
+        {activeTab === 'aces' && <ACESTab product={product} acesDraft={acesDraft} setAcesDraft={setAcesDraft} />}
         {activeTab === 'pies' && (
           <div>
             {/* PIES Sub-tabs */}
@@ -224,9 +291,9 @@ const ProductDetailPage: React.FC = () => {
             {/* PIES Tab Content - reuse PIESBuilder with external tabs */}
             {['item','descriptions','prices','expi','attributes','packages','kits','interchange','assets'].includes(activePiesTab) && (
               <PIESBuilder
-                value={piesInitial}
-                onChange={(updated) => { console.log('PIES updated', updated); }}
-                partTerminologyId={piesInitial.item.partType}
+                value={piesDraft}
+                onChange={(updated) => setPiesDraft(updated)}
+                partTerminologyId={piesDraft.item.partType}
                 activeTab={activePiesTab === 'item' ? 'Item' : activePiesTab === 'descriptions' ? 'Descriptions' : activePiesTab === 'prices' ? 'Prices' : activePiesTab === 'expi' ? 'EXPI' : activePiesTab === 'attributes' ? 'Attributes' : activePiesTab === 'packages' ? 'Packages' : activePiesTab === 'kits' ? 'Kits' : activePiesTab === 'interchange' ? 'Interchange' : 'Assets'}
               />
             )}
@@ -239,7 +306,7 @@ const ProductDetailPage: React.FC = () => {
   );
 };
 
-const ProfileTab: React.FC<{ product: any }> = ({ product }) => {
+const ProfileTab: React.FC<{ product: any; profileDraft: { productName: string; shortDescription: string; longDescription: string }; setProfileDraft: React.Dispatch<React.SetStateAction<{ productName: string; shortDescription: string; longDescription: string }>> }> = ({ product, profileDraft, setProfileDraft }) => {
   const [brandName, setBrandName] = React.useState<string>('');
   React.useEffect(() => {
     const brandId = product?.piesItem?.brandId || product?.brandId || product?.brand;
@@ -274,15 +341,30 @@ const ProfileTab: React.FC<{ product: any }> = ({ product }) => {
 
       <div className="col-span-2">
         <label className="block text-sm font-medium text-gray-700 mb-2">Product Name</label>
-        <input type="text" defaultValue={product.productName} className="w-full border border-gray-300 rounded-md px-3 py-2" />
+        <input
+          type="text"
+          value={profileDraft.productName}
+          onChange={(e) => setProfileDraft(s => ({ ...s, productName: e.target.value }))}
+          className="w-full border border-gray-300 rounded-md px-3 py-2"
+        />
       </div>
       <div className="col-span-2">
         <label className="block text-sm font-medium text-gray-700 mb-2">Short Description</label>
-        <textarea defaultValue={product.shortDescription} rows={3} className="w-full border border-gray-300 rounded-md px-3 py-2" />
+        <textarea
+          value={profileDraft.shortDescription}
+          onChange={(e) => setProfileDraft(s => ({ ...s, shortDescription: e.target.value }))}
+          rows={3}
+          className="w-full border border-gray-300 rounded-md px-3 py-2"
+        />
       </div>
       <div className="col-span-2">
         <label className="block text-sm font-medium text-gray-700 mb-2">Long Description</label>
-        <textarea defaultValue={product.longDescription} rows={5} className="w-full border border-gray-300 rounded-md px-3 py-2" />
+        <textarea
+          value={profileDraft.longDescription}
+          onChange={(e) => setProfileDraft(s => ({ ...s, longDescription: e.target.value }))}
+          rows={5}
+          className="w-full border border-gray-300 rounded-md px-3 py-2"
+        />
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">Stock</label>
@@ -301,8 +383,8 @@ const ProfileTab: React.FC<{ product: any }> = ({ product }) => {
   );
 };
 
-const ACESTab: React.FC<{ product: any }> = ({ product }) => {
-  const applications = product.acesApplications || [];
+const ACESTab: React.FC<{ product: any; acesDraft: any[]; setAcesDraft: React.Dispatch<React.SetStateAction<any[]>> }> = ({ product, acesDraft, setAcesDraft }) => {
+  const applications = acesDraft;
   
   return (
     <div>
@@ -311,10 +393,7 @@ const ACESTab: React.FC<{ product: any }> = ({ product }) => {
       
       <ACESBuilder 
         applications={applications} 
-        onUpdate={(updatedApps) => {
-          // TODO: Update product with new applications
-          console.log('Updated applications:', updatedApps);
-        }} 
+        onUpdate={(updatedApps) => setAcesDraft(updatedApps)} 
       />
     </div>
   );
