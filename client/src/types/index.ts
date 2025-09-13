@@ -257,14 +257,84 @@ export interface PIESMarketCopy {
 }
 
 // ERP Module Types
-export interface Customer {
+export interface Address {
+  street1: string;
+  street2?: string;
+  city: string;
+  province: string;
+  postalCode: string;
+  country: string;
+}
+
+export interface ShippingAddress extends Address {
+  id: string;
+  name: string; // Address nickname
+  isDefault: boolean;
+  deliveryNotes?: string;
+  specialInstructions?: string;
+  contactName?: string;
+  contactPhone?: string;
+}
+
+export interface ContactInfo {
   id: string;
   name: string;
+  title: string;
   email: string;
   phone: string;
-  address: string;
-  type: 'B2B' | 'B2C';
-  status: 'active' | 'inactive';
+  mobile?: string;
+  isPrimary: boolean;
+  department?: string;
+  notes?: string;
+}
+
+export interface Customer {
+  id: string;
+  accountNumber?: string;
+
+  // Basic Information
+  companyName?: string;
+  contactName?: string;
+  customerType?: 'B2C' | 'B2B';
+  businessType?: 'auto_repair' | 'body_shop' | 'dealership' | 'fleet' | 'retail' | 'wholesale' | 'individual';
+
+  // Contact Information
+  primaryContact?: ContactInfo;
+  additionalContacts?: ContactInfo[];
+
+  // Address Information
+  billingAddress?: Address;
+  shippingAddresses?: ShippingAddress[];
+
+  // Business Settings
+  defaultWarehouse?: string;
+  territory?: string;
+  salesRep?: string;
+
+  // Tags and Classification
+  tags?: string[];
+  creditLimit?: number;
+  paymentTerms?: string;
+  taxExempt?: boolean;
+
+  // Status and Dates
+  status?: 'active' | 'inactive' | 'suspended' | 'prospect';
+  dateCreated?: string;
+  lastOrderDate?: string;
+
+  // Business Intelligence
+  totalOrders?: number;
+  totalRevenue?: number;
+  averageOrderValue?: number;
+  lastActivityDate?: string;
+  lastUpdated?: string;
+
+  // Backward-compat support for legacy fields
+  name?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  type?: 'B2B' | 'B2C';
 }
 
 export interface Order {

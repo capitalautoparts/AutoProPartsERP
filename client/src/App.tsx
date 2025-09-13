@@ -5,6 +5,7 @@ import ProductsPage from './pages/ProductsPage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import OrdersPage from './pages/OrdersPage';
 import CustomersPage from './pages/CustomersPage';
+import CustomerDetailPage from './pages/CustomerDetailPage';
 import ModulePage from './pages/ModulePage';
 import SettingsPage from './pages/SettingsPage';
 import DashboardPage from './pages/DashboardPage';
@@ -22,6 +23,7 @@ function App() {
         <Route path="products/:id" element={<ProductDetailPage />} />
         <Route path="orders" element={<OrdersPage />} />
         <Route path="customers" element={<CustomersPage />} />
+        <Route path="customers/:customerId" element={<CustomerDetailPage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="shipping" element={<ShippingPage />} />
         <Route path="shipping/settings" element={<ShippingSettingsPage />} />

@@ -85,6 +85,7 @@ class DataService {
         status: 'active'
       }
     ];
+    console.log('Created sample customers:', this.customers.map(c => ({ id: c.id, name: c.name })));
 
     if (this.orders.length > 0) return;
     
@@ -240,6 +241,25 @@ class DataService {
     };
     this.customers.push(newCustomer);
     return newCustomer;
+  }
+
+  updateCustomer(id: string, updates: Partial<Customer>): Customer | null {
+    const idx = this.customers.findIndex(c => c.id === id);
+    if (idx === -1) return null;
+    const current = this.customers[idx];
+    const updated: Customer = {
+      ...current,
+      ...updates,
+    } as Customer;
+    this.customers[idx] = updated;
+    return updated;
+  }
+
+  deleteCustomer(id: string): boolean {
+    const idx = this.customers.findIndex(c => c.id === id);
+    if (idx === -1) return false;
+    this.customers.splice(idx, 1);
+    return true;
   }
 
   // Orders

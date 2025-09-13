@@ -32,6 +32,24 @@ router.post('/', (req, res) => {
   }
 });
 
+// Update customer
+router.put('/:id', (req, res) => {
+  try {
+    const updated = dataService.updateCustomer(req.params.id, req.body);
+    if (!updated) return res.status(404).json({ error: 'Customer not found' });
+    res.json(updated);
+  } catch (error) {
+    res.status(400).json({ error: 'Invalid customer data' });
+  }
+});
+
+// Delete customer
+router.delete('/:id', (req, res) => {
+  const ok = dataService.deleteCustomer(req.params.id);
+  if (!ok) return res.status(404).json({ error: 'Customer not found' });
+  res.status(204).send();
+});
+
 // Import customers from Excel
 router.post('/import/excel', upload.single('file'), async (req, res) => {
   try {

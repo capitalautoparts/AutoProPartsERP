@@ -34,6 +34,27 @@ router.get('/', (req, res) => {
   });
 });
 
+// Add dedicated internal ID route BEFORE generic :id to avoid route shadowing
+router.get('/internal/:internalId', (req, res) => {
+  try {
+    const { internalId } = req.params;
+    if (!dataService.isValidInternalId(internalId)) {
+      return res.status(400).json({ 
+        error: 'Invalid internal ID format',
+        expected: 'BrandID+PartNumber (e.g., JVYDAFF12090511432SMF)'
+      });
+    }
+    const product = dataService.getProductByInternalId(internalId);
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found by internal ID', internalId });
+    }
+    res.json(product);
+  } catch (error) {
+    console.error('Internal ID lookup error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Enhanced product lookup route with dual ID support
 router.get('/:id', (req, res) => {
   const { id } = req.params;
@@ -65,33 +86,7 @@ router.get('/:id', (req, res) => {
   }
 });
 
-// Add dedicated internal ID route for explicit internal ID lookups
-router.get('/internal/:internalId', (req, res) => {
-  try {
-    const { internalId } = req.params;
-    
-    if (!dataService.isValidInternalId(internalId)) {
-      return res.status(400).json({ 
-        error: 'Invalid internal ID format',
-        expected: 'BrandID+PartNumber (e.g., JVYDAFF12090511432SMF)'
-      });
-    }
-    
-    const product = dataService.getProductByInternalId(internalId);
-    
-    if (!product) {
-      return res.status(404).json({ 
-        error: 'Product not found by internal ID',
-        internalId: internalId
-      });
-    }
-    
-    res.json(product);
-  } catch (error) {
-    console.error('Internal ID lookup error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
+// (moved earlier)
 
 // Add brand/part number route for structured lookups
 router.get('/brand/:brand/part/:partNumber', (req, res) => {

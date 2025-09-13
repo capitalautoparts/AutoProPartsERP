@@ -57,90 +57,50 @@ const ProductDetailPage: React.FC = () => {
     { id: 'market-copy', name: 'Market Copy' },
   ];
 
-  if (isLoading) {
-    return <div className="flex justify-center items-center h-64">Loading...</div>;
-  }
-
-  // Enhanced error display
-  if (error) {
-    return (
-      <div className="text-center py-8">
-        <h2 className="text-lg font-semibold text-red-600 mb-2">Product Not Found</h2>
-        <p className="text-gray-600 mb-2">Could not find product with ID:</p>
-        <code className="bg-gray-100 px-2 py-1 rounded text-sm">{id}</code>
-        <div className="mt-4 text-sm text-gray-500">
-          <p className="mb-2">Supported ID formats:</p>
-          <ul className="list-disc list-inside space-y-1">
-            <li>UUID: <code>410d4b6a-1aae-407e-8d34-a27211892c58</code></li>
-            <li>Internal ID: <code>JVYDAFF12090511432SMF</code></li>
-          </ul>
-        </div>
-        <button 
-          onClick={() => navigate('/products')}
-          className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          Back to Products
-        </button>
-      </div>
-    );
-  }
-
-  if (!product) {
-    return (
-      <div className="text-center py-8">
-        <p>Product not found</p>
-        <p className="text-sm text-gray-500 mt-2">Product ID: {id}</p>
-        <button 
-          onClick={() => navigate('/products')}
-          className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          Back to Products
-        </button>
-      </div>
-    );
-  }
-
-  // Build initial PIES data once for the PIES editor
-  const piesInitial: PIESData = {
-    item: {
-      partNo: product.piesItem?.partNo || product.partNumber || '',
-      baseItemNo: product.piesItem?.baseItemNo || '',
-      vmrsCode: product.piesItem?.vmrsCode || '',
-      gtin: product.piesItem?.gtin || '',
-      brandId: product.piesItem?.brandId || '',
-      subBrandId: product.piesItem?.subBrandId || '',
-      partType: product.piesItem?.partType || '',
-      categoryId: product.piesItem?.categoryCode || '',
-      unspsc: product.piesItem?.unspsc || '',
-      mfgCode: product.piesItem?.mfgCode || '',
-      groupCode: product.piesItem?.groupCode || '',
-      subGroupCode: product.piesItem?.subGroupCode || '',
-      itemQtySize: product.piesItem?.itemQtySize || '',
-      itemQtyUom: product.piesItem?.itemQtyUom || ''
-    },
-    descriptions: product.piesDescriptions || [],
-    prices: product.piesPrices || [],
-    expi: product.piesExpi || [],
-    attributes: product.piesAttributes?.map((a: any) => ({ paid: a.attributeId, value: a.attributeValue, uom: a.attributeUom })) || [],
-    packages: product.piesPackages?.map((p: any) => ({
-      packageUom: p.packageUom,
-      packageQuantity: p.packageQuantity,
-      packageLength: p.packageLength,
-      packageWidth: p.packageWidth,
-      packageHeight: p.packageHeight,
-      packageWeight: p.packageWeight,
-      dimensionUom: p.dimensionUom,
-      weightUom: p.weightUom
-    })) || [],
-    kits: product.piesKits || [],
-    interchange: product.piesInterchange?.map((i: any) => ({
-      interchangeType: i.interchangeType,
-      brandAaiaId: i.brandAaiaId,
-      brandLabel: i.brandLabel,
-      partNo: i.partNo
-    })) || [],
-    digitalAssets: product.piesAssets?.map((a: any) => ({ assetType: a.assetType, uri: a.uri, assetDescription: a.assetDescription })) || []
-  };
+  // Build initial PIES data based on fetched product (memoized)
+  const piesInitial: PIESData = React.useMemo(() => {
+    const p: any = product || {};
+    return {
+      item: {
+        partNo: p.piesItem?.partNo || p.partNumber || '',
+        baseItemNo: p.piesItem?.baseItemNo || '',
+        vmrsCode: p.piesItem?.vmrsCode || '',
+        gtin: p.piesItem?.gtin || '',
+        brandId: p.piesItem?.brandId || '',
+        subBrandId: p.piesItem?.subBrandId || '',
+        partType: p.piesItem?.partType || '',
+        categoryId: p.piesItem?.categoryCode || '',
+        unspsc: p.piesItem?.unspsc || '',
+        mfgCode: p.piesItem?.mfgCode || '',
+        groupCode: p.piesItem?.groupCode || '',
+        subGroupCode: p.piesItem?.subGroupCode || '',
+        itemQtySize: p.piesItem?.itemQtySize || '',
+        itemQtyUom: p.piesItem?.itemQtyUom || ''
+      },
+      descriptions: p.piesDescriptions || [],
+      prices: p.piesPrices || [],
+      expi: p.piesExpi || [],
+      attributes: p.piesAttributes?.map((a: any) => ({ paid: a.attributeId, value: a.attributeValue, uom: a.attributeUom })) || [],
+      packages: p.piesPackages?.map((pk: any) => ({
+        packageUom: pk.packageUom,
+        packageQuantity: pk.packageQuantity,
+        packageLength: pk.packageLength,
+        packageWidth: pk.packageWidth,
+        packageHeight: pk.packageHeight,
+        packageWeight: pk.packageWeight,
+        dimensionUom: pk.dimensionUom,
+        weightUom: pk.weightUom
+      })) || [],
+      kits: p.piesKits || [],
+      interchange: p.piesInterchange?.map((i: any) => ({
+        interchangeType: i.interchangeType,
+        brandAaiaId: i.brandAaiaId,
+        brandLabel: i.brandLabel,
+        partNo: i.partNo
+      })) || [],
+      digitalAssets: p.piesAssets?.map((a: any) => ({ assetType: a.assetType, uri: a.uri, assetDescription: a.assetDescription })) || []
+    };
+  }, [product?.id]);
 
   // Local editable state
   const [profileDraft, setProfileDraft] = useState({
@@ -207,6 +167,39 @@ const ProductDetailPage: React.FC = () => {
   });
 
   const handleSave = () => updateMutation.mutate();
+
+  // After hooks, we can now render with early returns
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-64">Loading...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <h2 className="text-lg font-semibold text-red-600 mb-2">Product Not Found</h2>
+        <p className="text-gray-600 mb-2">Could not find product with ID:</p>
+        <code className="bg-gray-100 px-2 py-1 rounded text-sm">{id}</code>
+        <div className="mt-4 text-sm text-gray-500">
+          <p className="mb-2">Supported ID formats:</p>
+          <ul className="list-disc list-inside space-y-1">
+            <li>UUID: <code>410d4b6a-1aae-407e-8d34-a27211892c58</code></li>
+            <li>Internal ID: <code>JVYDAFF12090511432SMF</code></li>
+          </ul>
+        </div>
+        <button onClick={() => navigate('/products')} className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Back to Products</button>
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="text-center py-8">
+        <p>Product not found</p>
+        <p className="text-sm text-gray-500 mt-2">Product ID: {id}</p>
+        <button onClick={() => navigate('/products')} className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Back to Products</button>
+      </div>
+    );
+  }
 
   return (
     <div>
